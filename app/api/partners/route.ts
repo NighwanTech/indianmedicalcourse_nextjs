@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { partnerRepository } from "@/features/partners/partnerRepository";
+import { hospitalPartners } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
@@ -15,12 +16,10 @@ export async function GET(request: Request) {
       partners = await partnerRepository.seedDefaultPartners();
     }
 
-    return NextResponse.json(partners, { status: 200 });
+    return NextResponse.json(partners || hospitalPartners, { status: 200 });
   } catch (error: any) {
-    console.error("GET /api/partners error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch partners" },
-      { status: 500 }
-    );
+    console.error("GET /api/partners fallback to static data:", error);
+    return NextResponse.json(hospitalPartners, { status: 200 });
   }
 }
+

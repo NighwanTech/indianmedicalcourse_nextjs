@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { hospitalPartners } from "@/lib/data";
 
 export interface CreatePartnerInput {
   name: string;
@@ -21,13 +22,15 @@ export class PartnerRepository {
         where.partnerType = { contains: category };
       }
 
-      return await prisma.partner.findMany({
+      const partners = await prisma.partner.findMany({
         where,
         orderBy: { displayOrder: "asc" },
       });
+
+      if (partners && partners.length > 0) return partners;
+      return hospitalPartners;
     } catch (error) {
-      console.error("[PartnerRepository] getAllPartners error:", error);
-      return [];
+      return hospitalPartners;
     }
   }
 
@@ -38,13 +41,15 @@ export class PartnerRepository {
         where.partnerType = { contains: category };
       }
 
-      return await prisma.partner.findMany({
+      const partners = await prisma.partner.findMany({
         where,
         orderBy: { displayOrder: "asc" },
       });
+
+      if (partners && partners.length > 0) return partners;
+      return hospitalPartners;
     } catch (error) {
-      console.error("[PartnerRepository] getActivePartners error:", error);
-      return [];
+      return hospitalPartners;
     }
   }
 
@@ -54,7 +59,6 @@ export class PartnerRepository {
         where: { id },
       });
     } catch (error) {
-      console.error("[PartnerRepository] getPartnerById error:", error);
       return null;
     }
   }
@@ -154,16 +158,20 @@ export class PartnerRepository {
       },
     ];
 
-    for (const partner of defaultPartners) {
-      const existing = await prisma.partner.findFirst({
-        where: { name: partner.name },
-      });
-      if (!existing) {
-        await prisma.partner.create({ data: partner });
+    try {
+      for (const partner of defaultPartners) {
+        const existing = await prisma.partner.findFirst({
+          where: { name: partner.name },
+        });
+        if (!existing) {
+          await prisma.partner.create({ data: partner });
+        }
       }
-    }
 
-    return await this.getAllPartners();
+      return await this.getAllPartners();
+    } catch {
+      return hospitalPartners;
+    }
   }
 }
 
