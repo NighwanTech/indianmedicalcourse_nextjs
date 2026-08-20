@@ -61,10 +61,50 @@ export async function resetPasswordAction(formData: FormData) {
   return { success: true };
 }
 
-export async function createAdminUserAction(formData: FormData): Promise<{ success: boolean; error?: string }> {
-  return { success: true };
+export async function createAdminUserAction(formData: FormData): Promise<{ success: boolean; error?: string; user?: any }> {
+  try {
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const phone = formData.get("phone") as string;
+    const role = formData.get("role") as string;
+    const password = formData.get("password") as string;
+
+    const res = await fetch("/api/admin/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, phone, role, password }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, error: data.error || "Failed to create user" };
+    }
+    return { success: true, user: data.user };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to create user" };
+  }
 }
 
-export async function updateAdminUserAction(idOrFormData?: any, formData?: any): Promise<{ success: boolean; error?: string }> {
-  return { success: true };
+export async function updateAdminUserAction(formData: FormData): Promise<{ success: boolean; error?: string; user?: any }> {
+  try {
+    const id = formData.get("id") as string;
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const phone = formData.get("phone") as string;
+    const role = formData.get("role") as string;
+
+    const res = await fetch("/api/admin/users", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, name, email, phone, role }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, error: data.error || "Failed to update user" };
+    }
+    return { success: true, user: data.user };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to update user" };
+  }
 }
