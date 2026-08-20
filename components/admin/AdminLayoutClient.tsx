@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { usePathname } from "next/navigation";
 import { DynamicAdminSidebar, MenuItemData } from "./DynamicAdminSidebar";
-import { Menu, User, LogOut } from "lucide-react";
+import { Menu, LogOut } from "lucide-react";
 import { logoutAction } from "@/features/auth/authActions";
 
 interface AdminLayoutClientProps {
@@ -63,19 +63,6 @@ export function AdminLayoutClient({
           </div>
 
           <div className="flex items-center gap-3">
-            {/* User Profile Pill with Person Icon */}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-xl border border-slate-200/80">
-              <div className="w-6 h-6 rounded-full bg-[#0B4F9C] text-white flex items-center justify-center shadow-2xs">
-                <User className="w-3.5 h-3.5" />
-              </div>
-              <div className="text-left leading-none">
-                <div className="text-xs font-bold text-slate-800">{userName}</div>
-                <div className="text-[9px] font-extrabold text-emerald-600 uppercase tracking-wider mt-0.5">
-                  {userRole.replace("_", " ")}
-                </div>
-              </div>
-            </div>
-
             {/* Top Right Sign Out Button */}
             <button
               onClick={async () => {
