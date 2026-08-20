@@ -1,0 +1,880 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ========================================================================
+// 1. USERS & RBAC AUTHENTICATION
+// ========================================================================
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  COUNSELLOR
+  EDITOR
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  uuid          String         @unique @default(uuid())
+  name          String         @db.VarChar(120)
+  email         String         @unique @db.VarChar(160)
+  passwordHash  String         @map("password_hash") @db.VarChar(255)
+  phone         String?        @db.VarChar(25)
+  role          Role           @default(COUNSELLOR)
+  avatarMediaId Int?           @map("avatar_media_id")
+  avatarMedia   MediaFile?     @relation("UserAvatar", fields: [avatarMediaId], references: [id], onDelete: SetNull)
+  isActive      Boolean        @default(true) @map("is_active")
+  lastLoginAt   DateTime?      @map("last_login_at")
+  lastLoginIp   String?        @map("last_login_ip") @db.VarChar(64)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  refreshTokens  RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  auditLogs      AuditLog[]
+  createdMedia   MediaFile[]     @relation("MediaCreator")
+  assignedLeads  Lead[]          @relation("AssignedCounsellor")
+  leadActivities LeadActivity[]
+  leadNotes      LeadNote[]
+  leadReminders  LeadReminder[]
+  blogPosts      BlogPost[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        BigInt   @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  tokenHash String   @unique @map("token_hash") @db.VarChar(255)
+  userAgent String?  @map("user_agent") @db.VarChar(300)
+  ipAddress String?  @map("ip_address") @db.VarChar(64)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tokenHash])
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  token     String    @unique @db.VarChar(255)
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  PASSWORD_CHANGE
+  ROLE_CHANGE
+  SETTINGS_CHANGE
+  LEAD_EXPORT
+  BULK_UPDATE
+}
+
+model AuditLog {
+  id          BigInt      @id @default(autoincrement())
+  userId      Int?        @map("user_id")
+  action      AuditAction
+  entityType  String      @map("entity_type") @db.VarChar(100)
+  entityId    String?     @map("entity_id") @db.VarChar(100)
+  description String      @db.Text
+  oldValues   Json?       @map("old_values")
+  newValues   Json?       @map("new_values")
+  ipAddress   String?     @map("ip_address") @db.VarChar(64)
+  userAgent   String?     @map("user_agent") @db.VarChar(300)
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ========================================================================
+// 2. CENTRALIZED MEDIA LIBRARY (ZERO RAW URLS)
+// ========================================================================
+enum MediaType {
+  IMAGE
+  VIDEO
+  PDF
+  DOCUMENT
+  ICON
+  DOC
+  ZIP
+}
+
+enum StorageProvider {
+  LOCAL
+  S3
+  CLOUDINARY
+}
+
+model MediaFolder {
+  id        Int           @id @default(autoincrement())
+  name      String        @db.VarChar(120)
+  slug      String        @unique @db.VarChar(140)
+  parentId  Int?          @map("parent_id")
+  parent    MediaFolder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children  MediaFolder[] @relation("FolderHierarchy")
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  files MediaFile[]
+
+  @@map("media_folders")
+}
+
+model MediaFile {
+  id              Int             @id @default(autoincrement())
+  uuid            String          @unique @default(uuid())
+  folderId        Int?            @map("folder_id")
+  folder          MediaFolder?    @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  originalName    String          @map("original_name") @db.VarChar(255)
+  fileName        String          @map("file_name") @db.VarChar(255)
+  fileType        MediaType       @map("file_type")
+  mimeType        String          @map("mime_type") @db.VarChar(120)
+  fileSizeBytes   BigInt          @map("file_size_bytes")
+  storageProvider StorageProvider @default(LOCAL) @map("storage_provider")
+  storagePath     String          @map("storage_path") @db.VarChar(500)
+  webpPath        String?         @map("webp_path") @db.VarChar(500)
+  thumbnailPath   String?         @map("thumbnail_path") @db.VarChar(500)
+  altText         String?         @map("alt_text") @db.VarChar(255)
+  seoTitle        String?         @map("seo_title") @db.VarChar(255)
+  width           Int?
+  height          Int?
+  durationSeconds Int?            @map("duration_seconds")
+  usageCount      Int             @default(0) @map("usage_count")
+  createdBy       Int?            @map("created_by")
+  creator         User?           @relation("MediaCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  // Relational usages
+  usersAvatar           User[]            @relation("UserAvatar")
+  categoriesIcon        Category[]        @relation("CategoryIcon")
+  categoriesBanner      Category[]        @relation("CategoryBanner")
+  facultyPhotos         Faculty[]         @relation("FacultyPhoto")
+  coursesHeroImage      Course[]          @relation("CourseHeroImage")
+  coursesBanner         Course[]          @relation("CourseBanner")
+  coursesBrochure       Course[]          @relation("CourseBrochure")
+  coursesIntroVideo     Course[]          @relation("CourseIntroVideo")
+  coursesCertificate   Course[]          @relation("CourseCertificate")
+  coursesOgImage        Course[]          @relation("CourseOgImage")
+  courseGalleries       CourseGallery[]
+  courseDownloads       CourseDownload[]
+  landingHeroImages     LandingPage[]     @relation("LandingHeroImage")
+  landingPromoVideos    LandingPage[]     @relation("LandingPromoVideo")
+  landingOgImages       LandingPage[]     @relation("LandingOgImage")
+  menuItemIcons         MenuItem[]        @relation("MenuItemIcon")
+  testimonialPhotos     Testimonial[]     @relation("TestimonialPhoto")
+  testimonialVideos     Testimonial[]     @relation("TestimonialVideo")
+  partnerLogos          Partner[]         @relation("PartnerLogo")
+  blogPostCovers        BlogPost[]        @relation("BlogPostCover")
+  galleryItems          GalleryItem[]
+
+  @@index([fileType])
+  @@index([folderId])
+  @@index([uuid])
+  @@map("media_files")
+}
+
+// ========================================================================
+// 3. DYNAMIC MENU BUILDER (SIDEBAR, HEADER, FOOTER)
+// ========================================================================
+model Menu {
+  id          Int        @id @default(autoincrement())
+  slug        String     @unique @db.VarChar(80) // e.g. "admin_sidebar", "header_nav", "footer_specialties", "footer_quick_links"
+  name        String     @db.VarChar(120)
+  description String?    @db.VarChar(255)
+  isActive    Boolean    @default(true) @map("is_active")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  items MenuItem[]
+
+  @@map("menus")
+}
+
+model MenuItem {
+  id           Int        @id @default(autoincrement())
+  menuId       Int        @map("menu_id")
+  menu         Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  parentId     Int?       @map("parent_id")
+  parent       MenuItem?  @relation("MenuNesting", fields: [parentId], references: [id], onDelete: Cascade)
+  children     MenuItem[] @relation("MenuNesting")
+  label        String     @db.VarChar(120)
+  url          String     @db.VarChar(350)
+  icon         String?    @db.VarChar(80) // Dynamic Lucide Icon String, e.g. "LayoutDashboard", "Users", "Image"
+  target       String     @default("_self") @db.VarChar(20)
+  permission   String?    @db.VarChar(80) // Role permission, e.g. "SUPER_ADMIN", "ADMIN", "ALL"
+  iconMediaId  Int?       @map("icon_media_id")
+  iconMedia    MediaFile? @relation("MenuItemIcon", fields: [iconMediaId], references: [id], onDelete: SetNull)
+  badgeText    String?    @map("badge_text") @db.VarChar(50)
+  badgeColor   String?    @map("badge_color") @db.VarChar(30)
+  displayOrder Int        @default(0) @map("display_order")
+  isVisible    Boolean    @default(true) @map("is_visible")
+  isActive     Boolean    @default(true) @map("is_active")
+  openInNewTab Boolean    @default(false) @map("open_in_new_tab")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  @@index([menuId, displayOrder])
+  @@map("menu_items")
+}
+
+// ========================================================================
+// 4. HOMEPAGE SECTION BUILDER (HEADLESS CMS SECTIONS)
+// ========================================================================
+model HomepageSection {
+  id           Int      @id @default(autoincrement())
+  sectionKey   String   @unique @map("section_key") @db.VarChar(100) // e.g. "hero", "fellowship_spotlight", "about_us", "stats", "courses", "partners", "why_choose_us", "admission_process", "testimonials", "faculty", "faqs", "final_cta"
+  name         String   @db.VarChar(150)
+  isEnabled    Boolean  @default(true) @map("is_enabled")
+  displayOrder Int      @default(0) @map("display_order")
+  contentJson  Json?    @map("content_json")
+  styleJson    Json?    @map("style_json")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("homepage_sections")
+}
+
+// ========================================================================
+// 5. COURSE CATEGORIES & FACULTY
+// ========================================================================
+model Category {
+  id              Int        @id @default(autoincrement())
+  slug            String     @unique @db.VarChar(120)
+  name            String     @db.VarChar(160)
+  subtitle        String?    @db.VarChar(255)
+  description     String?    @db.Text
+  iconMediaId     Int?       @map("icon_media_id")
+  iconMedia       MediaFile? @relation("CategoryIcon", fields: [iconMediaId], references: [id], onDelete: SetNull)
+  bannerMediaId   Int?       @map("banner_media_id")
+  bannerMedia     MediaFile? @relation("CategoryBanner", fields: [bannerMediaId], references: [id], onDelete: SetNull)
+  badgeText       String?    @map("badge_text") @db.VarChar(60)
+  displayOrder    Int        @default(0) @map("display_order")
+  isFeatured      Boolean    @default(false) @map("is_featured")
+  isActive        Boolean    @default(true) @map("is_active")
+  metaTitle       String?    @map("meta_title") @db.VarChar(200)
+  metaDescription String?    @map("meta_description") @db.VarChar(350)
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  courses Course[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("categories")
+}
+
+model Faculty {
+  id                  Int        @id @default(autoincrement())
+  slug                String     @unique @db.VarChar(120)
+  name                String     @db.VarChar(160)
+  designation         String     @db.VarChar(200)
+  qualifications      String     @db.VarChar(255)
+  hospitalAffiliation String?    @map("hospital_affiliation") @db.VarChar(255)
+  experienceYears     Int        @default(0) @map("experience_years")
+  bio                 String?    @db.Text
+  photoMediaId        Int?       @map("photo_media_id")
+  photoMedia          MediaFile? @relation("FacultyPhoto", fields: [photoMediaId], references: [id], onDelete: SetNull)
+  displayOrder        Int        @default(0) @map("display_order")
+  isFeatured          Boolean    @default(false) @map("is_featured")
+  isActive            Boolean    @default(true) @map("is_active")
+  createdAt           DateTime   @default(now()) @map("created_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
+
+  taughtCourses CourseFaculty[]
+
+  @@map("faculty")
+}
+
+// ========================================================================
+// 6. COURSES SYSTEM
+// ========================================================================
+enum CourseType {
+  FELLOWSHIP
+  PG_DIPLOMA
+  ADVANCED_CERTIFICATE
+  MASTERCLASS
+}
+
+enum DeliveryMode {
+  HYBRID_CLINICAL
+  ONLINE_LIVE
+  HOSPITAL_ATTACHMENT
+  SELF_PACED
+}
+
+model Course {
+  id                       Int          @id @default(autoincrement())
+  categoryId               Int          @map("category_id")
+  category                 Category     @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  slug                     String       @unique @db.VarChar(160)
+  title                    String       @db.VarChar(220)
+  tagline                  String?      @db.VarChar(300)
+  courseType               CourseType   @default(FELLOWSHIP) @map("course_type")
+  deliveryMode             DeliveryMode @default(HYBRID_CLINICAL) @map("delivery_mode")
+  duration                 String       @db.VarChar(80)
+  clinicalHours            Int          @default(0) @map("clinical_hours")
+  eligibility              String       @db.Text
+  feeINR                   Decimal?     @map("fee_inr") @db.Decimal(10, 2)
+  feeUSD                   Decimal?     @map("fee_usd") @db.Decimal(10, 2)
+  emiStartingINR           Decimal?     @map("emi_starting_inr") @db.Decimal(10, 2)
+  scholarshipAvailable     Boolean      @default(true) @map("scholarship_available")
+  scholarshipDetails       String?      @map("scholarship_details") @db.Text
+  emiDetails               String?      @map("emi_details") @db.Text
+
+  heroImageMediaId         Int?         @map("hero_image_media_id")
+  heroImageMedia           MediaFile?   @relation("CourseHeroImage", fields: [heroImageMediaId], references: [id], onDelete: SetNull)
+  bannerMediaId            Int?         @map("banner_media_id")
+  bannerMedia              MediaFile?   @relation("CourseBanner", fields: [bannerMediaId], references: [id], onDelete: SetNull)
+  brochureMediaId          Int?         @map("brochure_media_id")
+  brochureMedia            MediaFile?   @relation("CourseBrochure", fields: [brochureMediaId], references: [id], onDelete: SetNull)
+  introVideoMediaId        Int?         @map("intro_video_media_id")
+  introVideoMedia          MediaFile?   @relation("CourseIntroVideo", fields: [introVideoMediaId], references: [id], onDelete: SetNull)
+  sampleCertificateMediaId Int?         @map("sample_certificate_media_id")
+  sampleCertificateMedia   MediaFile?   @relation("CourseCertificate", fields: [sampleCertificateMediaId], references: [id], onDelete: SetNull)
+
+  overviewHtml             String?      @map("overview_html") @db.LongText
+  curriculumJson           Json?        @map("curriculum_json")
+  careerScopeJson          Json?        @map("career_scope_json")
+  skillsCoveredJson        Json?        @map("skills_covered_json")
+  admissionProcessJson     Json?        @map("admission_process_json")
+  requiredDocumentsJson    Json?        @map("required_documents_json")
+  placementSupportText     String?      @map("placement_support_text") @db.Text
+  clinicalHospitalsText    String?      @map("clinical_hospitals_text") @db.Text
+
+  nextBatchDate            DateTime?    @map("next_batch_date")
+  totalEnrolled            Int          @default(0) @map("total_enrolled")
+  ratingVal                Decimal      @default(4.9) @map("rating_val") @db.Decimal(2, 1)
+  ratingCount              Int          @default(120) @map("rating_count")
+  isFeatured               Boolean      @default(false) @map("is_featured")
+  isPopular                Boolean      @default(false) @map("is_popular")
+  isAdmissionOpen          Boolean      @default(true) @map("is_admission_open")
+  isActive                 Boolean      @default(true) @map("is_active")
+
+  metaTitle                String?      @map("meta_title") @db.VarChar(200)
+  metaDescription          String?      @map("meta_description") @db.VarChar(350)
+  ogImageMediaId           Int?         @map("og_image_media_id")
+  ogImageMedia             MediaFile?   @relation("CourseOgImage", fields: [ogImageMediaId], references: [id], onDelete: SetNull)
+  schemaCustomJson         Json?        @map("schema_custom_json")
+
+  createdAt                DateTime     @default(now()) @map("created_at")
+  updatedAt                DateTime     @updatedAt @map("updated_at")
+
+  facultyMembers           CourseFaculty[]
+  galleryImages            CourseGallery[]
+  downloads                CourseDownload[]
+  faqs                     CourseFaq[]
+  relatedTo                CourseRelated[] @relation("RelatedCourses")
+  relatedFrom              CourseRelated[] @relation("OriginCourses")
+  landingPages             LandingPage[]
+  leads                    Lead[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@index([courseType])
+  @@map("courses")
+}
+
+model CourseFaculty {
+  courseId     Int      @map("course_id")
+  course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  facultyId    Int      @map("faculty_id")
+  faculty      Faculty  @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  roleInCourse String   @default("Clinical Director") @map("role_in_course") @db.VarChar(120)
+
+  @@id([courseId, facultyId])
+  @@map("course_faculty")
+}
+
+model CourseGallery {
+  id           Int       @id @default(autoincrement())
+  courseId     Int       @map("course_id")
+  course       Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  mediaId      Int       @map("media_id")
+  media        MediaFile @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  caption      String?   @db.VarChar(255)
+  displayOrder Int       @default(0) @map("display_order")
+
+  @@map("course_gallery")
+}
+
+model CourseDownload {
+  id            Int       @id @default(autoincrement())
+  courseId      Int       @map("course_id")
+  course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  mediaId       Int       @map("media_id")
+  media         MediaFile @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  title         String    @db.VarChar(160)
+  description   String?   @db.VarChar(255)
+  displayOrder  Int       @default(0) @map("display_order")
+  downloadCount Int       @default(0) @map("download_count")
+
+  @@map("course_downloads")
+}
+
+model CourseFaq {
+  id           Int      @id @default(autoincrement())
+  courseId     Int?     @map("course_id")
+  course       Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  question     String   @db.VarChar(300)
+  answer       String   @db.Text
+  category     String   @default("General") @db.VarChar(80)
+  displayOrder Int      @default(0) @map("display_order")
+  isActive     Boolean  @default(true) @map("is_active")
+
+  @@index([courseId])
+  @@map("course_faqs")
+}
+
+model CourseRelated {
+  courseId        Int    @map("course_id")
+  course          Course @relation("OriginCourses", fields: [courseId], references: [id], onDelete: Cascade)
+  relatedCourseId Int    @map("related_course_id")
+  relatedCourse   Course @relation("RelatedCourses", fields: [relatedCourseId], references: [id], onDelete: Cascade)
+  displayOrder    Int    @default(0) @map("display_order")
+
+  @@id([courseId, relatedCourseId])
+  @@map("course_related")
+}
+
+// ========================================================================
+// 7. DYNAMIC MODULAR LANDING PAGES
+// ========================================================================
+model LandingPage {
+  id                     Int        @id @default(autoincrement())
+  slug                   String     @unique @db.VarChar(160)
+  title                  String     @db.VarChar(220)
+  campaignName           String?    @map("campaign_name") @db.VarChar(150)
+  targetCourseId         Int?       @map("target_course_id")
+  targetCourse           Course?    @relation(fields: [targetCourseId], references: [id], onDelete: SetNull)
+
+  isHeroEnabled          Boolean    @default(true) @map("is_hero_enabled")
+  isHighlightsEnabled    Boolean    @default(true) @map("is_highlights_enabled")
+  isCurriculumEnabled    Boolean    @default(true) @map("is_curriculum_enabled")
+  isFacultyEnabled       Boolean    @default(true) @map("is_faculty_enabled")
+  isTestimonialsEnabled  Boolean    @default(true) @map("is_testimonials_enabled")
+  isGalleryEnabled       Boolean    @default(true) @map("is_gallery_enabled")
+  isFaqEnabled           Boolean    @default(true) @map("is_faq_enabled")
+  isLeadFormEnabled      Boolean    @default(true) @map("is_lead_form_enabled")
+  isVideoEnabled         Boolean    @default(true) @map("is_video_enabled")
+  isFinalCtaEnabled      Boolean    @default(true) @map("is_final_cta_enabled")
+
+  heroHeadline           String     @map("hero_headline") @db.VarChar(255)
+  heroSubheadline        String?    @map("hero_subheadline") @db.Text
+  heroCtaText            String     @default("Book Free Expert Counselling") @map("hero_cta_text") @db.VarChar(60)
+  heroImageMediaId       Int?       @map("hero_image_media_id")
+  heroImageMedia         MediaFile? @relation("LandingHeroImage", fields: [heroImageMediaId], references: [id], onDelete: SetNull)
+  promoVideoMediaId      Int?       @map("promo_video_media_id")
+  promoVideoMedia        MediaFile? @relation("LandingPromoVideo", fields: [promoVideoMediaId], references: [id], onDelete: SetNull)
+
+  highlightsJson         Json?      @map("highlights_json")
+  customCurriculumJson   Json?      @map("custom_curriculum_json")
+  customFaqsJson         Json?      @map("custom_faqs_json")
+  customTestimonialsJson Json?      @map("custom_testimonials_json")
+  customGalleryMediaIds  Json?      @map("custom_gallery_media_ids")
+
+  customScriptsHeader    String?    @map("custom_scripts_header") @db.Text
+  customScriptsFooter    String?    @map("custom_scripts_footer") @db.Text
+
+  metaTitle              String?    @map("meta_title") @db.VarChar(200)
+  metaDescription        String?    @map("meta_description") @db.VarChar(350)
+  ogImageMediaId         Int?       @map("og_image_media_id")
+  ogImageMedia           MediaFile? @relation("LandingOgImage", fields: [ogImageMediaId], references: [id], onDelete: SetNull)
+
+  isPublished            Boolean    @default(true) @map("is_published")
+  createdAt              DateTime   @default(now()) @map("created_at")
+  updatedAt              DateTime   @updatedAt @map("updated_at")
+
+  @@index([slug])
+  @@map("landing_pages")
+}
+
+// ========================================================================
+// 8. CONFIGURABLE FORMS & LEAD CAPTURE
+// ========================================================================
+model FormConfig {
+  id                 Int      @id @default(autoincrement())
+  formKey            String   @unique @map("form_key") @db.VarChar(80)
+  title              String   @db.VarChar(150)
+  isActive           Boolean  @default(true) @map("is_active")
+  fieldsConfigJson   Json     @map("fields_config_json")
+  successMessage     String   @map("success_message") @db.Text
+  redirectUrl        String?  @map("redirect_url") @db.VarChar(350)
+  notificationEmails String?  @map("notification_emails") @db.VarChar(350)
+  ctaButtonText      String   @default("Submit Inquiry") @map("cta_button_text") @db.VarChar(100)
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  leads Lead[]
+
+  @@map("form_configs")
+}
+
+enum DoctorQualification {
+  MBBS
+  MD_MS
+  DNB
+  BDS_MDS
+  BAMS_BHMS
+  BSc_MSc_NURSING
+  OTHER_HEALTHCARE
+}
+
+enum LeadSource {
+  WEBSITE_FORM
+  HERO_FORM
+  BROCHURE_DOWNLOAD
+  COURSE_PAGE_MODAL
+  EXIT_INTENT
+  WHATSAPP_CLICK
+  PHONE_CLICK
+  SCHOLARSHIP_CALC
+  LANDING_PAGE
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  IN_COUNSELLING
+  APPLICATION_SUBMITTED
+  ADMITTED
+  NOT_ELIGIBLE
+  LOST
+  MERGED
+}
+
+enum LeadPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model LeadTag {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(80)
+  colorHex  String   @default("#0B4F9C") @map("color_hex") @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  leads LeadTagMapping[]
+
+  @@map("lead_tags")
+}
+
+model LeadTagMapping {
+  leadId BigInt  @map("lead_id")
+  lead   Lead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  tagId  Int     @map("tag_id")
+  tag    LeadTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([leadId, tagId])
+  @@map("lead_tag_mappings")
+}
+
+model Lead {
+  id                       BigInt              @id @default(autoincrement())
+  uuid                     String              @unique @default(uuid())
+  formConfigId             Int?                @map("form_config_id")
+  formConfig               FormConfig?         @relation(fields: [formConfigId], references: [id], onDelete: SetNull)
+  name                     String              @db.VarChar(160)
+  mobile                   String              @db.VarChar(25)
+  email                    String              @db.VarChar(160)
+  qualification            DoctorQualification
+  currentProfession        String?             @map("current_profession") @db.VarChar(150)
+  experienceYears          String?             @map("experience_years") @db.VarChar(50)
+  interestedCourseId       Int?                @map("interested_course_id")
+  interestedCourse         Course?             @relation(fields: [interestedCourseId], references: [id], onDelete: SetNull)
+  interestedCourseName     String?             @map("interested_course_name") @db.VarChar(220)
+  state                    String?             @db.VarChar(100)
+  city                     String?             @db.VarChar(100)
+  message                  String?             @db.Text
+  preferredCounsellingTime String?             @map("preferred_counselling_time") @db.VarChar(100)
+
+  leadSource               LeadSource          @default(WEBSITE_FORM) @map("lead_source")
+  leadStatus               LeadStatus          @default(NEW) @map("lead_status")
+  priority                 LeadPriority        @default(MEDIUM)
+  leadScore                Int                 @default(50) @map("lead_score")
+  sourceColorHex           String              @default("#0B4F9C") @map("source_color_hex") @db.VarChar(20)
+  assignedCounsellorId     Int?                @map("assigned_counsellor_id")
+  assignedCounsellor       User?               @relation("AssignedCounsellor", fields: [assignedCounsellorId], references: [id], onDelete: SetNull)
+  mergedIntoLeadId         BigInt?             @map("merged_into_lead_id")
+  mergedIntoLead           Lead?               @relation("MergedLeads", fields: [mergedIntoLeadId], references: [id], onDelete: SetNull)
+  mergedChildren           Lead[]              @relation("MergedLeads")
+
+  // Tracking Metadata
+  utmSource                String?             @map("utm_source") @db.VarChar(150)
+  utmCampaign              String?             @map("utm_campaign") @db.VarChar(200)
+  utmMedium                String?             @map("utm_medium") @db.VarChar(150)
+  utmContent               String?             @map("utm_content") @db.VarChar(255)
+  utmTerm                  String?             @map("utm_term") @db.VarChar(255)
+  gclid                    String?             @db.VarChar(255)
+  fbclid                   String?             @db.VarChar(255)
+  landingPageUrl           String?             @map("landing_page_url") @db.VarChar(500)
+  referrerUrl              String?             @map("referrer_url") @db.VarChar(500)
+  ipAddress                String?             @map("ip_address") @db.VarChar(64)
+  browser                  String?             @db.VarChar(100)
+  operatingSystem          String?             @map("operating_system") @db.VarChar(100)
+  deviceType               String?             @map("device_type") @db.VarChar(50)
+
+  // AIWCRM Ingestion
+  crmSynced                Boolean             @default(false) @map("crm_synced")
+  crmLeadId                String?             @map("crm_lead_id") @db.VarChar(100)
+  crmSyncError             String?             @map("crm_sync_error") @db.Text
+  crmSyncedAt              DateTime?           @map("crm_synced_at")
+
+  createdAt                DateTime            @default(now()) @map("created_at")
+  updatedAt                DateTime            @updatedAt @map("updated_at")
+
+  activities               LeadActivity[]
+  notes                    LeadNote[]
+  reminders                LeadReminder[]
+  tags                     LeadTagMapping[]
+
+  @@index([createdAt])
+  @@index([leadStatus])
+  @@index([mobile])
+  @@index([email])
+  @@index([utmSource])
+  @@index([utmCampaign])
+  @@index([priority])
+  @@map("leads")
+}
+
+enum ActivityType {
+  SUBMITTED
+  STATUS_CHANGE
+  NOTE_ADDED
+  CALL_LOGGED
+  EMAIL_SENT
+  WHATSAPP_SENT
+  CRM_SYNC
+  ASSIGNED
+  MERGED
+  TAG_ADDED
+  REMINDER_SET
+}
+
+model LeadActivity {
+  id           BigInt       @id @default(autoincrement())
+  leadId       BigInt       @map("lead_id")
+  lead         Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  userId       Int?         @map("user_id")
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  activityType ActivityType @map("activity_type")
+  title        String       @db.VarChar(200)
+  description  String?      @db.Text
+  metadataJson Json?        @map("metadata_json")
+  createdAt    DateTime     @default(now()) @map("created_at")
+
+  @@index([leadId])
+  @@map("lead_activities")
+}
+
+model LeadNote {
+  id        BigInt   @id @default(autoincrement())
+  leadId    BigInt   @map("lead_id")
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  userId    Int      @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  note      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("lead_notes")
+}
+
+model LeadReminder {
+  id            BigInt    @id @default(autoincrement())
+  leadId        BigInt    @map("lead_id")
+  lead          Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  userId        Int       @map("user_id")
+  user          User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  reminderTitle String    @map("reminder_title") @db.VarChar(200)
+  remindAt      DateTime  @map("remind_at")
+  isCompleted   Boolean   @default(false) @map("is_completed")
+  completedAt   DateTime? @map("completed_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@index([remindAt, isCompleted])
+  @@map("lead_reminders")
+}
+
+// ========================================================================
+// 9. TESTIMONIALS & HOSPITAL PARTNERS
+// ========================================================================
+model Testimonial {
+  id                 Int        @id @default(autoincrement())
+  doctorName         String     @map("doctor_name") @db.VarChar(160)
+  qualification      String     @db.VarChar(200)
+  hospital           String?    @db.VarChar(200)
+  city               String?    @db.VarChar(100)
+  state              String?    @db.VarChar(100)
+  courseName         String?    @map("course_name") @db.VarChar(200)
+  quote              String     @db.Text
+  detailedReview     String?    @map("detailed_review") @db.LongText
+  rating             Int        @default(5)
+  photoMediaId       Int?       @map("photo_media_id")
+  photoMedia         MediaFile? @relation("TestimonialPhoto", fields: [photoMediaId], references: [id], onDelete: SetNull)
+  videoMediaId       Int?       @map("video_media_id")
+  videoMedia         MediaFile? @relation("TestimonialVideo", fields: [videoMediaId], references: [id], onDelete: SetNull)
+  googleReviewUrl    String?    @map("google_review_url") @db.VarChar(500)
+  isVideoTestimonial Boolean    @default(false) @map("is_video_testimonial")
+  isFeatured         Boolean    @default(true) @map("is_featured")
+  displayOrder       Int        @default(0) @map("display_order")
+  createdAt          DateTime   @default(now()) @map("created_at")
+
+  @@map("testimonials")
+}
+
+model Partner {
+  id           Int        @id @default(autoincrement())
+  name         String     @db.VarChar(160)
+  logoMediaId  Int?       @map("logo_media_id")
+  logoMedia    MediaFile? @relation("PartnerLogo", fields: [logoMediaId], references: [id], onDelete: SetNull)
+  logoUrl      String?    @map("logo_url") @db.VarChar(500)
+  partnerType  String     @default("CLINICAL_TRAINING") @map("partner_type") @db.VarChar(80)
+  location     String?    @db.VarChar(120)
+  displayOrder Int        @default(0) @map("display_order")
+  isActive     Boolean    @default(true) @map("is_active")
+
+  @@map("partners")
+}
+
+// ========================================================================
+// 10. BLOGS & GALLERY
+// ========================================================================
+model BlogCategory {
+  id        Int        @id @default(autoincrement())
+  slug      String     @unique @db.VarChar(120)
+  name      String     @db.VarChar(160)
+  createdAt DateTime   @default(now()) @map("created_at")
+  posts     BlogPost[]
+
+  @@map("blog_categories")
+}
+
+model BlogPost {
+  id              Int          @id @default(autoincrement())
+  categoryId      Int          @map("category_id")
+  category        BlogCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  authorId        Int          @map("author_id")
+  author          User         @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  slug            String       @unique @db.VarChar(180)
+  title           String       @db.VarChar(255)
+  excerpt         String       @db.Text
+  contentHtml     String       @map("content_html") @db.LongText
+  coverMediaId    Int?         @map("cover_media_id")
+  coverMedia      MediaFile?   @relation("BlogPostCover", fields: [coverMediaId], references: [id], onDelete: SetNull)
+  readTimeMinutes Int          @default(5) @map("read_time_minutes")
+  isPublished     Boolean      @default(true) @map("is_published")
+  publishedAt     DateTime?    @map("published_at")
+  metaTitle       String?      @map("meta_title") @db.VarChar(200)
+  metaDescription String?      @map("meta_description") @db.VarChar(350)
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  @@index([slug])
+  @@index([isPublished])
+  @@map("blog_posts")
+}
+
+model GalleryItem {
+  id           Int       @id @default(autoincrement())
+  title        String    @db.VarChar(200)
+  category     String    @default("Clinical Training") @db.VarChar(100)
+  mediaId      Int       @map("media_id")
+  media        MediaFile @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  caption      String?   @db.VarChar(300)
+  displayOrder Int       @default(0) @map("display_order")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@map("gallery_items")
+}
+
+// ========================================================================
+// 11. SEO, REDIRECTS & SETTINGS
+// ========================================================================
+model UrlRedirect {
+  id         Int       @id @default(autoincrement())
+  sourceUrl  String    @unique @map("source_url") @db.VarChar(350)
+  targetUrl  String    @map("target_url") @db.VarChar(350)
+  statusCode String    @default("301") @map("status_code") @db.VarChar(10)
+  hitCount   Int       @default(0) @map("hit_count")
+  lastHitAt  DateTime? @map("last_hit_at")
+  isActive   Boolean   @default(true) @map("is_active")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([sourceUrl])
+  @@map("url_redirects")
+}
+
+model NotFoundLog {
+  id             BigInt   @id @default(autoincrement())
+  requestedUrl   String   @map("requested_url") @db.VarChar(350)
+  referrerUrl    String?  @map("referrer_url") @db.VarChar(350)
+  userAgent      String?  @map("user_agent") @db.VarChar(300)
+  ipAddress      String?  @map("ip_address") @db.VarChar(64)
+  hitCount       Int      @default(1) @map("hit_count")
+  lastOccurredAt DateTime @default(now()) @map("last_occurred_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([requestedUrl])
+  @@map("not_found_logs")
+}
+
+enum SettingGroup {
+  GENERAL
+  COMPANY_DETAILS
+  CONTACT_INFO
+  SOCIAL_MEDIA
+  GOOGLE_ANALYTICS
+  GOOGLE_TAG_MANAGER
+  GOOGLE_ADS
+  META_PIXEL
+  SMTP_EMAIL
+  AIWCRM
+  WHATSAPP_CONFIG
+  GLOBAL_SEO
+  SCHEMA_SETTINGS
+  FOOTER_SETTINGS
+  ANNOUNCEMENT_BAR
+  HEADER_CTA
+  HOMEPAGE_SECTIONS
+  THEME_COLORS
+}
+
+model SiteSetting {
+  settingKey   String       @id @map("setting_key") @db.VarChar(120)
+  settingGroup SettingGroup @map("setting_group")
+  settingValue String       @map("setting_value") @db.LongText
+  valueType    String       @default("STRING") @map("value_type") @db.VarChar(30)
+  description  String?      @db.VarChar(255)
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  @@index([settingGroup])
+  @@map("site_settings")
+}
