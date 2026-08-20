@@ -1,19 +1,44 @@
 export async function loginAction(formData: FormData) {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  const email = (formData.get("email") as string || "").trim();
+  const password = (formData.get("password") as string || "").trim();
 
   if (!email || !password) {
     return { error: "Email and password are required" };
   }
 
-  if (typeof window !== "undefined") {
-    sessionStorage.setItem("imc_admin_session", JSON.stringify({ email, role: "SUPER_ADMIN", name: "Super Administrator" }));
-  }
+  try {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
 
-  return { success: true, error: "" };
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      return { error: data.error || "Invalid credentials" };
+    }
+
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(
+        "imc_admin_session",
+        JSON.stringify(data.user || { email, role: "SUPER_ADMIN", name: "Super Administrator" })
+      );
+    }
+
+    return { success: true, error: "" };
+  } catch (err: any) {
+    console.error("[Login Action Error]", err);
+    return { error: err.message || "Failed to login. Please try again." };
+  }
 }
 
 export async function logoutAction() {
+  try {
+    await fetch("/api/auth/logout", { method: "POST" });
+  } catch (e) {
+    console.error("[Logout Error]", e);
+  }
   if (typeof window !== "undefined") {
     sessionStorage.removeItem("imc_admin_session");
   }
