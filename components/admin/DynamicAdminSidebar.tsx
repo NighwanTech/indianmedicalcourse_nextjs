@@ -75,23 +75,24 @@ export function DynamicAdminSidebar({
               href={item.url}
               target={item.openInNewTab ? "_blank" : undefined}
               onClick={onClose}
-              className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+              title={item.label}
+              className={`flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap min-w-0 ${
                 isActive
                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/30 font-extrabold"
                   : "text-slate-400 hover:text-white hover:bg-slate-900/90"
               }`}
             >
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 <DynamicIcon
                   name={item.icon}
-                  className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400"}`}
+                  className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-slate-400"}`}
                 />
-                <span>{item.label}</span>
+                <span className="truncate">{item.label}</span>
               </div>
 
               {item.badgeText && (
                 <span
-                  className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
+                  className={`text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap ${
                     isActive
                       ? "bg-white/20 text-white"
                       : item.badgeColor === "red"
