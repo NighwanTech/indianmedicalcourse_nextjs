@@ -12,7 +12,7 @@ const defaultAdminUsers = [
     phone: "+91 8295843006",
     role: "SUPER_ADMIN",
     isActive: true,
-    lastLoginAt: new Date().toISOString(),
+    lastLoginAt: "2026-08-20T10:00:00.000Z",
   },
   {
     id: 2,

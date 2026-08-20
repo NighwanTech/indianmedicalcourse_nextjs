@@ -27,7 +27,7 @@ const fallbackTeamMembers = [
     phone: "+91 8295843006",
     role: "SUPER_ADMIN",
     isActive: true,
-    lastLoginAt: new Date().toISOString(),
+    lastLoginAt: "2026-08-20T10:00:00.000Z",
   },
   {
     id: 2,
@@ -50,6 +50,7 @@ const fallbackTeamMembers = [
 ];
 
 export default function AdminUsersPage() {
+  const [mounted, setMounted] = useState(false);
   const [usersList, setUsersList] = useState<any[]>(fallbackTeamMembers);
   const [isLoading, setIsLoading] = useState(true);
   const [activeModal, setActiveModal] = useState<"create" | "edit" | null>(null);
@@ -95,6 +96,7 @@ export default function AdminUsersPage() {
   };
 
   useEffect(() => {
+    setMounted(true);
     loadUsers();
   }, []);
 
@@ -257,8 +259,8 @@ export default function AdminUsersPage() {
                       </span>
                     )}
                   </td>
-                  <td className="py-3.5 px-4 text-slate-500">
-                    {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : "Never logged in"}
+                  <td className="py-3.5 px-4 text-slate-500" suppressHydrationWarning>
+                    {mounted ? (u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : "Never logged in") : (u.lastLoginAt ? "Recently" : "Never logged in")}
                   </td>
                   <td className="py-3.5 px-4 text-right">
                     <button
