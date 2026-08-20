@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DynamicAdminSidebar, MenuItemData } from "./DynamicAdminSidebar";
-import { Menu, LogOut } from "lucide-react";
+import { Menu, LogOut, User } from "lucide-react";
 import { logoutAction } from "@/features/auth/authActions";
 
 interface AdminLayoutClientProps {
@@ -62,10 +62,10 @@ export function AdminLayoutClient({
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Complete User Profile Card (Top Right) */}
+            {/* Complete User Profile Card with Person Icon (Top Right) */}
             <div className="flex items-center gap-2.5 p-1.5 sm:px-3 sm:py-1.5 bg-[#09101D] text-slate-300 rounded-xl border border-slate-800 shadow-2xs">
-              <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
-                {userName.substring(0, 2).toUpperCase()}
+              <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                <User className="w-4 h-4" />
               </div>
               <div className="text-left leading-none hidden sm:block">
                 <div className="text-xs font-bold text-white">

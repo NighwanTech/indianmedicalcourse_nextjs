@@ -129,3 +129,16 @@ body {
 .animate-pulse-ring {
   animation: pulse-ring 2.5s cubic-bezier(0.24, 0, 0.38, 1) infinite;
 }
+
+/* Hide Next.js dev indicator & overlay badge */
+nextjs-portal,
+#nextjs-dev-indicator,
+[data-nextjs-dev-indicator],
+[data-nextjs-toast],
+div[data-nextjs-toast-wrapper] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+

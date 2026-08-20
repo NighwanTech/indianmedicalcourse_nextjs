@@ -26,6 +26,7 @@ import { medicalKnowledgeBase, KnowledgeBaseEntry } from "@/lib/knowledgeBase";
 import { courses, siteSettings } from "@/lib/data";
 import { submitLeadAction } from "@/features/leads/leadActions";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface Message {
   id: string;
@@ -47,7 +48,12 @@ interface Message {
 const FAQS_STORAGE_KEY = "imc_faqs_catalog";
 
 export function AiDoctorCounselorAgent() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
   const [kbEntries, setKbEntries] = useState<KnowledgeBaseEntry[]>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem(FAQS_STORAGE_KEY);
