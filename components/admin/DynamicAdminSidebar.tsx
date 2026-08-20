@@ -3,11 +3,9 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { logoutAction } from "@/features/auth/authActions";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { 
   GraduationCap, 
-  LogOut, 
   X, 
   ChevronRight,
   ShieldCheck
@@ -68,7 +66,7 @@ export function DynamicAdminSidebar({
         </div>
 
         {/* Dynamic Navigation Items from Database */}
-        <nav className="space-y-1 max-h-[72vh] overflow-y-auto no-scrollbar pr-1">
+        <nav className="space-y-1 max-h-[78vh] overflow-y-auto no-scrollbar pr-1">
           {items.map((item) => {
             const isActive =
               pathname === item.url ||
@@ -113,9 +111,9 @@ export function DynamicAdminSidebar({
         </nav>
       </div>
 
-      {/* User Profile Footer & Sign Out */}
-      <div className="pt-4 border-t border-slate-800/80">
-        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/90 mb-2 border border-slate-800/60">
+      {/* User Profile Footer */}
+      <div className="pt-3 border-t border-slate-800/80">
+        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/90 border border-slate-800/60">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
               {userName.substring(0, 2).toUpperCase()}
@@ -137,17 +135,6 @@ export function DynamicAdminSidebar({
             Live Site ↗
           </Link>
         </div>
-
-        <button
-          onClick={async () => {
-            await logoutAction();
-            window.location.href = "/admin/login";
-          }}
-          className="flex items-center gap-2 text-xs font-bold text-red-400 hover:text-red-300 px-3 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors w-full cursor-pointer text-left"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-          <span>Sign Out</span>
-        </button>
       </div>
     </aside>
   );

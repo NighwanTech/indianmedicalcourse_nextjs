@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { usePathname } from "next/navigation";
 import { DynamicAdminSidebar, MenuItemData } from "./DynamicAdminSidebar";
-import { Menu, ShieldCheck } from "lucide-react";
+import { Menu, User, LogOut } from "lucide-react";
+import { logoutAction } from "@/features/auth/authActions";
 
 interface AdminLayoutClientProps {
   sidebarItems: MenuItemData[];
@@ -62,10 +63,31 @@ export function AdminLayoutClient({
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-1.5 text-[11px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>MySQL Live: Connected</span>
+            {/* User Profile Pill with Person Icon */}
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-xl border border-slate-200/80">
+              <div className="w-6 h-6 rounded-full bg-[#0B4F9C] text-white flex items-center justify-center shadow-2xs">
+                <User className="w-3.5 h-3.5" />
+              </div>
+              <div className="text-left leading-none">
+                <div className="text-xs font-bold text-slate-800">{userName}</div>
+                <div className="text-[9px] font-extrabold text-emerald-600 uppercase tracking-wider mt-0.5">
+                  {userRole.replace("_", " ")}
+                </div>
+              </div>
             </div>
+
+            {/* Top Right Sign Out Button */}
+            <button
+              onClick={async () => {
+                await logoutAction();
+                window.location.href = "/admin/login";
+              }}
+              className="inline-flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold py-1.5 px-3 rounded-xl shadow-2xs hover:shadow-xs transition-all cursor-pointer"
+              title="Sign Out of Admin Portal"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Sign Out</span>
+            </button>
           </div>
         </header>
 
