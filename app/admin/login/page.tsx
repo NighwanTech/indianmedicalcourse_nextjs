@@ -19,8 +19,8 @@ function LoginForm() {
   const callbackUrl = searchParams.get("callbackUrl") || "/admin";
   const urlError = searchParams.get("error");
   
-  const [email, setEmail] = useState("admissions@indianmedicalcourses.com");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(urlError);
 
@@ -115,16 +115,6 @@ function LoginForm() {
               className="w-full pl-9 pr-3.5 py-3 bg-slate-800/80 border border-slate-700 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/80 focus:border-blue-500/80 transition-all shadow-inner"
             />
             <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3.5 group-focus-within:text-blue-400 transition-colors" />
-          </div>
-        </div>
-
-        <div className="bg-blue-950/40 border border-blue-500/30 rounded-xl p-3 text-left space-y-1">
-          <div className="text-[11px] font-bold text-blue-300 uppercase tracking-wider">Super Admin Credentials</div>
-          <div className="text-xs text-slate-300 font-mono flex items-center justify-between">
-            <span>Email: <strong className="text-white">admissions@indianmedicalcourses.com</strong></span>
-          </div>
-          <div className="text-xs text-slate-300 font-mono flex items-center justify-between">
-            <span>Password: <strong className="text-white">admin123</strong></span>
           </div>
         </div>
 
