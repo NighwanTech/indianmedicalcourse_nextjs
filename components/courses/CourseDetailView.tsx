@@ -47,7 +47,10 @@ export function CourseDetailView({ initialCourse, slug }: CourseDetailViewProps)
         }
       }
     }
-  }, [slug]);
+    if (initialCourse) {
+      setCourse(initialCourse);
+    }
+  }, [slug, initialCourse]);
 
   if (!course) {
     return (

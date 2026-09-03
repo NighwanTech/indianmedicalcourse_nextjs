@@ -130,11 +130,907 @@ export const categories: Category[] = [
     iconName: "Award",
     courseCount: 11,
   },
+  {
+    id: 9,
+    slug: "pathology",
+    name: "Diagnostic & Oncopathology",
+    subtitle: "Dermatopathology, Oncopathology & Hematology",
+    description: "Advanced histological diagnosis, immunohistochemistry (IHC) profiling, and bone marrow reporting.",
+    iconName: "Microscope",
+    badgeText: "High Yield",
+    courseCount: 12,
+    isFeatured: true,
+  },
+  {
+    id: 10,
+    slug: "reproductive-medicine",
+    name: "Reproductive Medicine & IVF",
+    subtitle: "Clinical Embryology, IUI & Infertility Protocols",
+    description: "Comprehensive training in ovulation induction, ovum pick-up, embryo transfer, and ART laboratory protocols.",
+    iconName: "Baby",
+    badgeText: "IVF Speciality",
+    courseCount: 8,
+    isFeatured: true,
+  },
 ];
 
 export const courses: Course[] = [
+
   {
     "id": 1,
+    "slug": "fellowship-in-dermatopathology",
+    "title": "Fellowship in Dermatopathology",
+    "tagline": "Microscopic Diagnosis of Inflammatory Dermatoses, Cutaneous Neoplasms, Bullous Diseases & Clinicopathological Correlation",
+    "categoryId": 9,
+    "categoryName": "Diagnostic & Oncopathology",
+    "courseType": "FELLOWSHIP",
+    "deliveryMode": "HYBRID_CLINICAL",
+    "duration": "12 Months",
+    "clinicalHours": 140,
+    "eligibility": "MBBS / MD / DNB (Pathology / Dermatology) / DVD / DDVL",
+    "feeINR": 185000,
+    "feeUSD": 2400,
+    "emiStartingINR": 7700,
+    "ratingVal": 4.9,
+    "ratingCount": 215,
+    "totalEnrolled": 680,
+    "nextBatchDate": "2026-09-15",
+    "isFeatured": true,
+    "isPopular": true,
+    "isAdmissionOpen": true,
+    "heroImage": "https://images.unsplash.com/photo-1579154204601-01588f351e67?w=800&auto=format&fit=crop&q=80",
+    "curriculum": [
+      {
+        "moduleNumber": 1,
+        "title": "Biopsy Processing, Microtomy & Special Histochemical Stains",
+        "topics": [
+          "Punch, Shave & Excisional Biopsy Handling & Fixation Protocols",
+          "H&E Staining Nuances & Frozen Section Technique",
+          "Special Stains: PAS, Ziehl-Neelsen, Alcian Blue & Masson-Fontana"
+        ]
+      },
+      {
+        "moduleNumber": 2,
+        "title": "Inflammatory, Granulomatous & Bullous Dermatoses",
+        "topics": [
+          "Psoriasiform & Interface Dermatitis Clinicopathologic Patterns",
+          "Infectious Granulomas: Leprosy, Cutaneous TB & Deep Fungal Infections",
+          "Direct & Indirect Immunofluorescence (DIF/IIF) in Pemphigus & Bullous Pemphigoid"
+        ]
+      },
+      {
+        "moduleNumber": 3,
+        "title": "Cutaneous Neoplasms, Cysts & Adnexal Tumors",
+        "topics": [
+          "Basal Cell Carcinoma vs Squamous Cell Carcinoma Variants",
+          "Melanocytic Lesions: Dysplastic Nevi vs Malignant Melanoma Staging",
+          "Immunohistochemistry (IHC) Diagnostic Markers (Melan-A, S100, SOX10, Ki-67)"
+        ]
+      },
+      {
+        "moduleNumber": 4,
+        "title": "Cutaneous Lymphomas & Alopecia Histopathology",
+        "topics": [
+          "Mycosis Fungoides & CD30+ Cutaneous Lymphoproliferative Disorders",
+          "Cicatricial vs Non-Cicatricial Alopecia Scalp Biopsy Interpretation",
+          "Structured Synoptic Reporting & Digital Tele-dermatopathology"
+        ]
+      }
+    ],
+    "careerOpportunities": [
+      "Consultant Dermatopathologist in Diagnostic Laboratories",
+      "Clinical Dermatology Biopsy & Histology Specialist",
+      "Hospital-Attached Dermato-Oncology Specialist"
+    ],
+    "skillsCovered": [
+      "Skin Biopsy Grossing & Microscopic Evaluation",
+      "Direct Immunofluorescence (DIF) Interpretation",
+      "Melanoma & Non-Melanoma Skin Cancer Staging",
+      "Dermatopathology Synoptic Tele-reporting"
+    ],
+    "clinicalHospitals": [
+      "Apollo Hospitals Diagnostic Network",
+      "Max Super Speciality Hospital",
+      "Medanta - The Medicity Pathology Lab",
+      "Dr Lal PathLabs Central Reference Lab"
+    ],
+    "faqs": [
+      {
+        "question": "Who is eligible to enroll in the Fellowship in Dermatopathology?",
+        "answer": "Doctors holding an MBBS, MD/DNB in Dermatology or Pathology, or equivalent recognized post-graduate diploma (DVD, DDVL) are eligible."
+      },
+      {
+        "question": "Does the course include practical slide review?",
+        "answer": "Yes, the program includes comprehensive digital whole-slide imaging (WSI) case studies and hands-on laboratory rotations."
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "slug": "fellowship-in-oncopathology",
+    "title": "Fellowship in Oncopathology",
+    "tagline": "Advanced Surgical Cancer Pathology, Tumor Staging, Immunohistochemistry (IHC) & Molecular Diagnostic Profiling",
+    "categoryId": 9,
+    "categoryName": "Diagnostic & Oncopathology",
+    "courseType": "FELLOWSHIP",
+    "deliveryMode": "HYBRID_CLINICAL",
+    "duration": "12 Months",
+    "clinicalHours": 160,
+    "eligibility": "MBBS / MD / DNB (Pathology) / DCP with Histopathology Experience",
+    "feeINR": 185000,
+    "feeUSD": 2400,
+    "emiStartingINR": 7700,
+    "ratingVal": 4.9,
+    "ratingCount": 280,
+    "totalEnrolled": 740,
+    "nextBatchDate": "2026-09-15",
+    "isFeatured": true,
+    "isPopular": true,
+    "isAdmissionOpen": true,
+    "heroImage": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&auto=format&fit=crop&q=80",
+    "curriculum": [
+      {
+        "moduleNumber": 1,
+        "title": "Oncological Grossing Protocols & Intraoperative Frozen Sections",
+        "topics": [
+          "AJCC/UICC 8th Edition TNM Tumor Staging & Margin Assessment",
+          "Intraoperative Frozen Section Diagnostics, Artifacts & Pitfalls",
+          "Sentinel Lymph Node Biopsy Processing & Isolated Tumor Cells"
+        ]
+      },
+      {
+        "moduleNumber": 2,
+        "title": "Organ-Specific Surgical Oncopathology",
+        "topics": [
+          "Breast Carcinoma: Nottingham Grading, DCIS & Invasive Subtypes",
+          "GI Malignancies: Colorectal Adenocarcinoma & GIST Risk Stratification",
+          "Gynecological Oncology: Cervical, Endometrial & High-Grade Serous Ovarian Tumors"
+        ]
+      },
+      {
+        "moduleNumber": 3,
+        "title": "Theranostic Biomarkers & Molecular Oncology",
+        "topics": [
+          "Standard IHC Panels: ER, PR, HER2-neu, Ki-67 & PD-L1 (CPS/TPS)",
+          "Mismatch Repair (MMR/MSI) Screening by Immunohistochemistry",
+          "Liquid Biopsy, EGFR/KRAS/BRAF Mutations & NGS Genomic Reports"
+        ]
+      }
+    ],
+    "careerOpportunities": [
+      "Consultant Oncopathologist in Comprehensive Cancer Centers",
+      "Lead Surgical Pathologist & Head of IHC Lab",
+      "Molecular Tumor Board Clinical Pathologist"
+    ],
+    "skillsCovered": [
+      "Cancer Resection Specimen Grossing & Margin Inking",
+      "Rapid Intraoperative Frozen Section Interpretation",
+      "HER2-neu & Hormone Receptor Immuno-scoring",
+      "Molecular Pathology & Biomarker Data Synthesis"
+    ],
+    "clinicalHospitals": [
+      "Tata Memorial Hospital Network",
+      "Max Institute of Cancer Care",
+      "Rajiv Gandhi Cancer Institute & Research Centre",
+      "Fortis Memorial Research Institute"
+    ],
+    "faqs": [
+      {
+        "question": "What are the prerequisite qualifications for Oncopathology?",
+        "answer": "MD/DNB in Pathology or DCP with dedicated surgical histopathology exposure is required."
+      },
+      {
+        "question": "Does the program cover molecular oncology diagnostics?",
+        "answer": "Yes, predictive biomarkers, NGS sequencing basics, and IHC testing algorithms are thoroughly integrated."
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "slug": "fellowship-in-hematopathology",
+    "title": "Fellowship in Hematopathology",
+    "tagline": "Bone Marrow Trephine Biopsy Interpretation, Multicolor Flow Cytometry, Coagulation Disorders & Leukemia Diagnostics",
+    "categoryId": 9,
+    "categoryName": "Diagnostic & Oncopathology",
+    "courseType": "FELLOWSHIP",
+    "deliveryMode": "HYBRID_CLINICAL",
+    "duration": "12 Months",
+    "clinicalHours": 150,
+    "eligibility": "MBBS / MD / DNB (Pathology) / DCP",
+    "feeINR": 185000,
+    "feeUSD": 2400,
+    "emiStartingINR": 7700,
+    "ratingVal": 4.9,
+    "ratingCount": 194,
+    "totalEnrolled": 620,
+    "nextBatchDate": "2026-09-15",
+    "isFeatured": true,
+    "isPopular": true,
+    "isAdmissionOpen": true,
+    "heroImage": "https://images.unsplash.com/photo-1579165466741-7f35e4755660?w=800&auto=format&fit=crop&q=80",
+    "curriculum": [
+      {
+        "moduleNumber": 1,
+        "title": "Bone Marrow Aspirate & Trephine Biopsy Evaluation",
+        "topics": [
+          "Aspirate Particle Smears vs Trephine Core Architecture",
+          "Iron Staining (Perls), Reticulin Fibrosis Grading & Myelogram Counts",
+          "Cytochemical Profiles: MPO, PAS, SBB, NSE & Leukocyte Alkaline Phosphatase"
+        ]
+      },
+      {
+        "moduleNumber": 2,
+        "title": "Leukemias, Lymphomas & Myeloproliferative Neoplasms",
+        "topics": [
+          "WHO/ICC Classification of Acute Myeloid & Lymphoblastic Leukemias",
+          "Myelodysplastic Syndromes (MDS) Morphologic Dysplasia Criteria",
+          "Multiple Myeloma, Monoclonal Gammopathy (MGUS) & Plasma Cell Dyscrasias"
+        ]
+      },
+      {
+        "moduleNumber": 3,
+        "title": "Flow Cytometry, Hemostasis & Coagulation Profiling",
+        "topics": [
+          "Multicolor Flow Cytometry Gating & Minimal Residual Disease (MRD)",
+          "Hemophilia Factor Assays, Thrombophilia Panels & DIC Consumptive Workup",
+          "Hemoglobinopathies: High-Performance Liquid Chromatography (HPLC) Interpretation"
+        ]
+      }
+    ],
+    "careerOpportunities": [
+      "Consultant Hematopathologist in Tertiary Healthcare Systems",
+      "Flow Cytometry & Bone Marrow Reference Laboratory Director",
+      "Hematology & Transfusion Diagnostic Consultant"
+    ],
+    "skillsCovered": [
+      "Bone Marrow Trephine Biopsy Histopathological Reporting",
+      "Multicolor Flow Cytometric Immunophenotyping",
+      "Comprehensive Coagulation & Thrombosis Diagnostic Workup",
+      "HPLC Hemoglobin Variant Interpretation"
+    ],
+    "clinicalHospitals": [
+      "Medanta Bone Marrow Transplant Unit",
+      "Apollo Cancer Center Hematology Lab",
+      "BLK-Max Super Speciality Hospital",
+      "Manipal Hospital Hematology Division"
+    ],
+    "faqs": [
+      {
+        "question": "Is Flow Cytometry training included in this fellowship?",
+        "answer": "Yes, candidates receive dedicated practical training in flow cytometric gating strategies, antibody panels, and MRD assessment."
+      },
+      {
+        "question": "Are bone marrow biopsy procedures demonstrated?",
+        "answer": "Yes, trephine biopsy specimen grossing, decalcification protocols, and slide reporting are comprehensively covered."
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "slug": "fellowship-in-aesthetic-dermatology-and-cosmetic-surgery",
+    "title": "Fellowship in Aesthetic Dermatology and Cosmetic Surgery",
+    "tagline": "Hands-on Clinical Training in Facial Injectables, Botox, Dermal Fillers, Medical Lasers, Chemical Peels & Dermatosurgery",
+    "categoryId": 5,
+    "categoryName": "Clinical & Aesthetic Dermatology",
+    "courseType": "FELLOWSHIP",
+    "deliveryMode": "HYBRID_CLINICAL",
+    "duration": "12 Months",
+    "clinicalHours": 150,
+    "eligibility": "MBBS / MD / MS / DVD / DDVL / BDS / MDS",
+    "feeINR": 185000,
+    "feeUSD": 2400,
+    "emiStartingINR": 7700,
+    "ratingVal": 5,
+    "ratingCount": 412,
+    "totalEnrolled": 1290,
+    "nextBatchDate": "2026-09-15",
+    "isFeatured": true,
+    "isPopular": true,
+    "isAdmissionOpen": true,
+    "heroImage": "https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800&auto=format&fit=crop&q=80",
+    "curriculum": [
+      {
+        "moduleNumber": 1,
+        "title": "Facial Anatomy & Botulinum Toxin (Botox) Mastery",
+        "topics": [
+          "Functional Anatomy of Facial Mimetic Muscles & Vascular Danger Zones",
+          "Upper Face Neurotoxins: Frontalis, Glabella & Orbicularis Oculi",
+          "Lower Face & Off-label: Masseter Slimming, Gummy Smile, Neck Nefertiti Lift & Hyperhidrosis"
+        ]
+      },
+      {
+        "moduleNumber": 2,
+        "title": "Hyaluronic Acid Dermal Fillers & Thread Lifting",
+        "topics": [
+          "Cheek Volumization, Nasolabial Folds & Marionette Lines Restoration",
+          "Tear Trough Rejuvenation & Sharp Needle vs Blunt Micro-cannula Techniques",
+          "Lip Augmentation, Russian Lip Technique, Jawline Definition & PDO Thread Contouring"
+        ]
+      },
+      {
+        "moduleNumber": 3,
+        "title": "Clinical Lasers, Energy Devices & Advanced Peels",
+        "topics": [
+          "Q-Switched Nd:YAG Laser for Melasma, Pigmentation & Tattoo Removal",
+          "Fractional CO2 & Erbium Glass Lasers for Atrophic Acne Scar Resurfacing",
+          "Sequential Chemical Peels: Glycolic, Salicylic, Yellow Peels & TCA CROSS Technique"
+        ]
+      },
+      {
+        "moduleNumber": 4,
+        "title": "Procedural Dermatosurgery & Hair Restoration",
+        "topics": [
+          "Autologous PRP & Growth Factor Concentrate (GFC) for Androgenetic Alopecia",
+          "Subcision, Microneedling RF, Punch Elevation & Mole Radiofrequency Excision",
+          "Management of Aesthetic Emergencies: Impending Vascular Necrosis & Hyaluronidase Infiltration"
+        ]
+      }
+    ],
+    "careerOpportunities": [
+      "Consultant Aesthetic Physician & Medical Cosmetologist",
+      "Founder / Clinical Director of Cosmetic Dermatology Clinic",
+      "Dermatosurgeon in Leading Aesthetic Chains & Hospitals"
+    ],
+    "skillsCovered": [
+      "Facial Neurotoxin (Botox) Precision Injections",
+      "Micro-cannula Hyaluronic Acid Dermal Filler Placement",
+      "Fractional CO2 Laser & Radiofrequency Microneedling Operation",
+      "Acute Aesthetic Vascular Occlusion Reversal Protocols"
+    ],
+    "clinicalHospitals": [
+      "Kaya Skin Clinic Centers",
+      "Fortis Aesthetic Dermatology Department",
+      "Max Institute of Aesthetic Medicine",
+      "Artemis Aesthetic Care Department"
+    ],
+    "faqs": [
+      {
+        "question": "Will I receive hands-on patient practice on injectable procedures?",
+        "answer": "Yes, clinical contact sessions feature hands-on injection training on patients under senior aesthetic dermatologists with simulated pre-training."
+      },
+      {
+        "question": "Is this fellowship recognized for starting an aesthetic clinic?",
+        "answer": "Yes, this fellowship provides recognized clinical competence, medicolegal training, and CPD accreditation for clinical aesthetic practice."
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "slug": "fellowship-in-interventional-cardiology",
+    "title": "Fellowship in Interventional Cardiology",
+    "tagline": "Cath Lab Observer-ship, Coronary Angiography, PCI/Stenting Techniques, TPI Insertion, IVUS & Emergency Cardiac Interventions",
+    "categoryId": 1,
+    "categoryName": "Clinical Cardiology",
+    "courseType": "FELLOWSHIP",
+    "deliveryMode": "HYBRID_CLINICAL",
+    "duration": "12 Months",
+    "clinicalHours": 180,
+    "eligibility": "MBBS / MD / DNB (General Medicine / Cardiology) / PGDCC",
+    "feeINR": 185000,
+    "feeUSD": 2400,
+    "emiStartingINR": 7700,
+    "ratingVal": 4.9,
+    "ratingCount": 380,
+    "totalEnrolled": 1150,
+    "nextBatchDate": "2026-09-15",
+    "isFeatured": true,
+    "isPopular": true,
+    "isAdmissionOpen": true,
+    "heroImage": "https://images.unsplash.com/photo-1559757175-5700dde675bc?w=800&auto=format&fit=crop&q=80",
+    "curriculum": [
+      {
+        "moduleNumber": 1,
+        "title": "Vascular Access & Diagnostic Coronary Angiography",
+        "topics": [
+          "Transradial vs Transfemoral Puncture Technique & Sheath Management",
+          "Standard Coronary Angiographic Projections & Stenosis Estimation",
+          "Contrast Media Nephroprotection & Cath Lab Radiation Safety Standards"
+        ]
+      },
+      {
+        "moduleNumber": 2,
+        "title": "Percutaneous Coronary Intervention (PCI) & Stenting",
+        "topics": [
+          "Guide Catheter Engagement, Guidewire Handling & Lesion Crossing",
+          "Predilatation Balloons, Drug-Eluting Stents (DES) & Post-dilatation Optimization",
+          "Bifurcation Stenting Techniques & Calcified Lesion Preparation"
+        ]
+      },
+      {
+        "moduleNumber": 3,
+        "title": "Intracoronary Imaging & Physiological Guidance",
+        "topics": [
+          "Intravascular Ultrasound (IVUS) Image Acquisition & Stent Expansion Metrics",
+          "Optical Coherence Tomography (OCT) High-Definition Plaque Characterization",
+          "Fractional Flow Reserve (FFR) & Instantaneous Wave-Free Ratio (iFR)"
+        ]
+      },
+      {
+        "moduleNumber": 4,
+        "title": "Cath Lab Complications & Emergency Procedures",
+        "topics": [
+          "Managing Coronary Perforation, Dissection & No-Reflow Phenomenon",
+          "Emergency Temporary Pacemaker Implantation (TPI) via Femoral/Jugular Vein",
+          "Intra-Aortic Balloon Pump (IABP) Setup & Cardiogenic Shock Resuscitation"
+        ]
+      }
+    ],
+    "careerOpportunities": [
+      "Associate Interventional Cardiologist in Tertiary Centers",
+      "Cath Lab Clinical Supervisor & Medical Lead",
+      "Cardiology Senior Registrar in Multi-specialty Hospitals"
+    ],
+    "skillsCovered": [
+      "Diagnostic Coronary Angiogram Reporting & Interpretation",
+      "Transradial Puncture & Hemostasis Compression",
+      "Emergency Temporary Pacemaker Implantation (TPI)",
+      "Intracoronary Imaging (IVUS/OCT) Analysis"
+    ],
+    "clinicalHospitals": [
+      "Fortis Escorts Heart Institute",
+      "Medanta Heart Institute",
+      "Apollo Heart Centre",
+      "Max Super Speciality Hospital Cath Lab"
+    ],
+    "faqs": [
+      {
+        "question": "What hands-on exposure is provided in the Cath Lab?",
+        "answer": "Fellows participate in dedicated hospital attachments inside active tertiary cardiac catheterization labs observing and assisting senior interventional cardiologists."
+      },
+      {
+        "question": "Can post-MBBS doctors with cardiology experience enroll?",
+        "answer": "Yes, MBBS doctors with recognized post-graduate diplomas (such as PGDCC) or clinical cardiology experience can enroll."
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "slug": "fellowship-in-fetal-medicine",
+    "title": "Fellowship in Fetal Medicine",
+    "tagline": "Hands-on First Trimester NT/NB Screening, Target Anomaly Scan (TIFFA), Fetal Echo, Doppler & High-Risk Perinatology",
+    "categoryId": 4,
+    "categoryName": "Fetal Medicine & Ultrasound",
+    "courseType": "FELLOWSHIP",
+    "deliveryMode": "HYBRID_CLINICAL",
+    "duration": "12 Months",
+    "clinicalHours": 150,
+    "eligibility": "MBBS / MS / MD / DGO / DMRD (Obstetrics & Gynecology / Radiology)",
+    "feeINR": 185000,
+    "feeUSD": 2400,
+    "emiStartingINR": 7700,
+    "ratingVal": 5,
+    "ratingCount": 390,
+    "totalEnrolled": 1210,
+    "nextBatchDate": "2026-09-15",
+    "isFeatured": true,
+    "isPopular": true,
+    "isAdmissionOpen": true,
+    "heroImage": "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=800&auto=format&fit=crop&q=80",
+    "curriculum": [
+      {
+        "moduleNumber": 1,
+        "title": "11-14 Weeks Scan & Aneuploidy Risk Assessment",
+        "topics": [
+          "FMF Standardized Nuchal Translucency (NT) & Nasal Bone (NB) Measurement",
+          "Ductus Venosus Doppler Waveforms & Tricuspid Regurgitation",
+          "First Trimester Preeclampsia Screening & Uterine Artery Pulsatility Index"
+        ]
+      },
+      {
+        "moduleNumber": 2,
+        "title": "Target Anomaly Scan (TIFFA / Level-II Ultrasound)",
+        "topics": [
+          "Fetal Neurosonography: Ventriculomegaly, Corpus Callosum & Neural Tube Defects",
+          "Facial Profiles, Cleft Lip/Palate, Thoracic Masses & Congenital Diaphragmatic Hernia",
+          "Gastrointestinal & Genitourinary Tract Malformations (Hydronephrosis, Renal Agenesis)"
+        ]
+      },
+      {
+        "moduleNumber": 3,
+        "title": "Fetal Echocardiography & Obstetric Doppler",
+        "topics": [
+          "Standard Cardiac Views: 4-Chamber, LVOT, RVOT & 3-Vessel Trachea (3VT)",
+          "Umbilical Artery, Middle Cerebral Artery (MCA) & Ductus Venosus Doppler Velocimetry",
+          "Fetal Growth Restriction (FGR): Barcelona Protocol & Delivery Timing Decisions"
+        ]
+      },
+      {
+        "moduleNumber": 4,
+        "title": "Multiple Gestation & Invasive Prenatal Procedures",
+        "topics": [
+          "Chorionicity & Amnionicity Determination in Twin Pregnancies",
+          "Managing Twin-to-Twin Transfusion Syndrome (TTTS) & Selective FGR",
+          "Amniocentesis & Chorionic Villus Sampling (CVS) Hands-on Simulation"
+        ]
+      }
+    ],
+    "careerOpportunities": [
+      "Consultant Fetal Medicine Specialist in Tertiary Centers",
+      "Perinatal Sonologist in Diagnostic Imaging Centers",
+      "Director of High-Risk Obstetric Ultrasound Clinic"
+    ],
+    "skillsCovered": [
+      "FMF-Compliant 11-14 Week NT Scan Technique",
+      "Comprehensive Level-II TIFFA Scan Systematic Execution",
+      "Fetal Doppler Velocimetry (UA, MCA, DV) Interpretation",
+      "Fetal Echocardiography Outflow Tract Assessment"
+    ],
+    "clinicalHospitals": [
+      "Apollo Cradle & Children's Hospitals",
+      "Cloudnine Hospitals Fetal Care Network",
+      "Fortis La Femme Hospital",
+      "Max Smart Super Speciality Hospital"
+    ],
+    "faqs": [
+      {
+        "question": "Is this fellowship aligned with Fetal Medicine Foundation (FMF) standards?",
+        "answer": "Yes, the program strictly adheres to FMF guidelines and prepares clinicians for international audit certifications."
+      },
+      {
+        "question": "What is the clinical ultrasound scanning component?",
+        "answer": "Fellows perform real-time supervised scans on obstetric patients during hospital attachments under experienced perinatologists."
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "slug": "fellowship-in-reproductive-medicine",
+    "title": "Fellowship in Reproductive Medicine",
+    "tagline": "Advanced Infertility Assessment, Ovulation Induction Protocols, IUI Hands-on Lab, OPU/ET Procedures & Clinical Embryology",
+    "categoryId": 10,
+    "categoryName": "Reproductive Medicine & IVF",
+    "courseType": "FELLOWSHIP",
+    "deliveryMode": "HYBRID_CLINICAL",
+    "duration": "12 Months",
+    "clinicalHours": 140,
+    "eligibility": "MBBS / MS / MD / DGO / DNB (Obstetrics & Gynecology)",
+    "feeINR": 185000,
+    "feeUSD": 2400,
+    "emiStartingINR": 7700,
+    "ratingVal": 4.9,
+    "ratingCount": 310,
+    "totalEnrolled": 890,
+    "nextBatchDate": "2026-09-15",
+    "isFeatured": true,
+    "isPopular": true,
+    "isAdmissionOpen": true,
+    "heroImage": "https://images.unsplash.com/photo-1583912267670-6575ad36248b?w=800&auto=format&fit=crop&q=80",
+    "curriculum": [
+      {
+        "moduleNumber": 1,
+        "title": "Infertility Diagnostics & Ovarian Reserve Assessment",
+        "topics": [
+          "Ovarian Reserve Biomarkers (AMH, Antral Follicle Count, Basal FSH)",
+          "Sperm Assessment (WHO 6th Edition) & Sperm DNA Fragmentation Index",
+          "Hysterosalpingography (HSG), Saline Infusion Sonography & Diagnostic Hysteroscopy"
+        ]
+      },
+      {
+        "moduleNumber": 2,
+        "title": "Controlled Ovarian Stimulation & IUI Protocols",
+        "topics": [
+          "GnRH Antagonist vs Long Agonist Stimulation Protocols",
+          "Individualized Strategies for PCOS, Poor Responders & Endometriosis",
+          "Semen Preparation (Density Gradient vs Swim-up) & IUI Catheter Placement"
+        ]
+      },
+      {
+        "moduleNumber": 3,
+        "title": "Assisted Reproductive Technology (ART): OPU & ET",
+        "topics": [
+          "Ultrasound-Guided Transvaginal Ovum Pick-Up (OPU) Instrumentation",
+          "Embryo Transfer (ET) Catheters, Mock Transfer & Ultrasound Guidance",
+          "Luteal Phase Support Regimens & Prevention/Management of Severe OHSS"
+        ]
+      },
+      {
+        "moduleNumber": 4,
+        "title": "Clinical Embryology & ART Laboratory Protocols",
+        "topics": [
+          "IVF vs Intracytoplasmic Sperm Injection (ICSI) Indications & Principles",
+          "Embryo Cleavage Morphokinetics & Blastocyst Grading (Gardner Scale)",
+          "Oocyte & Embryo Vitrification Protocols & Indian ART Act Medicolegal Compliance"
+        ]
+      }
+    ],
+    "careerOpportunities": [
+      "Consultant Infertility & IVF Specialist",
+      "Clinical Director of Fertility & Assisted Conception Clinic",
+      "Reproductive Endocrinologist & ART Consultant"
+    ],
+    "skillsCovered": [
+      "Transvaginal Folliculometry & Endometrial Doppler",
+      "Semen Processing & Intrauterine Insemination (IUI)",
+      "Transvaginal Ovum Pick-Up (OPU) Assistance",
+      "Ultrasound-Guided Embryo Transfer (ET) Technique"
+    ],
+    "clinicalHospitals": [
+      "Indira IVF Centers Network",
+      "Nova IVF Fertility Hospitals",
+      "Apollo Fertility Units",
+      "Max Institute of Reproductive Medicine"
+    ],
+    "faqs": [
+      {
+        "question": "Does the program include hands-on IUI and OPU observer-ship?",
+        "answer": "Yes, candidates participate in clinical rotations covering folliculometry, IUI procedures, and active IVF operating theater observation."
+      },
+      {
+        "question": "Is training in Indian ART regulations included?",
+        "answer": "Yes, complete guidance on ART Regulation Act standards, consent documentation, and ethical compliance is provided."
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "slug": "fellowship-in-robotic-laparoscopic-surgery",
+    "title": "Fellowship in Robotic & Laparoscopic Surgery",
+    "tagline": "Da Vinci Robotic Console Simulation, Laparoscopic Knot Tying, Cholecystectomy, Hernia Repair & Live OT Assisting",
+    "categoryId": 8,
+    "categoryName": "Minimal Access Surgery",
+    "courseType": "FELLOWSHIP",
+    "deliveryMode": "HYBRID_CLINICAL",
+    "duration": "12 Months",
+    "clinicalHours": 160,
+    "eligibility": "MBBS / MS (Surgery) / DNB (Surgery) / DGO / MD (Obstetrics & Gynecology)",
+    "feeINR": 185000,
+    "feeUSD": 2400,
+    "emiStartingINR": 7700,
+    "ratingVal": 4.9,
+    "ratingCount": 295,
+    "totalEnrolled": 950,
+    "nextBatchDate": "2026-09-15",
+    "isFeatured": true,
+    "isPopular": true,
+    "isAdmissionOpen": true,
+    "heroImage": "https://images.unsplash.com/photo-1551076805-e1869033e561?w=800&auto=format&fit=crop&q=80",
+    "curriculum": [
+      {
+        "moduleNumber": 1,
+        "title": "Minimal Access Fundamentals & Endotrainer Ergonomics",
+        "topics": [
+          "Veress Needle Insertion, Open Hasson Technique & Port Placement Ergonomics",
+          "Advanced Energy Sources: Monopolar, Bipolar, Ultrasonic & Bipolar Vessel Sealers",
+          "Intracorporeal Suturing, Needle Angulation & Dundee/Square Knot Tying on Pelvitrainer"
+        ]
+      },
+      {
+        "moduleNumber": 2,
+        "title": "Core General Laparoscopic Procedures",
+        "topics": [
+          "Laparoscopic Cholecystectomy: Critical View of Safety (Strasberg) & Calot's Triangle Dissection",
+          "Laparoscopic Appendectomy: Mesoappendix Control & Base Ligation Techniques",
+          "Inguinal Hernia Repair: TAPP (Transabdominal Preperitoneal) & TEP Principles"
+        ]
+      },
+      {
+        "moduleNumber": 3,
+        "title": "Advanced Laparoscopic Gynecological & Colorectal Procedures",
+        "topics": [
+          "Total Laparoscopic Hysterectomy (TLH) & Uterine Artery Ligation at Origin",
+          "Laparoscopic Myomectomy & Safe Cold/Containment Morcellation Protocols",
+          "Management of Laparoscopic Complications: Inferior Epigastric & Bowel Thermal Injuries"
+        ]
+      },
+      {
+        "moduleNumber": 4,
+        "title": "Robotic Surgery Simulation & Console Training",
+        "topics": [
+          "Da Vinci Surgical Platform Components: Surgeon Console, Patient Cart & Vision Cart",
+          "Patient Positioning, Trocar Placement & Precise Robotic Arm Docking",
+          "EndoWrist Simulation: 7 Degrees of Freedom Motion & Robotic Fine Tissue Dissection"
+        ]
+      }
+    ],
+    "careerOpportunities": [
+      "Consultant Laparoscopic & Robotic Minimal Access Surgeon",
+      "Surgical Department Head in Advanced Laparoscopy Centers",
+      "Robotic Surgery Senior Clinical Fellow"
+    ],
+    "skillsCovered": [
+      "Pelvitrainer Intracorporeal Knot Tying & Stitching",
+      "Critical View of Safety in Lap Cholecystectomy",
+      "Robotic Surgical System Docking & Console Simulation",
+      "Advanced Energy Source Dissection & Hemostasis"
+    ],
+    "clinicalHospitals": [
+      "Max Institute of Minimal Access & Robotic Surgery",
+      "Medanta Institute of Robotic Surgery",
+      "Fortis Memorial Research Institute Surgery OT",
+      "Manipal Hospitals Department of Surgery"
+    ],
+    "faqs": [
+      {
+        "question": "What robotic training platform is used in this fellowship?",
+        "answer": "Training incorporates Da Vinci robotic surgical console virtual simulators, pelvitrainers, and live robotic operating theater rotations."
+      },
+      {
+        "question": "Is this suitable for both general surgeons and gynecologists?",
+        "answer": "Yes, modules are customized for both General Surgical (cholecystectomy, hernia) and Gynecological (TLH, myomectomy) minimal access procedures."
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "slug": "fellowship-in-pediatric-dermatology",
+    "title": "Fellowship in Pediatric Dermatology",
+    "tagline": "Diagnosis and Clinical Management of Neonatal Dermatoses, Atopic Eczema, Vascular Birthmarks, Genodermatoses & Pediatric Infections",
+    "categoryId": 7,
+    "categoryName": "Pediatrics & Neonatology",
+    "courseType": "FELLOWSHIP",
+    "deliveryMode": "HYBRID_CLINICAL",
+    "duration": "12 Months",
+    "clinicalHours": 120,
+    "eligibility": "MBBS / MD / DNB / DCH (Pediatrics / Dermatology) / DVD / DDVL",
+    "feeINR": 185000,
+    "feeUSD": 2400,
+    "emiStartingINR": 7700,
+    "ratingVal": 4.9,
+    "ratingCount": 210,
+    "totalEnrolled": 580,
+    "nextBatchDate": "2026-09-15",
+    "isFeatured": true,
+    "isPopular": true,
+    "isAdmissionOpen": true,
+    "heroImage": "https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?w=800&auto=format&fit=crop&q=80",
+    "curriculum": [
+      {
+        "moduleNumber": 1,
+        "title": "Neonatal Skin Disorders & Congenital Anomalies",
+        "topics": [
+          "Physiological Skin Changes vs Pathological Neonatal Rashes",
+          "Aplasia Cutis Congenita, Cranial Dysraphism & Midline Skin Markers",
+          "Neonatal Vesiculobullous & Infectious Emergencies (Staphylococcal Scalded Skin, HSV)"
+        ]
+      },
+      {
+        "moduleNumber": 2,
+        "title": "Pediatric Eczemas & Inflammatory Skin Conditions",
+        "topics": [
+          "Atopic Dermatitis Phenotypes, Severity Scoring (SCORAD) & Barrier Restoration",
+          "Pediatric Psoriasis, Pityriasis Lichenoides & Seborrheic Dermatitis Management",
+          "Targeted Systemic Therapies & Biologics in Severe Pediatric Eczema"
+        ]
+      },
+      {
+        "moduleNumber": 3,
+        "title": "Vascular Birthmarks & Pigmentary Disorders",
+        "topics": [
+          "Infantile Hemangioma: High-Risk Locations, Ulceration & Oral Propranolol Protocols",
+          "Vascular Malformations: Capillary (Port-Wine Stain), Venous & Lymphatic Malformations",
+          "Pigmentary Mosaicism, Cafe-au-lait Macules & Neurocutaneous Syndromes (NF-1, Tuberous Sclerosis)"
+        ]
+      },
+      {
+        "moduleNumber": 4,
+        "title": "Genodermatoses, Hair & Nail Disorders in Children",
+        "topics": [
+          "Epidermolysis Bullosa (EB) Subtypes, Wound Care & Multidisciplinary Management",
+          "Ichthyoses & Inherited Cornification Disorders",
+          "Pediatric Alopecia Areata, Tinea Capitis & Minor Pediatric Dermatosurgical Procedures"
+        ]
+      }
+    ],
+    "careerOpportunities": [
+      "Consultant Pediatric Dermatologist in Children's Hospitals",
+      "Pediatric Dermatology Specialist in Multi-specialty OPDs",
+      "Pediatric Skin Disease Clinical Researcher"
+    ],
+    "skillsCovered": [
+      "Oral Propranolol Initiation & Monitoring in Infantile Hemangioma",
+      "Pediatric Dermoscopy & Diagnostic Skin Scrapings",
+      "Gentle Pediatric Skin Biopsy & Excisions",
+      "Comprehensive Pediatric Atopic Eczema Action Plan Formulation"
+    ],
+    "clinicalHospitals": [
+      "Rainbow Children's Hospital",
+      "Apollo Children's Hospitals",
+      "Fortis Memorial Pediatric Dermatology OPD",
+      "Max Super Speciality Hospital Pediatric Care Wing"
+    ],
+    "faqs": [
+      {
+        "question": "Can pediatricians enroll in this course without dermatology residency?",
+        "answer": "Yes, pediatricians (MD, DNB, DCH) seeking advanced competence in clinical pediatric skin diseases are eligible and welcome."
+      },
+      {
+        "question": "Does the course cover pediatric laser therapies?",
+        "answer": "Yes, pulsed dye laser (PDL) indications for vascular birthmarks and fractional lasers for pediatric burn scars are covered."
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "slug": "fellowship-in-pediatric-critical-care",
+    "title": "Fellowship in Pediatric Critical Care",
+    "tagline": "PICU Mechanical Ventilation, Pediatric Septic Shock Protocols, Bedside POCUS, Arterial Lines, Neuro-Critical Care & ECMO Principles",
+    "categoryId": 2,
+    "categoryName": "Critical Care & ICU",
+    "courseType": "FELLOWSHIP",
+    "deliveryMode": "HYBRID_CLINICAL",
+    "duration": "12 Months",
+    "clinicalHours": 180,
+    "eligibility": "MBBS / MD / DNB / DCH (Pediatrics) / Anaesthesia / Emergency Medicine",
+    "feeINR": 185000,
+    "feeUSD": 2400,
+    "emiStartingINR": 7700,
+    "ratingVal": 4.9,
+    "ratingCount": 340,
+    "totalEnrolled": 810,
+    "nextBatchDate": "2026-09-15",
+    "isFeatured": true,
+    "isPopular": true,
+    "isAdmissionOpen": true,
+    "heroImage": "https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800&auto=format&fit=crop&q=80",
+    "curriculum": [
+      {
+        "moduleNumber": 1,
+        "title": "Pediatric Resuscitation & Emergency Airway Management",
+        "topics": [
+          "Pediatric Advanced Life Support (PALS) Protocols & Defibrillation Energy Dosing",
+          "Rapid Sequence Intubation (RSI) in Children, Cuffed Tube Sizing & Difficult Airway Cart",
+          "Invasive Vascular Lines: Ultrasound-Guided Pediatric CVC & Radial Arterial Lines"
+        ]
+      },
+      {
+        "moduleNumber": 2,
+        "title": "Pediatric Mechanical Ventilation & Acute Respiratory Failure",
+        "topics": [
+          "Conventional Modes: Pressure Control vs PRVC in Infants & Small Children",
+          "Pediatric ARDS (PARDS) Diagnostic Criteria & Lung Protective Ventilation Strategies",
+          "High-Frequency Oscillatory Ventilation (HFOV), Non-Invasive Ventilation & Inhaled Nitric Oxide (iNO)"
+        ]
+      },
+      {
+        "moduleNumber": 3,
+        "title": "Pediatric Hemodynamic Instability, Sepsis & Inotropic Support",
+        "topics": [
+          "Septic Shock Guidelines: Cold Shock vs Warm Shock Therapeutic Protocols",
+          "Pediatric Vasoactive Drug Selection: Epinephrine, Norepinephrine, Milrinone & Vasopressin",
+          "Bedside Pediatric Critical Care Ultrasound (POCUS / Focused Cardiac Echo)"
+        ]
+      },
+      {
+        "moduleNumber": 4,
+        "title": "Pediatric Neurocritical Care, CRRT & Extracorporeal Support (ECMO)",
+        "topics": [
+          "Refractory Status Epilepticus Protocol & Intracranial Pressure (ICP) Monitoring",
+          "Continuous Renal Replacement Therapy (CRRT) Modalities & Anticoagulation in PICU",
+          "Pediatric Extracorporeal Membrane Oxygenation (VA/VV ECMO) Indications & Circuit Care"
+        ]
+      }
+    ],
+    "careerOpportunities": [
+      "Consultant Pediatric Intensivist in Tertiary PICUs",
+      "Lead Intensivist in Children's Super Speciality Hospitals",
+      "Pediatric Critical Care Fellow / Specialist Registrar"
+    ],
+    "skillsCovered": [
+      "Pediatric Mechanical Ventilator Graphics Interpretation",
+      "Ultrasound-Guided Pediatric Central Venous & Arterial Cannulation",
+      "Point-of-Care Pediatric Ultrasound (POCUS)",
+      "Pediatric Septic Shock Hemodynamic Resuscitation"
+    ],
+    "clinicalHospitals": [
+      "Apollo Children's Hospital PICU",
+      "Rainbow Children's Hospital Intensive Care Center",
+      "Medanta Division of Pediatric Critical Care",
+      "Fortis Memorial Research Institute PICU"
+    ],
+    "faqs": [
+      {
+        "question": "Does this fellowship cover hands-on bedside PICU rotations?",
+        "answer": "Yes, candidates undergo dedicated clinical observer-ship in high-volume tertiary Pediatric ICUs with hands-on simulation training."
+      },
+      {
+        "question": "Is PALS training incorporated into the curriculum?",
+        "answer": "Yes, PALS guidelines, pediatric CPR, defibrillation protocols, and emergency pharmacological calculations are fully integrated."
+      }
+    ]
+  }
+,
+{
+    "id": 11,
     "slug": "fellowship-in-clinical-cardiology",
     "title": "Fellowship in Clinical Cardiology",
     "tagline": "Comprehensive 12-Month Clinical Training in Echo, ECG, Cath Lab Observation & ICCU Protocols",
@@ -210,7 +1106,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    "id": 2,
+    "id": 12,
     "slug": "fellowship-in-critical-care-medicine",
     "title": "Fellowship in Critical Care Medicine",
     "tagline": "Intensive 12-Month Hands-on ICU Fellowship: Mechanical Ventilation, Hemodynamics, Sepsis & Arterial Lines",
@@ -277,7 +1173,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    "id": 3,
+    "id": 13,
     "slug": "fellowship-in-laparoscopic-surgery",
     "title": "Fellowship in Laparoscopic Surgery",
     "tagline": "Master Basic & Advanced Minimal Access Surgery, Endotrainer Simulation & Hands-on Laparoscopy",
@@ -342,7 +1238,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    "id": 4,
+    "id": 14,
     "slug": "fellowship-in-clinical-dermatology",
     "title": "Fellowship in Clinical Dermatology",
     "tagline": "Comprehensive Training in Dermatopathology, Lasers, Chemical Peels, PRP & Dermatosurgery",
@@ -407,7 +1303,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    "id": 6,
+    "id": 16,
     "slug": "fellowship-in-fetal-medicine-ultrasound",
     "title": "Fellowship in Fetal Medicine & Ultrasound",
     "tagline": "Hands-on Perinatology Training: 11-13 Week NT Scan, Level-II Target Anomalies & Fetal Doppler",
@@ -464,7 +1360,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    "id": 7,
+    "id": 17,
     "slug": "fellowship-in-sports-injuries",
     "title": "Fellowship in Sports Injuries & Arthroscopy",
     "tagline": "Comprehensive Rehabilitation, Ligament Reconstruction & Arthroscopic Surgical Observer-ship",
@@ -529,7 +1425,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    "id": 8,
+    "id": 18,
     "slug": "fellowship-in-clinical-embryology",
     "title": "Fellowship in Clinical Embryology & ART",
     "tagline": "Hands-on IVF Lab Mastery: ICSI, Vitrification, Embryo Biopsy, PGT & Quality Control",
@@ -595,7 +1491,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    "id": 9,
+    "id": 19,
     "slug": "fellowship-in-anorectal-laser-proctology",
     "title": "Fellowship in Anorectal & Laser Proctology",
     "tagline": "Modern Laser Hemorrhoidoplasty (LHP), FiLaC for Fistula & Diode Laser Surgery",
@@ -659,7 +1555,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    "id": 10,
+    "id": 20,
     "slug": "fellowship-in-interventional-radiology",
     "title": "Fellowship in Interventional Radiology",
     "tagline": "Hands-on Catheter Angiography, Embolization, CT/USG Guided Biopsies & Drainage",
@@ -724,7 +1620,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    "id": 11,
+    "id": 21,
     "slug": "post-graduate-diploma-in-emergency-medicine",
     "title": "PG Diploma in Emergency Medicine",
     "tagline": "Master Acute Resuscitation, Polytrauma Protocols, Stroke Interventions & POCUS in the ER",
@@ -790,7 +1686,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    "id": 12,
+    "id": 22,
     "slug": "pg-diploma-in-critical-care",
     "title": "PG Diploma in Critical Care",
     "tagline": "Comprehensive Clinical ICU Training: Ventilation, Inotropes, ABG Interpretation & Sepsis Bundles",
@@ -855,7 +1751,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    "id": 13,
+    "id": 23,
     "slug": "pg-diploma-in-dermatology",
     "title": "PG Diploma in Dermatology",
     "tagline": "Clinical Skin Diseases, Trichology, Chemical Peels, Electrocautery & Aesthetic Procedures",
@@ -920,7 +1816,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    "id": 14,
+    "id": 24,
     "slug": "pg-diploma-in-maternal-child-health",
     "title": "PG Diploma in Maternal & Child Health (MCH)",
     "tagline": "Antenatal High-Risk Obstetric Care, Normal Labour Protocols & Neonatal Resuscitation",
@@ -986,7 +1882,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    "id": 15,
+    "id": 25,
     "slug": "pg-diploma-in-clinical-embryology",
     "title": "PG Diploma in Clinical Embryology",
     "tagline": "Complete Theoretical & Practical Foundations in Assisted Reproductive Technology (ART)",
@@ -1050,7 +1946,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    "id": 16,
+    "id": 26,
     "slug": "certificate-course-in-2d-echocardiography",
     "title": "Certificate Course in 2D Echocardiography & Color Doppler",
     "tagline": "Hands-on Probe Handling, Standard Views, Valvular Assessment & EF Calculation",
@@ -1114,7 +2010,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    "id": 17,
+    "id": 27,
     "slug": "certificate-in-mechanical-ventilation-icu",
     "title": "Certificate in Mechanical Ventilation & ICU Resuscitation",
     "tagline": "Master Invasive & Non-Invasive Ventilation (NIV), Waveform Graphics & Trouble-shooting",
@@ -1179,7 +2075,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    "id": 18,
+    "id": 28,
     "slug": "certificate-in-aesthetic-medicine-lasers",
     "title": "Certificate in Aesthetic Medicine & Clinical Lasers",
     "tagline": "Hands-on Chemical Peeling, Micro-needling, Dermaroller, PRP & Laser Safety",
@@ -1244,7 +2140,7 @@ export const courses: Course[] = [
     ]
   },
   {
-    "id": 19,
+    "id": 29,
     "slug": "certificate-in-diabetes-mellitus-management",
     "title": "Certificate in Diabetes Mellitus Management",
     "tagline": "Master Modern Insulin Regimens, GLP-1 Analogues, SGLT-2 Inhibitors & CGM Technology",

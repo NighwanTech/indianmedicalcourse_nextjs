@@ -3,7 +3,7 @@ import { courses } from "@/lib/data";
 import { CourseDetailView } from "@/components/courses/CourseDetailView";
 import type { Metadata } from "next";
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export async function generateStaticParams() {
   return courses.map((c) => ({ slug: c.slug }));

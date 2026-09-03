@@ -46,7 +46,15 @@ function CourseSearchFilterContent({ limit = 6, isHomePage = false }: CourseSear
         try {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            setAllCoursesList(parsed);
+            const savedSlugs = new Set(parsed.map((c: any) => c.slug));
+            const missing = courses.filter((c) => !savedSlugs.has(c.slug));
+            if (missing.length > 0) {
+              const merged = [...missing, ...parsed];
+              localStorage.setItem("imc_courses_catalog", JSON.stringify(merged));
+              setAllCoursesList(merged);
+            } else {
+              setAllCoursesList(parsed);
+            }
           }
         } catch (e) {
           console.error(e);

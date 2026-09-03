@@ -37,8 +37,8 @@ export default function HomePage() {
       {/* Live Doctor Enrollment & Outcome Statistics Bar */}
       <StatsTicker />
 
-      {/* Course Catalog Filter (Top 6 High-Yield Programs) */}
-      <CourseSearchFilter limit={6} isHomePage={true} />
+      {/* Course Catalog Filter (Top 10 High-Yield Programs) */}
+      <CourseSearchFilter limit={10} isHomePage={true} />
 
       {/* ========================================================================= */}
       {/* SCROLL 3: 4-STAGE DOCTOR ROADMAP, FACULTY MENTORS & ALUMNI SUCCESS        */}

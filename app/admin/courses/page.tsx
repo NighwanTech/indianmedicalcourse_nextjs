@@ -84,23 +84,37 @@ export default function AdminCoursesPage() {
     return categories;
   });
 
-  // Load initial courses or persisted courses
+  // Load initial courses or persisted courses with auto-sync for newly added programs
   const [coursesList, setCoursesList] = useState<AdminCourseItem[]>(() => {
+    const formattedDefaults = initialCourses.map((c, idx) => ({
+      ...c,
+      isPublished: c.isPublished !== undefined ? c.isPublished : true,
+      priority: ((c.priority || (idx < 10 ? 1 : idx < 18 ? 2 : 3))) as 1 | 2 | 3,
+    }));
+
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const parsed: AdminCourseItem[] = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            // Auto-merge: check if any programs in initialCourses are missing from saved storage
+            const savedSlugs = new Set(parsed.map((c) => c.slug));
+            const missing = formattedDefaults.filter((c) => !savedSlugs.has(c.slug));
+            if (missing.length > 0) {
+              // Prepend newly added fellowship programs on top and update localStorage
+              const merged = [...missing, ...parsed];
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+              return merged;
+            }
+            return parsed;
+          }
         } catch (e) {
           console.error("Failed to parse courses from storage", e);
         }
       }
     }
-    return initialCourses.map((c, idx) => ({
-      ...c,
-      isPublished: c.isPublished !== undefined ? c.isPublished : true,
-      priority: ((c.priority || (idx < 6 ? 1 : idx < 12 ? 2 : 3))) as 1 | 2 | 3,
-    }));
+    return formattedDefaults;
   });
 
   const [search, setSearch] = useState("");
@@ -132,11 +146,11 @@ export default function AdminCoursesPage() {
 
   // Reset to original data seed
   const handleResetToDefaults = () => {
-    if (confirm("Reset courses list back to the default 18 accredited programs?")) {
+    if (confirm(`Reset courses list back to the default catalog (${initialCourses.length} accredited programs)?`)) {
       const reset = initialCourses.map((c, idx) => ({
         ...c,
         isPublished: true,
-        priority: ((idx < 6 ? 1 : idx < 12 ? 2 : 3)) as 1 | 2 | 3,
+        priority: ((idx < 10 ? 1 : idx < 18 ? 2 : 3)) as 1 | 2 | 3,
       }));
       updateCoursesState(reset);
       setSelectedIds([]);
