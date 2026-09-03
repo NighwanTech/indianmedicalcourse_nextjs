@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { partnerRepository } from "@/features/partners/partnerRepository";
 import { hospitalPartners } from "@/lib/data";
 
-export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
