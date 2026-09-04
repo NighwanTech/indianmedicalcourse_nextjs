@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { courses as initialCourses, categories } from "@/lib/data";
 import { MediaLibraryPickerModal, MediaItem } from "@/components/admin/MediaLibraryPickerModal";
+import { compressImageFile, MEDICAL_COURSE_PRESETS, DEFAULT_MEDICAL_BANNER } from "@/lib/imageUtils";
 import { CourseType } from "@/types";
 import { 
   GraduationCap, 
@@ -30,7 +31,11 @@ import {
   BookOpen,
   Building2,
   Briefcase,
-  Sliders
+  Sliders,
+  Upload,
+  Link as LinkIcon,
+  RefreshCw,
+  AlertCircle
 } from "lucide-react";
 
 interface AdminCourseItem {
@@ -84,38 +89,46 @@ export default function AdminCoursesPage() {
     return categories;
   });
 
-  // Load initial courses or persisted courses with auto-sync for newly added programs
-  const [coursesList, setCoursesList] = useState<AdminCourseItem[]>(() => {
-    const formattedDefaults = initialCourses.map((c, idx) => ({
-      ...c,
-      isPublished: c.isPublished !== undefined ? c.isPublished : true,
-      priority: ((c.priority || (idx < 10 ? 1 : idx < 18 ? 2 : 3))) as 1 | 2 | 3,
-    }));
+  const [isHydrated, setIsHydrated] = useState(false);
 
+  const formattedDefaults = initialCourses.map((c, idx) => ({
+    ...c,
+    isPublished: c.isPublished !== undefined ? c.isPublished : true,
+    priority: ((c.priority || (idx < 10 ? 1 : idx < 18 ? 2 : 3))) as 1 | 2 | 3,
+  }));
+
+  // Load initial courses - always start with defaults (matching static HTML)
+  const [coursesList, setCoursesList] = useState<AdminCourseItem[]>(formattedDefaults);
+
+  // Client-side hydration sync to guarantee latest localStorage courses are loaded
+  useEffect(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         try {
           const parsed: AdminCourseItem[] = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            // Auto-merge: check if any programs in initialCourses are missing from saved storage
-            const savedSlugs = new Set(parsed.map((c) => c.slug));
-            const missing = formattedDefaults.filter((c) => !savedSlugs.has(c.slug));
-            if (missing.length > 0) {
-              // Prepend newly added fellowship programs on top and update localStorage
-              const merged = [...missing, ...parsed];
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-              return merged;
+            // Deduplicate by slug (keep LAST occurrence = most recently saved)
+            const deduped = new Map<string, AdminCourseItem>();
+            for (const c of parsed) {
+              deduped.set(c.slug?.toLowerCase(), c);
             }
-            return parsed;
+            // Append any missing defaults
+            for (const c of formattedDefaults) {
+              if (!deduped.has(c.slug?.toLowerCase())) {
+                deduped.set(c.slug?.toLowerCase(), c);
+              }
+            }
+            setCoursesList(Array.from(deduped.values()));
           }
         } catch (e) {
-          console.error("Failed to parse courses from storage", e);
+          console.error("Failed to sync courses from localStorage on mount:", e);
         }
       }
     }
-    return formattedDefaults;
-  });
+    // Set isHydrated AFTER state update is queued so React batches both
+    setIsHydrated(true);
+  }, []);
 
   const [search, setSearch] = useState("");
   const [selectedFormatFilter, setSelectedFormatFilter] = useState<string>("ALL");
@@ -135,12 +148,26 @@ export default function AdminCoursesPage() {
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
   const [pickerTargetField, setPickerTargetField] = useState<string>("");
   const [notificationMsg, setNotificationMsg] = useState<string | null>(null);
+  const [isCompressingImage, setIsCompressingImage] = useState(false);
+  const directImageInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Sync state changes to localStorage
+  // Sync state changes to localStorage with safe quota fallback
   const updateCoursesState = (newList: AdminCourseItem[]) => {
     setCoursesList(newList);
     if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newList));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newList));
+      } catch (err) {
+        console.warn("Storage quota limit reached when persisting courses:", err);
+        try {
+          // Free up secondary cache to protect course catalog persistence
+          localStorage.removeItem("imc_user_uploaded_media");
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(newList));
+        } catch (err2) {
+          console.error("Could not write courses to localStorage even after cleaning media cache:", err2);
+          showNotification("Changes updated in memory! (Browser storage is currently full)");
+        }
+      }
     }
   };
 
@@ -257,13 +284,37 @@ export default function AdminCoursesPage() {
   };
 
   const handleMediaSelected = (media: MediaItem) => {
-    if (!editingCourse) return;
-    if (pickerTargetField === "heroImage") {
-      setEditingCourse({ ...editingCourse, heroImage: media.url });
-    } else if (pickerTargetField === "brochure") {
-      setEditingCourse({ ...editingCourse, brochureName: media.fileName });
-    } else if (pickerTargetField === "video") {
-      setEditingCourse({ ...editingCourse, videoUrl: media.url });
+    setEditingCourse((prev) => {
+      if (!prev) return null;
+      if (pickerTargetField === "heroImage") {
+        return { ...prev, heroImage: media.url };
+      } else if (pickerTargetField === "brochure") {
+        return { ...prev, brochureName: media.fileName };
+      } else if (pickerTargetField === "video") {
+        return { ...prev, videoUrl: media.url };
+      }
+      return prev;
+    });
+  };
+
+  const handleDirectImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setIsCompressingImage(true);
+      const result = await compressImageFile(file, {
+        maxWidth: 1200,
+        maxHeight: 720,
+        quality: 0.8,
+      });
+      setEditingCourse((prev) => (prev ? { ...prev, heroImage: result.dataUrl } : null));
+      showNotification(`Image "${file.name}" compressed (${result.sizeFormatted}) & attached!`);
+    } catch (err) {
+      console.error("Failed to compress and upload image:", err);
+      alert("Failed to process image. Please try another file.");
+    } finally {
+      setIsCompressingImage(false);
+      if (e.target) e.target.value = "";
     }
   };
 
@@ -340,53 +391,60 @@ export default function AdminCoursesPage() {
   };
 
   const handleSaveCourse = () => {
-    if (!editingCourse || !editingCourse.title.trim()) {
-      alert("Please provide a Course Title.");
-      return;
+    try {
+      if (!editingCourse || !editingCourse.title?.trim()) {
+        alert("Please provide a Course Title.");
+        return;
+      }
+
+      const categoryObj = dynamicCategories.find((cat) => cat.name === editingCourse.categoryName);
+      const categoryId = categoryObj ? categoryObj.id : (editingCourse.categoryId || 1);
+      const rawSlug = (editingCourse.slug || editingCourse.title || "").trim();
+      const slug = rawSlug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+      const skills = skillsInput
+        ? skillsInput.split(",").map((s) => s.trim()).filter(Boolean)
+        : editingCourse.skillsCovered || ["Clinical Training", "Bedside Procedures"];
+
+      const careers = careersInput
+        ? careersInput.split(",").map((s) => s.trim()).filter(Boolean)
+        : editingCourse.careerOpportunities || ["Consultant Specialist"];
+
+      const hospitals = hospitalsInput
+        ? hospitalsInput.split(",").map((s) => s.trim()).filter(Boolean)
+        : editingCourse.clinicalHospitals || ["Apollo Hospitals", "Fortis Healthcare"];
+
+      const updated: AdminCourseItem = {
+        ...editingCourse,
+        categoryId,
+        slug,
+        skillsCovered: skills,
+        careerOpportunities: careers,
+        clinicalHospitals: hospitals,
+        isPublished: editingCourse.isPublished !== undefined ? editingCourse.isPublished : true,
+        priority: editingCourse.priority || 1,
+        ratingVal: editingCourse.ratingVal || 4.9,
+        totalEnrolled: editingCourse.totalEnrolled || 250,
+      };
+
+      const exists = coursesList.some(
+        (c) => String(c.id) === String(updated.id) || c.slug?.toLowerCase() === updated.slug?.toLowerCase()
+      );
+      const updatedList = exists
+        ? coursesList.map((c) =>
+            String(c.id) === String(updated.id) || c.slug?.toLowerCase() === updated.slug?.toLowerCase()
+              ? updated
+              : c
+          )
+        : [updated, ...coursesList];
+
+      updateCoursesState(updatedList);
+      showNotification("Course saved & published successfully!");
+      setEditingCourse(null);
+    } catch (err) {
+      console.error("Error saving course:", err);
+      alert("An unexpected error occurred while saving the course. Check console for details.");
     }
-
-    const categoryObj = dynamicCategories.find((cat) => cat.name === editingCourse.categoryName);
-    const categoryId = categoryObj ? categoryObj.id : (editingCourse.categoryId || 1);
-    const slug = editingCourse.slug.trim() 
-      ? editingCourse.slug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
-      : editingCourse.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-
-    const skills = skillsInput
-      ? skillsInput.split(",").map((s) => s.trim()).filter(Boolean)
-      : editingCourse.skillsCovered || ["Clinical Training", "Bedside Procedures"];
-
-    const careers = careersInput
-      ? careersInput.split(",").map((s) => s.trim()).filter(Boolean)
-      : editingCourse.careerOpportunities || ["Consultant Specialist"];
-
-    const hospitals = hospitalsInput
-      ? hospitalsInput.split(",").map((s) => s.trim()).filter(Boolean)
-      : editingCourse.clinicalHospitals || ["Apollo Hospitals", "Fortis Healthcare"];
-
-    const updated: AdminCourseItem = {
-      ...editingCourse,
-      categoryId,
-      slug,
-      skillsCovered: skills,
-      careerOpportunities: careers,
-      clinicalHospitals: hospitals,
-      isPublished: editingCourse.isPublished !== undefined ? editingCourse.isPublished : true,
-      priority: editingCourse.priority || 1,
-      ratingVal: editingCourse.ratingVal || 4.9,
-      totalEnrolled: editingCourse.totalEnrolled || 250,
-    };
-
-    let updatedList: AdminCourseItem[];
-    const exists = coursesList.some((c) => c.id === updated.id);
-    if (exists) {
-      updatedList = coursesList.map((c) => (c.id === updated.id ? updated : c));
-    } else {
-      updatedList = [updated, ...coursesList];
-    }
-
-    updateCoursesState(updatedList);
-    showNotification("Course saved & published successfully!");
-    setEditingCourse(null);
   };
 
   const handleDeleteCourse = (id: number) => {
@@ -419,6 +477,33 @@ export default function AdminCoursesPage() {
               <span>{notificationMsg}</span>
             </div>
           )}
+
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                  try {
+                    const parsed: AdminCourseItem[] = JSON.parse(saved);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                      setCoursesList(parsed);
+                      showNotification("Catalog refreshed from browser storage!");
+                      return;
+                    }
+                  } catch (e) {
+                    console.error(e);
+                  }
+                }
+                showNotification("Storage is already synchronized.");
+              }
+            }}
+            className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold py-2.5 px-3 rounded-xl border border-slate-200 shadow-2xs transition-all cursor-pointer"
+            title="Reload catalog state from browser storage"
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-blue-600" />
+            <span>Sync Storage</span>
+          </button>
 
           <button
             onClick={handleResetToDefaults}
@@ -652,24 +737,43 @@ export default function AdminCoursesPage() {
                       </button>
                     </td>
 
-                    {/* Title & Specialty */}
+                    {/* Title & Specialty with Image Thumbnail */}
                     <td className="py-3.5 px-4">
-                      <div className="font-extrabold text-slate-900 leading-snug">
-                        {course.title}
-                      </div>
-                      <div className="flex items-center gap-2 text-[10px] text-blue-700 font-semibold mt-0.5">
-                        <span>/{course.slug}</span>
-                        <span>•</span>
-                        <span className="text-slate-600 font-bold">{course.categoryName}</span>
-                        <a
-                          href={`/courses/${course.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-0.5 text-blue-600 hover:underline font-bold"
-                          title="View Live Course Page"
-                        >
-                          <ExternalLink className="w-2.5 h-2.5" />
-                        </a>
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-9 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0 shadow-2xs relative">
+                          {isHydrated ? (
+                            <img
+                              key={course.heroImage || String(course.id)}
+                              src={course.heroImage || DEFAULT_MEDICAL_BANNER}
+                              alt={course.title}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = DEFAULT_MEDICAL_BANNER;
+                              }}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="absolute inset-0 bg-slate-200 animate-pulse" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-extrabold text-slate-900 leading-snug">
+                            {course.title}
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] text-blue-700 font-semibold mt-0.5">
+                            <span>/{course.slug}</span>
+                            <span>•</span>
+                            <span className="text-slate-600 font-bold">{course.categoryName}</span>
+                            <a
+                              href={`/courses/${course.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-0.5 text-blue-600 hover:underline font-bold"
+                              title="View Live Course Page"
+                            >
+                              <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                          </div>
+                        </div>
                       </div>
                     </td>
 
@@ -1208,28 +1312,141 @@ export default function AdminCoursesPage() {
 
               {/* TAB 4: MEDIA ATTACHMENTS */}
               {modalTab === "MEDIA" && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   
-                  <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-slate-200 overflow-hidden shrink-0">
-                        <img src={editingCourse.heroImage} alt="Hero" className="w-full h-full object-cover" />
-                      </div>
+                  {/* Hidden Direct File Input */}
+                  <input
+                    type="file"
+                    ref={directImageInputRef}
+                    accept="image/png, image/jpeg, image/webp, image/svg+xml"
+                    onChange={handleDirectImageUpload}
+                    className="hidden"
+                  />
+
+                  {/* Course Hero Banner Image Panel */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-4">
+                    <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-xs font-bold text-slate-800">Course Hero Banner Image</div>
-                        <div className="text-[10px] text-slate-400">Used in course cards and hero banners</div>
+                        <div className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                          <ImageIcon className="w-4 h-4 text-[#0B4F9C]" />
+                          <span>Course Hero Banner Image</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Featured in course cards on the catalog, search filters, and page banners.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => directImageInputRef.current?.click()}
+                          disabled={isCompressingImage}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-800 bg-white hover:bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs cursor-pointer transition-all disabled:opacity-50"
+                        >
+                          {isCompressingImage ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                          ) : (
+                            <Upload className="w-3.5 h-3.5 text-blue-600" />
+                          )}
+                          <span>{isCompressingImage ? "Compressing..." : "Upload from Device"}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openPicker("heroImage")}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0B4F9C] hover:bg-blue-100/60 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-200 cursor-pointer transition-all"
+                        >
+                          <Layers className="w-3.5 h-3.5" />
+                          <span>Media Library</span>
+                        </button>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => openPicker("heroImage")}
-                      className="text-xs font-bold text-[#0B4F9C] hover:bg-blue-100/60 px-3 py-1.5 rounded-lg border border-blue-200 cursor-pointer"
-                    >
-                      Change Image
-                    </button>
+
+                    {/* Banner Live Preview Box */}
+                    <div className="relative rounded-2xl border border-slate-200 overflow-hidden bg-slate-950 aspect-[16/7] max-h-52 w-full group flex items-center justify-center">
+                      <img
+                        src={editingCourse.heroImage || DEFAULT_MEDICAL_BANNER}
+                        alt="Course Hero Preview"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = DEFAULT_MEDICAL_BANNER;
+                        }}
+                        className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500 opacity-90"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/20 pointer-events-none" />
+                      
+                      <div className="absolute top-3 left-3 flex items-center gap-2">
+                        <span className="bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/20">
+                          {editingCourse.heroImage?.startsWith("data:") ? "Uploaded Image (Optimized)" : "Online Image URL"}
+                        </span>
+                      </div>
+
+                      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white">
+                        <div className="truncate text-xs font-black drop-shadow-md">
+                          {editingCourse.title || "Course Title Preview"}
+                        </div>
+                        <span className="text-[10px] bg-emerald-500/80 text-white px-2 py-0.5 rounded-full font-black">
+                          {editingCourse.courseType || "FELLOWSHIP"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Direct Image URL Input */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                        Direct Image URL (or paste external image link):
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <LinkIcon className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                          <input
+                            type="url"
+                            placeholder="https://images.unsplash.com/... or https://..."
+                            value={editingCourse.heroImage || ""}
+                            onChange={(e) => setEditingCourse({ ...editingCourse, heroImage: e.target.value })}
+                            className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:border-[#0B4F9C]"
+                          />
+                        </div>
+                        {editingCourse.heroImage && (
+                          <button
+                            type="button"
+                            onClick={() => setEditingCourse({ ...editingCourse, heroImage: DEFAULT_MEDICAL_BANNER })}
+                            className="text-xs font-bold text-slate-500 hover:text-slate-800 bg-white border border-slate-200 px-3 py-2 rounded-xl"
+                            title="Reset to default medical banner"
+                          >
+                            Reset
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 1-Click Medical Banner Presets */}
+                    <div>
+                      <div className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider mb-2">
+                        Quick Medical Presets (1-Click Apply):
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {MEDICAL_COURSE_PRESETS.map((preset, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => {
+                              setEditingCourse({ ...editingCourse, heroImage: preset.url });
+                              showNotification(`Applied ${preset.title} banner!`);
+                            }}
+                            className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                              editingCourse.heroImage === preset.url
+                                ? "bg-[#0B4F9C] text-white border-[#0B4F9C] shadow-xs"
+                                : "bg-white text-slate-700 border-slate-200 hover:border-slate-400 hover:bg-slate-100"
+                            }`}
+                          >
+                            {preset.title}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
                   </div>
 
-                  <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                  {/* Brochure PDF Download */}
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
                         <FileText className="w-6 h-6" />
@@ -1248,20 +1465,27 @@ export default function AdminCoursesPage() {
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                  {/* Video Attachment */}
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                         <Video className="w-6 h-6" />
                       </div>
-                      <div>
+                      <div className="flex-1 max-w-sm">
                         <div className="text-xs font-bold text-slate-800">Introduction Video / YouTube Embed</div>
-                        <div className="text-[10px] text-slate-400">{editingCourse.videoUrl || "Paste video URL or select MP4"}</div>
+                        <input
+                          type="text"
+                          placeholder="Paste YouTube or MP4 video URL"
+                          value={editingCourse.videoUrl || ""}
+                          onChange={(e) => setEditingCourse({ ...editingCourse, videoUrl: e.target.value })}
+                          className="w-full mt-1 text-xs px-2 py-1 bg-white border border-slate-200 rounded-lg focus:outline-hidden"
+                        />
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => openPicker("video")}
-                      className="text-xs font-bold text-[#0B4F9C] hover:bg-blue-100/60 px-3 py-1.5 rounded-lg border border-blue-200 cursor-pointer"
+                      className="text-xs font-bold text-[#0B4F9C] hover:bg-blue-100/60 px-3 py-1.5 rounded-lg border border-blue-200 cursor-pointer ml-3"
                     >
                       Attach Video
                     </button>
@@ -1349,7 +1573,20 @@ export default function AdminCoursesPage() {
         isOpen={isMediaPickerOpen}
         onClose={() => setIsMediaPickerOpen(false)}
         onSelect={handleMediaSelected}
-        title={`Select Media for ${pickerTargetField}`}
+        allowedTypes={
+          pickerTargetField === "heroImage"
+            ? ["IMAGE"]
+            : pickerTargetField === "video"
+            ? ["VIDEO"]
+            : ["PDF", "DOCUMENT"]
+        }
+        title={
+          pickerTargetField === "heroImage"
+            ? "Select Course Hero Banner Image"
+            : pickerTargetField === "brochure"
+            ? "Select Brochure PDF Document"
+            : "Select Course Introduction Video"
+        }
       />
 
     </div>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { categories, courses } from "@/lib/data";
 import { formatINR } from "@/lib/utils";
+import { DEFAULT_MEDICAL_BANNER } from "@/lib/imageUtils";
 import { 
   Search, 
   Star, 
@@ -29,14 +30,15 @@ interface CourseSearchFilterProps {
 
 function CourseSearchFilterContent({ limit = 6, isHomePage = false }: CourseSearchFilterProps) {
   const searchParams = useSearchParams();
-  const typeParam = searchParams.get("type");
   const categoryParam = searchParams.get("category");
+  const typeParam = searchParams.get("type");
   const searchParam = searchParams.get("search");
 
   const [activeTab, setActiveTab] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [isHydrated, setIsHydrated] = useState<boolean>(false);
   const [allCoursesList, setAllCoursesList] = useState<Course[]>(courses);
 
   useEffect(() => {
@@ -46,21 +48,27 @@ function CourseSearchFilterContent({ limit = 6, isHomePage = false }: CourseSear
         try {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            const savedSlugs = new Set(parsed.map((c: any) => c.slug));
-            const missing = courses.filter((c) => !savedSlugs.has(c.slug));
-            if (missing.length > 0) {
-              const merged = [...missing, ...parsed];
-              localStorage.setItem("imc_courses_catalog", JSON.stringify(merged));
-              setAllCoursesList(merged);
-            } else {
-              setAllCoursesList(parsed);
+            // Deduplicate by slug (keep LAST occurrence = most recently saved)
+            const deduped = new Map<string, Course>();
+            for (const c of parsed) {
+              deduped.set(c.slug?.toLowerCase(), c);
             }
+            // Append any missing defaults
+            for (const c of courses) {
+              if (!deduped.has(c.slug?.toLowerCase())) {
+                deduped.set(c.slug?.toLowerCase(), c);
+              }
+            }
+            const finalList = Array.from(deduped.values());
+            setAllCoursesList(finalList);
           }
         } catch (e) {
           console.error(e);
         }
       }
     }
+    // Set isHydrated AFTER state is queued, so React batches both updates together
+    setIsHydrated(true);
   }, []);
 
   useEffect(() => {
@@ -225,11 +233,21 @@ function CourseSearchFilterContent({ limit = 6, isHomePage = false }: CourseSear
               <div>
                 {/* Course Image & Badge */}
                 <div className="relative h-48 bg-slate-100 overflow-hidden">
-                  <img
-                    src={course.heroImage}
-                    alt={course.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                  {isHydrated ? (
+                    <img
+                      key={course.heroImage || String(course.id)}
+                      src={course.heroImage || DEFAULT_MEDICAL_BANNER}
+                      alt={course.title}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = DEFAULT_MEDICAL_BANNER;
+                      }}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-slate-200 animate-pulse flex items-center justify-center">
+                      <GraduationCap className="w-8 h-8 text-slate-400" />
+                    </div>
+                  )}
                   <div className="absolute top-3 left-3 flex items-center gap-1.5">
                     <span className={`text-[10px] font-black px-2.5 py-1 rounded-full text-white shadow ${
                       course.courseType === "FELLOWSHIP" ? "bg-[#0B4F9C]" :

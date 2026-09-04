@@ -17,6 +17,8 @@ import {
   AlertCircle
 } from "lucide-react";
 
+import { compressImageFile } from "@/lib/imageUtils";
+
 export interface MediaItem {
   id: number;
   fileName: string;
@@ -125,18 +127,47 @@ export function MediaLibraryPickerModal({
   useEffect(() => {
     if (typeof window !== "undefined") {
       try {
-        const stored = localStorage.getItem("imc_user_uploaded_media");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setLibrary([...parsed, ...DEFAULT_LIBRARY]);
+        const storedUser = localStorage.getItem("imc_user_uploaded_media");
+        const storedAdminMedia = localStorage.getItem("imc_media_library");
+        
+        const customItems: MediaItem[] = [];
+        
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          if (Array.isArray(parsed)) customItems.push(...parsed);
+        }
+        
+        if (storedAdminMedia) {
+          const parsedAdmin = JSON.parse(storedAdminMedia);
+          if (Array.isArray(parsedAdmin)) {
+            const mapped = parsedAdmin.map((m: { id?: number; fileName?: string; originalName?: string; fileType?: "IMAGE" | "VIDEO" | "PDF" | "DOCUMENT" | "ICON"; url: string; mimeType?: string; fileSize?: string }) => ({
+              id: m.id || Date.now() + Math.random(),
+              fileName: m.fileName || m.originalName || "Uploaded Media",
+              fileType: m.fileType || "IMAGE",
+              url: m.url,
+              mimeType: m.mimeType || "image/webp",
+              fileSize: m.fileSize || "200 KB",
+            }));
+            customItems.push(...mapped);
           }
         }
+        
+        // Deduplicate by URL or ID
+        const seenUrls = new Set<string>();
+        const uniqueCustom: MediaItem[] = [];
+        for (const item of customItems) {
+          if (item.url && !seenUrls.has(item.url)) {
+            seenUrls.add(item.url);
+            uniqueCustom.push(item);
+          }
+        }
+        
+        setLibrary([...uniqueCustom, ...DEFAULT_LIBRARY]);
       } catch (e) {
-        // ignore
+        console.error("Failed to load media library storage:", e);
       }
     }
-  }, []);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -159,30 +190,54 @@ export function MediaLibraryPickerModal({
     processFile(file);
   };
 
-  const processFile = (file: File) => {
+  const processFile = async (file: File) => {
     setUploadError(null);
+    setIsUploading(true);
 
-    // Max 10MB
-    if (file.size > 10 * 1024 * 1024) {
-      setUploadError("File size exceeds 10MB limit. Please choose a smaller file.");
+    // Max 15MB
+    if (file.size > 15 * 1024 * 1024) {
+      setUploadError("File size exceeds 15MB limit. Please choose a smaller file.");
+      setIsUploading(false);
       return;
     }
 
-    const sizeFormatted = file.size > 1024 * 1024 
-      ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` 
-      : `${Math.round(file.size / 1024)} KB`;
+    try {
+      if (file.type.startsWith("image/")) {
+        // Automatically compress images to lightweight WebP/JPEG (~40KB-70KB)
+        const compressed = await compressImageFile(file, {
+          maxWidth: 1200,
+          maxHeight: 720,
+          quality: 0.8,
+        });
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
         setUploadPreview({
           file,
-          previewUrl: reader.result,
-          sizeFormatted,
+          previewUrl: compressed.dataUrl,
+          sizeFormatted: compressed.sizeFormatted,
         });
+      } else {
+        // PDF or Video
+        const sizeKB = Math.round(file.size / 1024);
+        const sizeFormatted = sizeKB > 1024 ? `${(sizeKB / 1024).toFixed(1)} MB` : `${sizeKB} KB`;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === "string") {
+            setUploadPreview({
+              file,
+              previewUrl: reader.result,
+              sizeFormatted,
+            });
+          }
+        };
+        reader.readAsDataURL(file);
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.error("Error processing file:", err);
+      setUploadError("Failed to process image. Please try another file.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleConfirmUpload = () => {
@@ -199,16 +254,18 @@ export function MediaLibraryPickerModal({
       fileName: uploadPreview.file.name,
       fileType,
       url: uploadPreview.previewUrl,
-      mimeType: uploadPreview.file.type || "image/png",
+      mimeType: uploadPreview.file.type || "image/webp",
       fileSize: uploadPreview.sizeFormatted,
     };
 
-    // Save to local storage for persistence across all admin modules
+    // Save to local storage safely
     try {
       const existing = JSON.parse(localStorage.getItem("imc_user_uploaded_media") || "[]");
-      localStorage.setItem("imc_user_uploaded_media", JSON.stringify([newItem, ...existing]));
+      // Keep most recent 30 items to protect storage quota
+      const updated = [newItem, ...existing].slice(0, 30);
+      localStorage.setItem("imc_user_uploaded_media", JSON.stringify(updated));
     } catch (e) {
-      console.warn("Storage full:", e);
+      console.warn("Storage quota warning:", e);
     }
 
     setLibrary((prev) => [newItem, ...prev]);
@@ -496,6 +553,12 @@ export function MediaLibraryPickerModal({
                     placeholder="https://example.com/logo-or-photo.png"
                     value={customUrl}
                     onChange={(e) => setCustomUrl(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && customUrl.trim()) {
+                        e.preventDefault();
+                        handleConfirmSelect();
+                      }
+                    }}
                     className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:border-[#0B4F9C]"
                   />
                 </div>
@@ -512,7 +575,7 @@ export function MediaLibraryPickerModal({
                       alt="URL Preview"
                       className="max-h-full max-w-full object-contain"
                       onError={(e) => {
-                        (e.target as any).style.display = "none";
+                        (e.target as HTMLImageElement).style.display = "none";
                       }}
                     />
                   </div>

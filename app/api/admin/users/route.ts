@@ -4,6 +4,8 @@ import { verifyToken, hashPassword } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { Role } from "@prisma/client";
 
+export const dynamic = "force-static";
+
 const defaultAdminUsers = [
   {
     id: 1,

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { courses as defaultCourses } from "@/lib/data";
 import { formatINR } from "@/lib/utils";
+import { DEFAULT_MEDICAL_BANNER } from "@/lib/imageUtils";
 import { UniversalAdmissionForm } from "@/components/forms/UniversalAdmissionForm";
 import { HospitalPartnersMarquee } from "@/components/sections/HospitalPartnersMarquee";
 import { FinalCtaBanner } from "@/components/sections/FinalCtaBanner";
@@ -29,6 +30,7 @@ interface CourseDetailViewProps {
 }
 
 export function CourseDetailView({ initialCourse, slug }: CourseDetailViewProps) {
+  const [isHydrated, setIsHydrated] = useState(false);
   const [course, setCourse] = useState<Course | null>(initialCourse);
 
   useEffect(() => {
@@ -37,19 +39,19 @@ export function CourseDetailView({ initialCourse, slug }: CourseDetailViewProps)
       if (saved) {
         try {
           const parsed: Course[] = JSON.parse(saved);
-          const found = parsed.find((c) => c.slug === slug || c.slug === slug.toLowerCase());
+          const found = parsed.find(
+            (c) => c.slug?.toLowerCase() === slug.toLowerCase() || String(c.id) === slug
+          );
           if (found) {
             setCourse(found);
-            return;
           }
         } catch (e) {
           console.error(e);
         }
       }
     }
-    if (initialCourse) {
-      setCourse(initialCourse);
-    }
+    // Set isHydrated AFTER state update is queued so React batches both
+    setIsHydrated(true);
   }, [slug, initialCourse]);
 
   if (!course) {
@@ -144,58 +146,114 @@ export function CourseDetailView({ initialCourse, slug }: CourseDetailViewProps)
       />
       
       {/* Course Header Banner */}
-      <section className="bg-slate-950 text-white pt-10 pb-16 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/40 via-slate-950 to-emerald-950/30" />
+      <section className="bg-slate-950 text-white pt-8 pb-14 relative overflow-hidden">
+        {isHydrated && course.heroImage && (
+          <img
+            key={`bg-${course.heroImage}`}
+            src={course.heroImage}
+            alt={course.title}
+            className="absolute inset-0 w-full h-full object-cover opacity-15 filter blur-[2px] scale-105 pointer-events-none transition-opacity duration-300"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/95 to-blue-950/90" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
           <div className="text-xs text-slate-400 mb-4">
             <a href="/" className="hover:underline">Home</a> &gt; <a href="/courses" className="hover:underline">Courses</a> &gt; <span className="text-emerald-400 font-bold">{course.title}</span>
           </div>
 
-          <div className="max-w-3xl space-y-4">
-            <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-3 py-1 rounded-full text-xs font-bold">
-              <Sparkles className="w-3.5 h-3.5" />
-              Admissions Open for Next Batch • Starting {course.nextBatchDate || "1st of Next Month"}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            {/* Left Info Column */}
+            <div className="lg:col-span-7 space-y-4">
+              <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-3 py-1 rounded-full text-xs font-bold">
+                <Sparkles className="w-3.5 h-3.5" />
+                Admissions Open for Next Batch • Starting {course.nextBatchDate || "1st of Next Month"}
+              </div>
+
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight font-display">
+                {course.title}
+              </h1>
+
+              <p className="text-xs sm:text-base text-slate-300 leading-relaxed">
+                {course.tagline || "Comprehensive clinical training program designed for medical practitioners with hands-on hospital attachment."}
+              </p>
+
+              {/* Quick Metrics Bar */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                <div className="bg-slate-900/90 p-3 rounded-2xl border border-slate-800">
+                  <div className="text-[10px] text-slate-400">Duration</div>
+                  <div className="text-sm font-bold text-white flex items-center gap-1.5 mt-0.5">
+                    <Clock className="w-4 h-4 text-blue-400" />
+                    {course.duration}
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/90 p-3 rounded-2xl border border-slate-800">
+                  <div className="text-[10px] text-slate-400">Clinical Hours</div>
+                  <div className="text-sm font-bold text-white flex items-center gap-1.5 mt-0.5">
+                    <Award className="w-4 h-4 text-emerald-400" />
+                    {course.clinicalHours || 120}+ Hours
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/90 p-3 rounded-2xl border border-slate-800">
+                  <div className="text-[10px] text-slate-400">Course Format</div>
+                  <div className="text-sm font-bold text-white flex items-center gap-1.5 mt-0.5">
+                    <BookOpen className="w-4 h-4 text-purple-400" />
+                    {course.courseType ? course.courseType.replace("_", " ") : "FELLOWSHIP"}
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/90 p-3 rounded-2xl border border-slate-800">
+                  <div className="text-[10px] text-slate-400">Starting EMI</div>
+                  <div className="text-sm font-bold text-amber-300 flex items-center gap-1.5 mt-0.5">
+                    {formatINR(course.emiStartingINR || 7800)}/mo
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight font-display">
-              {course.title}
-            </h1>
+            {/* Right Column: Prominent Featured Course Image Showcase */}
+            <div className="lg:col-span-5">
+              <div className="relative rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl shadow-blue-950/80 bg-slate-900 group">
+                <div className="aspect-16/10 relative overflow-hidden bg-slate-800">
+                  {isHydrated ? (
+                    <img
+                      key={course.heroImage || String(course.id)}
+                      src={course.heroImage || DEFAULT_MEDICAL_BANNER}
+                      alt={course.title}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = DEFAULT_MEDICAL_BANNER;
+                      }}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-slate-800 animate-pulse flex items-center justify-center">
+                      <GraduationCap className="w-10 h-10 text-slate-600" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
 
-            <p className="text-xs sm:text-base text-slate-300 leading-relaxed">
-              {course.tagline || "Comprehensive clinical training program designed for medical practitioners with hands-on hospital attachment."}
-            </p>
+                  {/* Badges Over Image */}
+                  <div className="absolute top-3 left-3 flex items-center gap-2">
+                    <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-[#0B4F9C] text-white shadow-md uppercase tracking-wider">
+                      {course.courseType ? course.courseType.replace("_", " ") : "FELLOWSHIP"}
+                    </span>
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-900/80 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 backdrop-blur-xs">
+                      <Sparkles className="w-3 h-3 text-emerald-400" />
+                      Accredited
+                    </span>
+                  </div>
 
-            {/* Quick Metrics Bar */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
-              <div className="bg-slate-900/90 p-3 rounded-2xl border border-slate-800">
-                <div className="text-[10px] text-slate-400">Duration</div>
-                <div className="text-sm font-bold text-white flex items-center gap-1.5 mt-0.5">
-                  <Clock className="w-4 h-4 text-blue-400" />
-                  {course.duration}
-                </div>
-              </div>
-
-              <div className="bg-slate-900/90 p-3 rounded-2xl border border-slate-800">
-                <div className="text-[10px] text-slate-400">Clinical Hours</div>
-                <div className="text-sm font-bold text-white flex items-center gap-1.5 mt-0.5">
-                  <Award className="w-4 h-4 text-emerald-400" />
-                  {course.clinicalHours || 120}+ Hours
-                </div>
-              </div>
-
-              <div className="bg-slate-900/90 p-3 rounded-2xl border border-slate-800">
-                <div className="text-[10px] text-slate-400">Course Format</div>
-                <div className="text-sm font-bold text-white flex items-center gap-1.5 mt-0.5">
-                  <BookOpen className="w-4 h-4 text-purple-400" />
-                  {course.courseType ? course.courseType.replace("_", " ") : "FELLOWSHIP"}
-                </div>
-              </div>
-
-              <div className="bg-slate-900/90 p-3 rounded-2xl border border-slate-800">
-                <div className="text-[10px] text-slate-400">Starting EMI</div>
-                <div className="text-sm font-bold text-amber-300 flex items-center gap-1.5 mt-0.5">
-                  {formatINR(course.emiStartingINR || 7800)}/mo
+                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white">
+                    <span className="font-bold flex items-center gap-1">
+                      <Building2 className="w-3.5 h-3.5 text-blue-400" />
+                      {course.categoryName}
+                    </span>
+                    <span className="font-semibold text-slate-300 text-[11px] bg-black/50 px-2 py-0.5 rounded-md backdrop-blur-xs">
+                      {course.duration}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
