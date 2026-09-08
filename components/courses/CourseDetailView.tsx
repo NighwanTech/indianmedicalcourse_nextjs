@@ -34,38 +34,21 @@ export function CourseDetailView({ initialCourse, slug }: CourseDetailViewProps)
   const [course, setCourse] = useState<Course | null>(initialCourse);
 
   useEffect(() => {
-    const syncDetailCourse = () => {
-      if (typeof window !== "undefined") {
-        const saved = localStorage.getItem("imc_courses_catalog");
-        if (saved) {
-          try {
-            const parsed: Course[] = JSON.parse(saved);
-            const cleanSlug = slug.replace(/\/+$/, "").toLowerCase();
-            const found = parsed.find(
-              (c) =>
-                c.slug?.replace(/\/+$/, "").toLowerCase() === cleanSlug ||
-                String(c.id) === cleanSlug ||
-                String(c.id) === slug
-            );
-            if (found) {
-              setCourse(found);
-            }
-          } catch (e) {
-            console.error(e);
-          }
-        }
-      }
-      setIsHydrated(true);
-    };
-
-    syncDetailCourse();
-
-    window.addEventListener("storage", syncDetailCourse);
-    window.addEventListener("imc_courses_updated", syncDetailCourse);
-    return () => {
-      window.removeEventListener("storage", syncDetailCourse);
-      window.removeEventListener("imc_courses_updated", syncDetailCourse);
-    };
+    // Course data now comes from server/DB via props.
+    // If no initialCourse, try fetching from API as fallback.
+    if (!initialCourse) {
+      fetch(`/api/courses/by-slug/${slug}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.course) setCourse(data.course);
+        })
+        .catch(() => {
+          // Use fallback from defaultCourses
+          const fallback = defaultCourses.find((c) => c.slug === slug);
+          if (fallback) setCourse(fallback);
+        });
+    }
+    setIsHydrated(true);
   }, [slug, initialCourse]);
 
   if (!course) {

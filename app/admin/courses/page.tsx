@@ -71,25 +71,13 @@ interface AdminCourseItem {
   nextBatchDate?: string;
 }
 
-const STORAGE_KEY = "imc_courses_catalog";
+const API_BASE = "/api/courses";
 
 export default function AdminCoursesPage() {
-  const [dynamicCategories, setDynamicCategories] = useState<any[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("imc_categories_catalog");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    }
-    return categories;
-  });
+  const [dynamicCategories, setDynamicCategories] = useState<any[]>(categories);
 
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const formattedDefaults = initialCourses.map((c, idx) => ({
     ...c,
@@ -97,47 +85,38 @@ export default function AdminCoursesPage() {
     priority: ((c.priority || (idx < 10 ? 1 : idx < 18 ? 2 : 3))) as 1 | 2 | 3,
   }));
 
-  // Load initial courses - always start with defaults (matching static HTML)
   const [coursesList, setCoursesList] = useState<AdminCourseItem[]>(formattedDefaults);
 
-  // Client-side hydration sync to guarantee latest localStorage courses are loaded
-  useEffect(() => {
-    const syncAdminCourses = () => {
-      if (typeof window !== "undefined") {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          try {
-            const parsed: AdminCourseItem[] = JSON.parse(saved);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              // Deduplicate by slug (keep LAST occurrence = most recently saved)
-              const deduped = new Map<string, AdminCourseItem>();
-              for (const c of parsed) {
-                deduped.set(c.slug?.toLowerCase(), c);
-              }
-              // Append any missing defaults
-              for (const c of formattedDefaults) {
-                if (!deduped.has(c.slug?.toLowerCase())) {
-                  deduped.set(c.slug?.toLowerCase(), c);
-                }
-              }
-              setCoursesList(Array.from(deduped.values()));
-            }
-          } catch (e) {
-            console.error("Failed to sync courses from localStorage on mount:", e);
-          }
-        }
+  // Fetch courses from API on mount
+  const fetchCourses = async () => {
+    try {
+      const res = await fetch(API_BASE);
+      const data = await res.json();
+      if (data.courses && Array.isArray(data.courses) && data.courses.length > 0) {
+        const mapped = data.courses.map((c: any, idx: number) => ({
+          ...c,
+          heroImage: c.heroImage || "",
+          isPublished: c.isActive !== false,
+          priority: (c.priority || (idx < 10 ? 1 : idx < 18 ? 2 : 3)) as 1 | 2 | 3,
+          skillsCovered: Array.isArray(c.skillsCovered) ? c.skillsCovered : [],
+          careerOpportunities: Array.isArray(c.careerScope) ? c.careerScope : (Array.isArray(c.careerOpportunities) ? c.careerOpportunities : []),
+          clinicalHospitals: typeof c.clinicalHospitals === "string"
+            ? c.clinicalHospitals.split(", ").filter(Boolean)
+            : (Array.isArray(c.clinicalHospitals) ? c.clinicalHospitals : []),
+          curriculum: Array.isArray(c.curriculum) ? c.curriculum : [],
+          faqs: Array.isArray(c.faqs) ? c.faqs : [],
+        }));
+        setCoursesList(mapped);
       }
+    } catch (err) {
+      console.error("Failed to fetch courses from API:", err);
+    } finally {
       setIsHydrated(true);
-    };
+    }
+  };
 
-    syncAdminCourses();
-
-    window.addEventListener("storage", syncAdminCourses);
-    window.addEventListener("imc_courses_updated", syncAdminCourses);
-    return () => {
-      window.removeEventListener("storage", syncAdminCourses);
-      window.removeEventListener("imc_courses_updated", syncAdminCourses);
-    };
+  useEffect(() => {
+    fetchCourses();
   }, []);
 
   const [search, setSearch] = useState("");
@@ -161,39 +140,17 @@ export default function AdminCoursesPage() {
   const [isCompressingImage, setIsCompressingImage] = useState(false);
   const directImageInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Sync state changes to localStorage with safe quota fallback and event dispatch
+  // Update local state (API calls are made individually per action)
   const updateCoursesState = (newList: AdminCourseItem[]) => {
     setCoursesList(newList);
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newList));
-        window.dispatchEvent(new Event("imc_courses_updated"));
-      } catch (err) {
-        console.warn("Storage quota limit reached when persisting courses:", err);
-        try {
-          // Free up secondary cache to protect course catalog persistence
-          localStorage.removeItem("imc_user_uploaded_media");
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(newList));
-          window.dispatchEvent(new Event("imc_courses_updated"));
-        } catch (err2) {
-          console.error("Could not write courses to localStorage even after cleaning media cache:", err2);
-          showNotification("Changes updated in memory! (Browser storage is currently full)");
-        }
-      }
-    }
   };
 
-  // Reset to original data seed
-  const handleResetToDefaults = () => {
-    if (confirm(`Reset courses list back to the default catalog (${initialCourses.length} accredited programs)?`)) {
-      const reset = initialCourses.map((c, idx) => ({
-        ...c,
-        isPublished: true,
-        priority: ((idx < 10 ? 1 : idx < 18 ? 2 : 3)) as 1 | 2 | 3,
-      }));
-      updateCoursesState(reset);
+  // Reset: re-fetch from API
+  const handleResetToDefaults = async () => {
+    if (confirm("Refresh courses from database?")) {
+      await fetchCourses();
       setSelectedIds([]);
-      showNotification("Courses reset to default catalog.");
+      showNotification("Courses refreshed from database.");
     }
   };
 
@@ -314,16 +271,34 @@ export default function AdminCoursesPage() {
     if (!file) return;
     try {
       setIsCompressingImage(true);
+      // Compress first
       const result = await compressImageFile(file, {
         maxWidth: 800,
         maxHeight: 480,
         quality: 0.7,
         mimeType: "image/webp",
       });
-      setEditingCourse((prev) => (prev ? { ...prev, heroImage: result.dataUrl } : null));
-      showNotification(`Image "${file.name}" compressed (${result.sizeFormatted}) & attached!`);
+      // Upload to server via API
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dataUrl: result.dataUrl,
+          fileName: file.name.replace(/\.[^.]+$/, ".webp"),
+          folder: "courses",
+        }),
+      });
+      const uploadData = await uploadRes.json();
+      if (uploadData.success && uploadData.url) {
+        setEditingCourse((prev) => (prev ? { ...prev, heroImage: uploadData.url, heroImageMediaId: uploadData.mediaFileId } : null));
+        showNotification(`Image uploaded to server (${uploadData.size})!`);
+      } else {
+        // Fallback to data URL if upload fails
+        setEditingCourse((prev) => (prev ? { ...prev, heroImage: result.dataUrl } : null));
+        showNotification(`Image compressed (${result.sizeFormatted}) — saved locally`);
+      }
     } catch (err) {
-      console.error("Failed to compress and upload image:", err);
+      console.error("Failed to upload image:", err);
       alert("Failed to process image. Please try another file.");
     } finally {
       setIsCompressingImage(false);
@@ -403,15 +378,14 @@ export default function AdminCoursesPage() {
     });
   };
 
-  const handleSaveCourse = () => {
+  const handleSaveCourse = async () => {
     try {
       if (!editingCourse || !editingCourse.title?.trim()) {
         alert("Please provide a Course Title.");
         return;
       }
+      setIsSaving(true);
 
-      const categoryObj = dynamicCategories.find((cat) => cat.name === editingCourse.categoryName);
-      const categoryId = categoryObj ? categoryObj.id : (editingCourse.categoryId || 1);
       const rawSlug = (editingCourse.slug || editingCourse.title || "").trim();
       const slug = rawSlug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
@@ -427,45 +401,85 @@ export default function AdminCoursesPage() {
         ? hospitalsInput.split(",").map((s) => s.trim()).filter(Boolean)
         : editingCourse.clinicalHospitals || ["Apollo Hospitals", "Fortis Healthcare"];
 
-      const updated: AdminCourseItem = {
-        ...editingCourse,
-        categoryId,
+      const payload = {
+        title: editingCourse.title,
         slug,
+        tagline: editingCourse.tagline,
+        courseType: editingCourse.courseType || "FELLOWSHIP",
+        categoryName: editingCourse.categoryName,
+        duration: editingCourse.duration,
+        clinicalHours: editingCourse.clinicalHours || 0,
+        feeINR: editingCourse.feeINR || 0,
+        feeUSD: editingCourse.feeUSD || 0,
+        emiStartingINR: editingCourse.emiStartingINR || 0,
+        eligibility: editingCourse.eligibility,
+        heroImageMediaId: (editingCourse as any).heroImageMediaId || undefined,
+        curriculum: editingCourse.curriculum || [],
         skillsCovered: skills,
-        careerOpportunities: careers,
-        clinicalHospitals: hospitals,
-        isPublished: editingCourse.isPublished !== undefined ? editingCourse.isPublished : true,
-        priority: editingCourse.priority || 1,
-        ratingVal: editingCourse.ratingVal || 4.9,
+        careerScope: careers,
+        clinicalHospitals: hospitals.join(", "),
         totalEnrolled: editingCourse.totalEnrolled || 250,
+        isFeatured: editingCourse.priority === 1,
+        isPopular: editingCourse.priority === 1 || editingCourse.priority === 2,
+        isActive: editingCourse.isPublished !== false,
+        ratingVal: editingCourse.ratingVal || 4.9,
+        ratingCount: editingCourse.ratingCount || 120,
       };
 
-      const exists = coursesList.some(
-        (c) => String(c.id) === String(updated.id) || c.slug?.toLowerCase() === updated.slug?.toLowerCase()
-      );
-      const updatedList = exists
-        ? coursesList.map((c) =>
-            String(c.id) === String(updated.id) || c.slug?.toLowerCase() === updated.slug?.toLowerCase()
-              ? updated
-              : c
-          )
-        : [updated, ...coursesList];
+      // Determine if this is an existing DB course (has numeric ID) or new
+      const existsInDB = coursesList.some((c) => c.id === editingCourse.id && c.id < 1000000000);
 
-      updateCoursesState(updatedList);
-      showNotification("Course saved & published successfully!");
+      let res;
+      if (existsInDB) {
+        // UPDATE existing course
+        res = await fetch(`${API_BASE}/${editingCourse.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        // CREATE new course
+        res = await fetch(API_BASE, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+
+      const result = await res.json();
+      if (result.success || result.course) {
+        showNotification("Course saved to database successfully!");
+        await fetchCourses(); // Refresh from DB
+      } else {
+        showNotification(result.error || "Failed to save course to database");
+        // Fallback: update local state
+        const updated: AdminCourseItem = { ...editingCourse, slug, skillsCovered: skills, careerOpportunities: careers, clinicalHospitals: hospitals };
+        const updatedList = coursesList.some((c) => c.id === updated.id)
+          ? coursesList.map((c) => (c.id === updated.id ? updated : c))
+          : [updated, ...coursesList];
+        updateCoursesState(updatedList);
+      }
       setEditingCourse(null);
     } catch (err) {
       console.error("Error saving course:", err);
-      alert("An unexpected error occurred while saving the course. Check console for details.");
+      alert("An unexpected error occurred while saving the course.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleDeleteCourse = (id: number) => {
+  const handleDeleteCourse = async (id: number) => {
     if (confirm("Are you sure you want to delete this program?")) {
-      const updated = coursesList.filter((c) => c.id !== id);
-      updateCoursesState(updated);
-      setSelectedIds((prev) => prev.filter((item) => item !== id));
-      showNotification("Course deleted.");
+      try {
+        await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
+        const updated = coursesList.filter((c) => c.id !== id);
+        updateCoursesState(updated);
+        setSelectedIds((prev) => prev.filter((item) => item !== id));
+        showNotification("Course deleted from database.");
+      } catch (err) {
+        console.error("Failed to delete course:", err);
+        showNotification("Failed to delete course.");
+      }
     }
   };
 
@@ -493,29 +507,15 @@ export default function AdminCoursesPage() {
 
           <button
             type="button"
-            onClick={() => {
-              if (typeof window !== "undefined") {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                if (saved) {
-                  try {
-                    const parsed: AdminCourseItem[] = JSON.parse(saved);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                      setCoursesList(parsed);
-                      showNotification("Catalog refreshed from browser storage!");
-                      return;
-                    }
-                  } catch (e) {
-                    console.error(e);
-                  }
-                }
-                showNotification("Storage is already synchronized.");
-              }
+            onClick={async () => {
+              await fetchCourses();
+              showNotification("Catalog refreshed from database!");
             }}
             className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold py-2.5 px-3 rounded-xl border border-slate-200 shadow-2xs transition-all cursor-pointer"
-            title="Reload catalog state from browser storage"
+            title="Reload catalog state from database"
           >
             <RefreshCw className="w-3.5 h-3.5 text-blue-600" />
-            <span>Sync Storage</span>
+            <span>Refresh</span>
           </button>
 
           <button

@@ -42,56 +42,21 @@ function CourseSearchFilterContent({ limit = 6, isHomePage = false }: CourseSear
   const [allCoursesList, setAllCoursesList] = useState<Course[]>(courses);
 
   useEffect(() => {
-    const syncCourses = () => {
-      if (typeof window !== "undefined") {
-        const saved = localStorage.getItem("imc_courses_catalog");
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              // Build map of current fresh code defaults for reference images
-              const freshDefaultMap = new Map<string, Course>();
-              for (const c of courses) {
-                freshDefaultMap.set(c.slug?.toLowerCase(), c);
-              }
-
-              // Deduplicate by slug (keep custom fields & images, only fallback to default if missing)
-              const deduped = new Map<string, Course>();
-              for (const c of parsed) {
-                const fresh = freshDefaultMap.get(c.slug?.toLowerCase());
-                const hasCustomHero = Boolean(c.heroImage && typeof c.heroImage === "string" && c.heroImage.trim() !== "");
-                const finalHeroImage = hasCustomHero ? c.heroImage : (fresh?.heroImage || DEFAULT_MEDICAL_BANNER);
-
-                deduped.set(c.slug?.toLowerCase(), {
-                  ...c,
-                  heroImage: finalHeroImage,
-                });
-              }
-              // Append any missing defaults
-              for (const c of courses) {
-                if (!deduped.has(c.slug?.toLowerCase())) {
-                  deduped.set(c.slug?.toLowerCase(), c);
-                }
-              }
-              const finalList = Array.from(deduped.values());
-              setAllCoursesList(finalList);
-            }
-          } catch (e) {
-            console.error(e);
-          }
+    // Fetch courses from API (DB-backed)
+    fetch("/api/courses")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.courses && Array.isArray(data.courses) && data.courses.length > 0) {
+          setAllCoursesList(data.courses);
         }
-      }
-      setIsHydrated(true);
-    };
-
-    syncCourses();
-
-    window.addEventListener("storage", syncCourses);
-    window.addEventListener("imc_courses_updated", syncCourses);
-    return () => {
-      window.removeEventListener("storage", syncCourses);
-      window.removeEventListener("imc_courses_updated", syncCourses);
-    };
+      })
+      .catch((err) => {
+        console.error("Failed to fetch courses:", err);
+        // Keep default courses from lib/data.ts
+      })
+      .finally(() => {
+        setIsHydrated(true);
+      });
   }, []);
 
   useEffect(() => {

@@ -44,26 +44,16 @@ export function FloatingConversionLayer() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // Dynamically load real-time courses catalog from Admin CMS
+  // Dynamically load courses from API
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const loadCourses = () => {
-        const saved = localStorage.getItem("imc_courses_catalog");
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              setDynamicCourses(parsed);
-            }
-          } catch (e) {
-            console.error(e);
-          }
+    fetch("/api/courses")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.courses && Array.isArray(data.courses) && data.courses.length > 0) {
+          setDynamicCourses(data.courses);
         }
-      };
-      loadCourses();
-      window.addEventListener("storage", loadCourses);
-      return () => window.removeEventListener("storage", loadCourses);
-    }
+      })
+      .catch((err) => console.error("Failed to fetch courses:", err));
   }, []);
 
   // Exit-Intent Detector + 25-Second Timed Trigger

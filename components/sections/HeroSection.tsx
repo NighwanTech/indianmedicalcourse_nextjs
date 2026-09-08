@@ -72,33 +72,20 @@ export function HeroSection() {
           console.error(e);
         }
       }
-      const savedCourses = localStorage.getItem("imc_courses_catalog");
-      if (savedCourses) {
-        try {
-          const parsedCourses = JSON.parse(savedCourses);
-          if (Array.isArray(parsedCourses) && parsedCourses.length > 0) {
-            setCoursesCatalog(parsedCourses);
-          }
-        } catch (e) {
-          console.error(e);
-        }
-      }
     }
+    // Fetch courses from API for autocomplete
+    fetch("/api/courses")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.courses && Array.isArray(data.courses) && data.courses.length > 0) {
+          setCoursesCatalog(data.courses);
+        }
+      })
+      .catch((err) => console.error("Failed to fetch courses for hero:", err));
   };
 
   useEffect(() => {
     loadHeroFromStorage();
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === "imc_homepage_sections" || e.key === "imc_courses_catalog") {
-        loadHeroFromStorage();
-      }
-    };
-    window.addEventListener("storage", handleStorage);
-    window.addEventListener("imc_courses_updated", loadHeroFromStorage);
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener("imc_courses_updated", loadHeroFromStorage);
-    };
   }, []);
 
   const phoneHref = `tel:${siteSettings.hotlinePhone.replace(/[^0-9+]/g, "") || "+918295843006"}`;
