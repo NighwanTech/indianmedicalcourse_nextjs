@@ -408,6 +408,46 @@ export default function AdminLeadsPage() {
     setTimeout(() => setIsSuccessNotification(false), 2500);
   };
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Fetch live leads from MySQL DB
+  const fetchLeadsFromDB = async () => {
+    try {
+      setIsRefreshing(true);
+      const res = await fetch("/api/leads?limit=500");
+      const data = await res.json();
+      if (data.success && Array.isArray(data.leads)) {
+        if (data.leads.length > 0) {
+          const deduplicated = deduplicateLeadsList(data.leads);
+          setLeads(deduplicated);
+          if (typeof window !== "undefined") {
+            localStorage.setItem(LEADS_STORAGE_KEY, JSON.stringify(deduplicated));
+          }
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("DB lead fetch notice (using storage):", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+
+    // Fallback to localStorage if DB fetch failed or empty
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(LEADS_STORAGE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setLeads(deduplicateLeadsList(parsed));
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+  };
+
   const updateLeadsAndStorage = (updated: LeadItem[]) => {
     const deduplicated = deduplicateLeadsList(updated);
     setLeads(deduplicated);
@@ -418,32 +458,17 @@ export default function AdminLeadsPage() {
 
   useEffect(() => {
     setIsMounted(true);
-    const loadFromStorage = () => {
-      if (typeof window !== "undefined") {
-        const saved = localStorage.getItem(LEADS_STORAGE_KEY);
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed)) {
-              const cleaned = deduplicateLeadsList(parsed);
-              setLeads(cleaned);
-              // Clean duplicate entries in localStorage permanently
-              if (cleaned.length !== parsed.length) {
-                localStorage.setItem(LEADS_STORAGE_KEY, JSON.stringify(cleaned));
-              }
-            }
-          } catch (e) {
-            console.error(e);
-          }
-        }
-      }
+    fetchLeadsFromDB();
+
+    const handleStorageUpdate = () => {
+      fetchLeadsFromDB();
     };
-    loadFromStorage();
-    window.addEventListener("storage", loadFromStorage);
-    window.addEventListener("imc_lead_captured", loadFromStorage);
+
+    window.addEventListener("storage", handleStorageUpdate);
+    window.addEventListener("imc_lead_captured", handleStorageUpdate);
     return () => {
-      window.removeEventListener("storage", loadFromStorage);
-      window.removeEventListener("imc_lead_captured", loadFromStorage);
+      window.removeEventListener("storage", handleStorageUpdate);
+      window.removeEventListener("imc_lead_captured", handleStorageUpdate);
     };
   }, []);
 
@@ -666,23 +691,42 @@ export default function AdminLeadsPage() {
     }
   };
 
-  const handleUpdateStatus = (newStatus: string) => {
+  const handleUpdateStatus = async (newStatus: string) => {
     if (!selectedLead) return;
+    const leadId = selectedLead.id;
     const updated = leads.map((l) =>
-      l.id === selectedLead.id ? { ...l, leadStatus: newStatus } : l
+      l.id === leadId ? { ...l, leadStatus: newStatus } : l
     );
     updateLeadsAndStorage(updated);
     setSelectedLead({ ...selectedLead, leadStatus: newStatus });
     showNotification(`Status updated to ${newStatus.replace("_", " ")}`);
+
+    // Sync to DB
+    try {
+      await fetch(`/api/leads/${leadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leadStatus: newStatus }),
+      });
+    } catch (e) {
+      console.warn("Status update API sync notice:", e);
+    }
   };
 
-  const handleDeleteLead = (id: string, name: string) => {
+  const handleDeleteLead = async (id: string, name: string) => {
     if (confirm(`Are you sure you want to delete lead "${name}"?`)) {
       const updated = leads.filter((l) => l.id !== id);
       updateLeadsAndStorage(updated);
       setSelectedLeadIds((prev) => prev.filter((item) => item !== id));
       if (selectedLead?.id === id) setSelectedLead(null);
       showNotification(`Lead "${name}" deleted.`);
+
+      // Sync to DB
+      try {
+        await fetch(`/api/leads/${id}`, { method: "DELETE" });
+      } catch (e) {
+        console.warn("Delete API sync notice:", e);
+      }
     }
   };
 
@@ -784,6 +828,20 @@ export default function AdminLeadsPage() {
               <span>{notificationMsg}</span>
             </div>
           )}
+
+          <button
+            type="button"
+            onClick={async () => {
+              await fetchLeadsFromDB();
+              showNotification("Leads refreshed from database!");
+            }}
+            disabled={isRefreshing}
+            className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold py-2.5 px-3.5 rounded-xl border border-slate-200 shadow-2xs transition-all cursor-pointer"
+            title="Reload leads directly from MySQL database"
+          >
+            <RotateCcw className={`w-3.5 h-3.5 text-blue-600 ${isRefreshing ? "animate-spin" : ""}`} />
+            <span>{isRefreshing ? "Refreshing..." : "Refresh DB"}</span>
+          </button>
 
           <button
             onClick={() => handleExportCSV(false)}

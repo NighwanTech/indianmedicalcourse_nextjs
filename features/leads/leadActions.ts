@@ -215,7 +215,23 @@ export async function submitLeadAction(
       },
     };
 
-    // 2. Save lead EXACTLY ONCE to local CRM storage
+    // 2. Persist to MySQL Database via /api/leads API
+    let dbLeadId: string | null = null;
+    try {
+      const apiRes = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fullLeadItem),
+      });
+      const apiData = await apiRes.json();
+      if (apiData.success && apiData.data?.leadId) {
+        dbLeadId = apiData.data.leadId;
+      }
+    } catch (apiErr) {
+      console.warn("[DB Lead Submission Notice] Direct API save failed, cached locally:", apiErr);
+    }
+
+    // 3. Save lead to local CRM storage as client fallback/immediate sync
     if (typeof window !== "undefined") {
       try {
         const stored = localStorage.getItem("imc_captured_leads");
@@ -232,11 +248,12 @@ export async function submitLeadAction(
         });
 
         if (!isExistingInStorage) {
-          const updated = [fullLeadItem, ...existing];
+          const itemToSave = dbLeadId ? { ...fullLeadItem, id: dbLeadId } : fullLeadItem;
+          const updated = [itemToSave, ...existing];
           localStorage.setItem("imc_captured_leads", JSON.stringify(updated));
           // Dispatch storage event for real-time update in open tabs/windows
           window.dispatchEvent(new Event("storage"));
-          window.dispatchEvent(new CustomEvent("imc_lead_captured", { detail: fullLeadItem }));
+          window.dispatchEvent(new CustomEvent("imc_lead_captured", { detail: itemToSave }));
         }
       } catch (storageErr) {
         console.error("[Lead Storage Error]", storageErr);
@@ -246,7 +263,7 @@ export async function submitLeadAction(
     return {
       success: true,
       data: {
-        refId,
+        refId: dbLeadId || refId,
         message: "Application Submitted Successfully",
       },
     };
