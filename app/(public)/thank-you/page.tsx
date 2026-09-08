@@ -266,7 +266,7 @@ function ThankYouContent() {
               href="/courses"
               className="inline-flex items-center gap-1 text-xs font-bold text-[#0B4F9C] hover:underline shrink-0"
             >
-              <span>View All 150+ Courses</span>
+              <span>View All Courses</span>
               <ChevronRight className="w-4 h-4" />
             </Link>
           </div>

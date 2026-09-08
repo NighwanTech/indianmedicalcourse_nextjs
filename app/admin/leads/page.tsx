@@ -1062,7 +1062,7 @@ export default function AdminLeadsPage() {
               onChange={(e) => setSelectedCourse(e.target.value)}
               className="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 cursor-pointer truncate"
             >
-              <option value="ALL">All Programs (150+ Courses)</option>
+              <option value="ALL">All Programs</option>
               
               {/* Category 1: Clinical Fellowships */}
               <optgroup label="🎓 Clinical Fellowships (12-24 Months)">

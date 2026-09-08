@@ -20,11 +20,13 @@ import {
   Percent,
   ChevronRight,
   PhoneCall,
-  MessageCircle
+  MessageCircle,
+  BookOpen
 } from "lucide-react";
+import { courses } from "@/lib/data";
 
 export const DEFAULT_HERO_CONTENT = {
-  badgeText: "🚀 ADMISSIONS OPEN FOR 2026 BATCHES • 40% MERIT SCHOLARSHIPS",
+  badgeText: "🚀 ADMISSIONS OPEN FOR 2026 BATCHES • CPD UK ACCREDITED",
   titleStart: "Advance Your Clinical Practice With",
   titleHighlight: "Premier Medical Fellowships",
   titleEnd: "& PG Diplomas",
@@ -35,8 +37,8 @@ export const DEFAULT_HERO_CONTENT = {
   card2Subtitle: "Apollo, Fortis, Max",
   card3Title: "CPD (UK)",
   card3Subtitle: "Valid Letterhead",
-  card4Title: "0% EMI",
-  card4Subtitle: "From ₹6,500/mo",
+  card4Title: "Bedside Skills",
+  card4Subtitle: "Hospital Rotations",
   searchPlaceholder: "Search Cardiology, ICU, Laparoscopy, Ultrasound...",
   trendingKeywords: "Cardiology, Critical Care ICU, Fetal Ultrasound, Laparoscopy",
   cta1Sub: "Admissions Desk",
@@ -50,6 +52,9 @@ export const DEFAULT_HERO_CONTENT = {
 export function HeroSection() {
   const [searchKey, setSearchKey] = useState("");
   const [heroContent, setHeroContent] = useState(DEFAULT_HERO_CONTENT);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  const [coursesCatalog, setCoursesCatalog] = useState<typeof courses>(courses);
 
   const loadHeroFromStorage = () => {
     if (typeof window !== "undefined") {
@@ -67,18 +72,33 @@ export function HeroSection() {
           console.error(e);
         }
       }
+      const savedCourses = localStorage.getItem("imc_courses_catalog");
+      if (savedCourses) {
+        try {
+          const parsedCourses = JSON.parse(savedCourses);
+          if (Array.isArray(parsedCourses) && parsedCourses.length > 0) {
+            setCoursesCatalog(parsedCourses);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
     }
   };
 
   useEffect(() => {
     loadHeroFromStorage();
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === "imc_homepage_sections") {
+      if (e.key === "imc_homepage_sections" || e.key === "imc_courses_catalog") {
         loadHeroFromStorage();
       }
     };
     window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
+    window.addEventListener("imc_courses_updated", loadHeroFromStorage);
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("imc_courses_updated", loadHeroFromStorage);
+    };
   }, []);
 
   const phoneHref = `tel:${siteSettings.hotlinePhone.replace(/[^0-9+]/g, "") || "+918295843006"}`;
@@ -157,23 +177,23 @@ export function HeroSection() {
 
               <div className="bg-white/95 p-2 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-center">
                 <div className="flex items-center gap-1 text-[11px] font-black text-slate-900">
-                  <Percent className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                  <BookOpen className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                   <span>{heroContent.card4Title}</span>
                 </div>
                 <span className="text-[9px] text-slate-500 mt-0.5">{heroContent.card4Subtitle}</span>
               </div>
             </div>
 
-            {/* 5. Dynamic Interactive Search Bar & Trending Tags */}
-            <div className="max-w-xl mx-auto lg:mx-0">
+            {/* 5. Dynamic Interactive Search Bar with Live Instant Autocomplete Dropdown */}
+            <div className="max-w-xl mx-auto lg:mx-0 relative">
               <form 
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (searchKey.trim()) {
-                    window.location.href = `/courses?search=${encodeURIComponent(searchKey)}`;
+                    window.location.href = `/courses?search=${encodeURIComponent(searchKey.trim())}`;
                   }
                 }}
-                className="relative flex items-center shadow-xs rounded-xl border border-slate-300 bg-white p-1 focus-within:ring-2 focus-within:ring-[#0B4F9C] transition-all"
+                className="relative flex items-center shadow-xs rounded-xl border border-slate-300 bg-white p-1 focus-within:ring-2 focus-within:ring-[#0B4F9C] transition-all z-20"
               >
                 <div className="pl-2.5 pr-1.5 text-slate-400">
                   <Search className="w-3.5 h-3.5 text-[#0B4F9C]" />
@@ -181,7 +201,11 @@ export function HeroSection() {
                 <input
                   type="text"
                   value={searchKey}
-                  onChange={(e) => setSearchKey(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onChange={(e) => {
+                    setSearchKey(e.target.value);
+                    setIsSearchFocused(true);
+                  }}
                   placeholder={heroContent.searchPlaceholder}
                   className="w-full text-xs font-semibold text-slate-900 placeholder:text-slate-400 bg-transparent focus:outline-hidden py-1"
                 />
@@ -192,6 +216,62 @@ export function HeroSection() {
                   Search
                 </button>
               </form>
+
+              {/* Live Instant Course Autocomplete Dropdown */}
+              {isSearchFocused && searchKey.trim().length >= 2 && (
+                <div 
+                  className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden z-30 divide-y divide-slate-100"
+                  onMouseDown={(e) => e.preventDefault()}
+                >
+                  {coursesCatalog
+                    .filter((c) => {
+                      const terms = searchKey.trim().toLowerCase().split(/\s+/).filter(Boolean);
+                      const text = [c.title, c.tagline, c.categoryName, c.slug, ...(c.skillsCovered || [])].join(" ").toLowerCase();
+                      return terms.every((t) => text.includes(t));
+                    })
+                    .slice(0, 5)
+                    .map((course) => (
+                      <Link
+                        key={course.id}
+                        href={`/courses/${course.slug}`}
+                        onClick={() => setIsSearchFocused(false)}
+                        className="flex items-center gap-3 p-2.5 hover:bg-blue-50/80 transition-colors group text-left"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden shrink-0">
+                          <img
+                            src={course.heroImage}
+                            alt={course.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] font-black uppercase text-[#0B4F9C] bg-blue-50 px-1.5 py-0.2 rounded">
+                              {course.categoryName}
+                            </span>
+                            <span className="text-[9px] text-slate-400">
+                              {course.duration}
+                            </span>
+                          </div>
+                          <div className="text-xs font-bold text-slate-900 truncate group-hover:text-[#0B4F9C]">
+                            {course.title}
+                          </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 shrink-0" />
+                      </Link>
+                    ))}
+
+                  <div className="p-2 bg-slate-50 text-center">
+                    <Link
+                      href={`/courses?search=${encodeURIComponent(searchKey.trim())}`}
+                      onClick={() => setIsSearchFocused(false)}
+                      className="text-[11px] font-bold text-[#0B4F9C] hover:underline"
+                    >
+                      View all results for &ldquo;{searchKey.trim()}&rdquo; →
+                    </Link>
+                  </div>
+                </div>
+              )}
 
               {/* Popular Specialty Fast-Links */}
               <div className="flex items-center gap-1.5 flex-wrap mt-1 text-[10px] text-slate-500 justify-center lg:justify-start">

@@ -203,11 +203,12 @@ export function MediaLibraryPickerModal({
 
     try {
       if (file.type.startsWith("image/")) {
-        // Automatically compress images to lightweight WebP/JPEG (~40KB-70KB)
+        // Automatically compress images to lightweight WebP (~25KB-40KB)
         const compressed = await compressImageFile(file, {
-          maxWidth: 1200,
-          maxHeight: 720,
-          quality: 0.8,
+          maxWidth: 800,
+          maxHeight: 480,
+          quality: 0.7,
+          mimeType: "image/webp",
         });
 
         setUploadPreview({

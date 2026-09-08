@@ -271,13 +271,13 @@ export function FloatingConversionLayer() {
         <Link
           href="/courses"
           className="group flex items-center bg-[#FF7A00] hover:bg-[#E66E00] text-white shadow-xl shadow-orange-900/20 py-2.5 pl-3 pr-2.5 rounded-l-2xl transition-all duration-300 translate-x-[calc(100%-46px)] hover:translate-x-0 cursor-pointer"
-          aria-label="Explore All 150+ Courses"
+          aria-label="Explore All Courses"
         >
           <div className="w-6 h-6 flex items-center justify-center shrink-0">
             <GraduationCap className="w-5 h-5 text-white" />
           </div>
           <span className="text-xs font-bold whitespace-nowrap pl-2 pr-1">
-            150+ Courses
+            All Courses
           </span>
         </Link>
 
@@ -327,7 +327,7 @@ export function FloatingConversionLayer() {
                 </div>
 
                 <h3 className="text-2xl font-black text-white leading-tight font-display">
-                  Download 2026 Curriculum & Check Scholarship
+                  Download 2026 Clinical Curriculum & Syllabus
                 </h3>
 
                 <p className="text-xs text-blue-100/90 leading-relaxed">
@@ -347,7 +347,7 @@ export function FloatingConversionLayer() {
                     <div className="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center shrink-0 mt-0.5">
                       <Award className="w-3 h-3 text-amber-300" />
                     </div>
-                    <span>Up to 40% Merit Scholarship & 0% EMI Eligibility</span>
+                    <span>CPD (UK) Accredited with Hands-on Hospital Observership</span>
                   </div>
 
                   <div className="flex items-start gap-2.5 text-xs text-white/95">

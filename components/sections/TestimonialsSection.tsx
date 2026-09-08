@@ -257,7 +257,7 @@ export function TestimonialsSection({
             href="/courses"
             className="bg-white hover:bg-blue-50 text-blue-900 text-xs font-bold py-3 px-6 rounded-xl shadow-xs transition-colors shrink-0 flex items-center gap-1.5"
           >
-            <span>Explore 150+ Programs</span>
+            <span>Explore All Programs</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

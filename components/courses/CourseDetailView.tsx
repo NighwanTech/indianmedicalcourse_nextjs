@@ -34,24 +34,38 @@ export function CourseDetailView({ initialCourse, slug }: CourseDetailViewProps)
   const [course, setCourse] = useState<Course | null>(initialCourse);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("imc_courses_catalog");
-      if (saved) {
-        try {
-          const parsed: Course[] = JSON.parse(saved);
-          const found = parsed.find(
-            (c) => c.slug?.toLowerCase() === slug.toLowerCase() || String(c.id) === slug
-          );
-          if (found) {
-            setCourse(found);
+    const syncDetailCourse = () => {
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("imc_courses_catalog");
+        if (saved) {
+          try {
+            const parsed: Course[] = JSON.parse(saved);
+            const cleanSlug = slug.replace(/\/+$/, "").toLowerCase();
+            const found = parsed.find(
+              (c) =>
+                c.slug?.replace(/\/+$/, "").toLowerCase() === cleanSlug ||
+                String(c.id) === cleanSlug ||
+                String(c.id) === slug
+            );
+            if (found) {
+              setCourse(found);
+            }
+          } catch (e) {
+            console.error(e);
           }
-        } catch (e) {
-          console.error(e);
         }
       }
-    }
-    // Set isHydrated AFTER state update is queued so React batches both
-    setIsHydrated(true);
+      setIsHydrated(true);
+    };
+
+    syncDetailCourse();
+
+    window.addEventListener("storage", syncDetailCourse);
+    window.addEventListener("imc_courses_updated", syncDetailCourse);
+    return () => {
+      window.removeEventListener("storage", syncDetailCourse);
+      window.removeEventListener("imc_courses_updated", syncDetailCourse);
+    };
   }, [slug, initialCourse]);
 
   if (!course) {
@@ -62,13 +76,13 @@ export function CourseDetailView({ initialCourse, slug }: CourseDetailViewProps)
         </div>
         <h1 className="text-2xl font-black text-slate-900 font-display">Medical Course Not Found</h1>
         <p className="text-xs text-slate-500 max-w-md mt-1 mb-6">
-          The requested course URL may have been updated or moved. Explore our 150+ accredited fellowship catalog.
+          The requested course URL may have been updated or moved. Explore our accredited fellowship catalog.
         </p>
         <a
           href="/courses"
           className="bg-[#0B4F9C] hover:bg-[#083E7D] text-white text-xs font-bold py-3 px-6 rounded-xl shadow-md transition-all"
         >
-          Explore All 150+ Courses
+          Explore All Courses
         </a>
       </div>
     );
@@ -397,7 +411,7 @@ export function CourseDetailView({ initialCourse, slug }: CourseDetailViewProps)
                   initialCourseName={course.title}
                   source="COURSE_PAGE_MODAL"
                   title="Apply for Next Batch"
-                  subtitle={`Enroll in ${course.title} with 40% Doctor Scholarship & 0% EMI.`}
+                  subtitle={`Enroll in ${course.title} with CPD UK Accreditation & Hospital Attachments.`}
                 />
               </div>
 

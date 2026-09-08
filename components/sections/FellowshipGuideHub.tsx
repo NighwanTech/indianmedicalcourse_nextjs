@@ -120,14 +120,14 @@ export function FellowshipGuideHub() {
     },
     {
       id: 13,
-      category: "Benefits & Fees",
-      question: "What 0% Interest EMI & Scholarship Options are Available?",
-      summary: "3, 6, 9, 12-month zero-interest EMI financing and merit fee waivers up to 40%.",
-      answer: "IMC provides 3, 6, 9, and 12-month zero-interest EMI financing through our banking partners with no hidden processing fees. Merit scholarships and early-bird fee waivers of up to 40% are also granted upon counsellor assessment.",
+      category: "Admissions & Policy",
+      question: "What is the Policy on Refunds and Mid-Course Discontinuation?",
+      summary: "Strict non-refundable policy due to pre-booked hospital quotas and faculty scheduling.",
+      answer: "Indian Medical Course follows a strict non-refundable fee policy. Because clinical slots, hospital quotas (Apollo, Fortis, Max), faculty mentors, and international CPD UK accreditation are pre-assigned upon admission, no fees will be refunded under any circumstances if a student leaves or drops out in-between.",
     },
   ];
 
-  const categoriesList = ["All", "Eligibility & NEET PG", "General", "Recognition & CME", "Benefits & Fees", "Top Programs"];
+  const categoriesList = ["All", "Eligibility & NEET PG", "General", "Recognition & CME", "Admissions & Policy", "Top Programs"];
 
   const filteredFaqs = allFaqs.filter((faq) => {
     if (selectedFaqCategory !== "All" && faq.category !== selectedFaqCategory) return false;

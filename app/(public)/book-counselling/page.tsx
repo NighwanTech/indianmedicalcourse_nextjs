@@ -53,7 +53,7 @@ export default function BookCounsellingPage() {
               </div>
               <div className="flex items-center gap-3 text-xs sm:text-sm font-bold text-slate-800 bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs">
                 <GraduationCap className="w-5 h-5 text-amber-600 shrink-0" />
-                <span>0% Interest EMI financing & early-bird 40% merit scholarship review</span>
+                <span>CPD UK accreditation roadmap & batch intake seat verification</span>
               </div>
             </div>
 

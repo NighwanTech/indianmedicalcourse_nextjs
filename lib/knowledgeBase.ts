@@ -26,7 +26,7 @@ export const medicalKnowledgeBase: KnowledgeBaseEntry[] = [
     question: "Can I Apply for an IMC Medical Fellowship Without NEET PG?",
     answer: "Yes, absolutely! All IMC clinical fellowships, post-graduate diplomas, and masterclasses do NOT require the NEET PG entrance examination. Admissions are based on merit, medical qualification, and council registration, enabling doctors to enhance their practical procedural skills immediately without waiting for NEET counselling cycles.",
     keywords: ["neet", "neet pg", "without neet", "entrance exam", "rank", "score", "qualify", "exam required", "no neet"],
-    suggestedFollowUps: ["Who is eligible to apply?", "How do hospital bedside rotations work?", "What are the 0% EMI tuition options?"],
+    suggestedFollowUps: ["Who is eligible to apply?", "How do hospital bedside rotations work?", "What is the fellowship curriculum structure?"],
   },
   {
     id: 3,
@@ -50,7 +50,7 @@ export const medicalKnowledgeBase: KnowledgeBaseEntry[] = [
     question: "What Documents are Required for Admission?",
     answer: "To secure admission, submit copies of:\n1. MBBS / Medical Degree Certificate or Provisional Passing Certificate.\n2. State Medical Council or NMC Permanent Registration Certificate.\n3. Internship Completion Certificate.\n4. Government Photo ID (Aadhaar / Passport / Voter ID).\n5. Updated Clinical CV / Resume.\n6. Two Passport-size Photographs.",
     keywords: ["documents", "docs", "papers", "certificates", "id proof", "aadhaar", "passport", "degree copy", "registration certificate"],
-    suggestedFollowUps: ["How do I apply for a program?", "What are the 0% EMI tuition options?"],
+    suggestedFollowUps: ["How do I apply for a program?", "Which hospital networks are available for rotations?"],
   },
   {
     id: 6,
@@ -134,31 +134,31 @@ export const medicalKnowledgeBase: KnowledgeBaseEntry[] = [
   },
 
   // =========================================================================
-  // 4. TUITION FEES, SCHOLARSHIPS & 0% EMI
+  // 4. ADMISSIONS, BATCHES & ENROLMENT REGULATIONS
   // =========================================================================
   {
     id: 15,
-    category: "Fees & EMI",
-    question: "What are the 0% Interest EMI Tuition Options?",
-    answer: "IMC partners with leading healthcare NBFCs (Bajaj Finserv, Eduvanz, Propelld, Liquiloans) to provide interest-free 0% EMI plans over 3, 6, 9, or 12 months with zero hidden charges. Monthly installments start from just ₹6,500/month, and instant pre-approval is completed in 10 minutes with minimal documentation.",
-    keywords: ["emi", "0% emi", "no cost emi", "fees", "cost", "price", "installment", "bajaj", "eduvanz", "loan", "monthly payment"],
-    suggestedFollowUps: ["How can I apply for a 40% scholarship?", "What is the fee for cardiology fellowship?"],
+    category: "Admissions",
+    question: "What is the Official Policy on Mid-Course Discontinuation or Refunds?",
+    answer: "Indian Medical Course adheres to a strict non-refundable policy. Because limited clinical bedside slots, hospital quota pre-bookings (Apollo, Fortis, Max), faculty mentor reservations, and CPD UK accreditation credentials are bound irrevocably upon enrollment, no fees will be refunded under any circumstances if a student drops out, leaves, or discontinues the course in-between.",
+    keywords: ["refund", "cancellation", "drop out", "discontinue", "money back", "leave course", "non refundable", "policy"],
+    suggestedFollowUps: ["What documents are required?", "How do hospital bedside rotations work?"],
   },
   {
     id: 16,
-    category: "Fees & EMI",
-    question: "How Can I Apply for the 40% Merit Scholarship?",
-    answer: "IMC awards Early-Bird Merit Scholarships of up to 40% fee reduction to deserving doctors based on MBBS marks, rural service background, early batch registration, and counsellor evaluation. To apply, submit your application form early and mention scholarship consideration to your assigned admissions counsellor.",
-    keywords: ["scholarship", "discount", "merit scholarship", "fee waiver", "40% off", "concession", "financial aid", "rural doctor"],
-    suggestedFollowUps: ["What are the 0% Interest EMI options?", "How do I apply for a program?"],
+    category: "Admissions",
+    question: "When do New Batches Commence for Clinical Programs?",
+    answer: "New batches commence monthly with continuous rolling admissions. Enrolled doctors receive immediate digital portal and LMS activation for didactic video lectures and case masterclasses, while hands-on hospital bedside attachments are scheduled flexibly to accommodate clinical duty hours.",
+    keywords: ["batch", "dates", "when to start", "orientation", "intake", "next batch", "schedule"],
+    suggestedFollowUps: ["How do I apply for a program?", "How are hospital clinical rotations organized?"],
   },
   {
     id: 17,
-    category: "Fees & EMI",
-    question: "Is There a Tax Benefit on Fellowship Tuition Fees?",
-    answer: "Yes! Medical practitioners and working doctors can claim tuition fees paid for IMC fellowships and PG diplomas as an allowable professional upskilling/training expense or under Section 80E of the Indian Income Tax Act, reducing their overall taxable income.",
-    keywords: ["tax", "tax benefit", "section 80e", "gst invoice", "receipt", "income tax", "professional expense"],
-    suggestedFollowUps: ["What are the 0% Interest EMI options?", "What documents are required?"],
+    category: "Admissions",
+    question: "How Does the Selection and Admission Process Work?",
+    answer: "The admission process is straightforward: 1) Submit your online application with medical degree credentials; 2) Document verification of your MBBS/MD qualification and state council registration; 3) Hospital training center selection; 4) Enrolment confirmation and student ID issuance.",
+    keywords: ["admission process", "how to apply", "selection", "interview", "application form", "enrolment"],
+    suggestedFollowUps: ["What documents are required?", "Can I apply without NEET PG?"],
   },
 
   // =========================================================================
@@ -170,7 +170,7 @@ export const medicalKnowledgeBase: KnowledgeBaseEntry[] = [
     question: "Tell Me About the Fellowship in Clinical Cardiology",
     answer: "The 12-Month Fellowship in Clinical Cardiology covers in-depth 2D Echocardiography, Doppler hemodynamics, 12-Lead ECG arrhythmia mastery, TMT, Holter monitoring, ICCU bedside management, and Cath Lab diagnostic angiogram observer-ship under Senior DM Cardiologists.",
     keywords: ["cardiology", "echo", "2d echo", "ecg", "cath lab", "heart", "cardiac", "tmt", "holter", "iccu", "angiography"],
-    suggestedFollowUps: ["How do hospital bedside rotations work?", "What are the 0% EMI tuition options?"],
+    suggestedFollowUps: ["How do hospital bedside rotations work?", "What is the fellowship curriculum structure?"],
     relevantCourseSlugs: ["fellowship-in-clinical-cardiology"],
   },
   {
@@ -188,7 +188,7 @@ export const medicalKnowledgeBase: KnowledgeBaseEntry[] = [
     question: "Tell Me About the Fellowship in Laparoscopic Surgery",
     answer: "The 6-Month Fellowship in Laparoscopic Surgery combines intensive box-trainer wet-lab ergonomic training with live operating theatre scrub-in sessions. Fellows master port placement, triangulation, knot tying, laparoscopic cholecystectomy, appendectomy, and diagnostic laparoscopy.",
     keywords: ["laparoscopy", "surgery", "lap", "surgeon", "ot", "scrub in", "cholecystectomy", "appendectomy", "minimal access", "wet lab", "box trainer"],
-    suggestedFollowUps: ["How are hospital clinical rotations organized?", "What are the 0% EMI tuition options?"],
+    suggestedFollowUps: ["How are hospital clinical rotations organized?", "What documents are required?"],
     relevantCourseSlugs: ["fellowship-in-laparoscopic-surgery"],
   },
   {
@@ -206,7 +206,7 @@ export const medicalKnowledgeBase: KnowledgeBaseEntry[] = [
     question: "Tell Me About the Fellowship in Clinical Dermatology & Aesthetics",
     answer: "The 12-Month Dermatology & Aesthetic Fellowship covers both core medical dermatoses (acne, eczema, psoriasis, fungal infections) and high-revenue aesthetic procedures: chemical peels, laser hair reduction, Q-switched Nd:YAG for pigmentation, PRP for hair restoration, and electrocautery.",
     keywords: ["dermatology", "skin", "aesthetics", "lasers", "prp", "chemical peel", "trichology", "botox", "fillers", "cautery", "derma"],
-    suggestedFollowUps: ["Who is eligible to apply?", "What are the 0% EMI tuition options?"],
+    suggestedFollowUps: ["Who is eligible to apply?", "Are certificates CPD UK accredited?"],
     relevantCourseSlugs: ["pg-diploma-in-dermatology"],
   },
   {
@@ -215,7 +215,7 @@ export const medicalKnowledgeBase: KnowledgeBaseEntry[] = [
     question: "Tell Me About the Fellowship in Clinical Diabetology",
     answer: "The 6-Month Clinical Diabetology Fellowship focuses on advanced insulin initiation & titration algorithms, Continuous Glucose Monitoring (CGM) interpretation, Time-in-Range (TIR) analysis, diabetic foot salvage protocols, and managing cardiovascular & renal complications in type-2 diabetes.",
     keywords: ["diabetes", "diabetology", "insulin", "cgm", "tir", "diabetic foot", "endocrinology", "hba1c", "blood sugar"],
-    suggestedFollowUps: ["Which fellowship is best after MBBS?", "What are the 0% EMI tuition options?"],
+    suggestedFollowUps: ["Which fellowship is best after MBBS?", "Can working doctors attend weekend rotations?"],
     relevantCourseSlugs: ["fellowship-in-clinical-diabetology"],
   },
   {
@@ -273,6 +273,6 @@ export const medicalKnowledgeBase: KnowledgeBaseEntry[] = [
     question: "How Do I Get in Touch with Admissions Right Now?",
     answer: "You can connect immediately through:\n• WhatsApp Desk: +91 8295843006\n• Admissions Hotline: +91 8295843006\n• Email: admissions@indianmedicalcourses.com\n• Online: Fill out the application form on any course page to receive an instant callback within 15 minutes.",
     keywords: ["contact", "phone", "whatsapp", "call", "hotline", "email", "address", "helpline", "talk to counsellor"],
-    suggestedFollowUps: ["What documents are required?", "What are the 0% EMI tuition options?"],
+    suggestedFollowUps: ["What documents are required?", "Can I apply without NEET PG?"],
   },
 ];

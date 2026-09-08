@@ -6,7 +6,7 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Clinical Fellowships & PG Diplomas | Indian Medical Course",
-  description: "Browse over 150+ hands-on medical fellowships, diplomas, and clinical observer-ships across Cardiology, Critical Care, ICU, Fetal Ultrasound, Surgery, and Dermatology.",
+  description: "Browse hands-on medical fellowships, diplomas, and clinical observer-ships across Cardiology, Critical Care, ICU, Fetal Ultrasound, Surgery, and Dermatology.",
 };
 
 export default function CoursesPage() {

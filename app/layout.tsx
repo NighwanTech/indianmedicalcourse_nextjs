@@ -26,7 +26,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Indian Medical Course | India's Premier Medical Education & Fellowships Platform",
   description:
-    "Explore 150+ Clinical Fellowships, Post-Graduate Diplomas, and Advanced Certification Courses for Doctors with bedside hospital rotations and recognized certifications.",
+    "Explore Premier Clinical Fellowships, Post-Graduate Diplomas, and Advanced Certification Courses for Doctors with bedside hospital rotations and recognized certifications.",
   keywords: [
     "Medical Fellowships in India",
     "PG Diploma for Doctors",
@@ -52,6 +52,17 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Indian Medical Course | Medical Education Platform",
     description: "Hands-on clinical fellowships and PG diplomas for doctors.",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   robots: {
     index: true,

@@ -147,7 +147,7 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
               onClick={onClose}
               className="inline-flex items-center justify-between text-xs font-bold text-[#0B4F9C] bg-white hover:bg-blue-50 border border-blue-200 px-3.5 py-2 rounded-xl transition-all shadow-xs group"
             >
-              <span>View All 150+ Course Catalog</span>
+              <span>View All Courses</span>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>

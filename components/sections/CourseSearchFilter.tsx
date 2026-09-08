@@ -42,33 +42,56 @@ function CourseSearchFilterContent({ limit = 6, isHomePage = false }: CourseSear
   const [allCoursesList, setAllCoursesList] = useState<Course[]>(courses);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("imc_courses_catalog");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            // Deduplicate by slug (keep LAST occurrence = most recently saved)
-            const deduped = new Map<string, Course>();
-            for (const c of parsed) {
-              deduped.set(c.slug?.toLowerCase(), c);
-            }
-            // Append any missing defaults
-            for (const c of courses) {
-              if (!deduped.has(c.slug?.toLowerCase())) {
-                deduped.set(c.slug?.toLowerCase(), c);
+    const syncCourses = () => {
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("imc_courses_catalog");
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              // Build map of current fresh code defaults for reference images
+              const freshDefaultMap = new Map<string, Course>();
+              for (const c of courses) {
+                freshDefaultMap.set(c.slug?.toLowerCase(), c);
               }
+
+              // Deduplicate by slug (keep custom fields & images, only fallback to default if missing)
+              const deduped = new Map<string, Course>();
+              for (const c of parsed) {
+                const fresh = freshDefaultMap.get(c.slug?.toLowerCase());
+                const hasCustomHero = Boolean(c.heroImage && typeof c.heroImage === "string" && c.heroImage.trim() !== "");
+                const finalHeroImage = hasCustomHero ? c.heroImage : (fresh?.heroImage || DEFAULT_MEDICAL_BANNER);
+
+                deduped.set(c.slug?.toLowerCase(), {
+                  ...c,
+                  heroImage: finalHeroImage,
+                });
+              }
+              // Append any missing defaults
+              for (const c of courses) {
+                if (!deduped.has(c.slug?.toLowerCase())) {
+                  deduped.set(c.slug?.toLowerCase(), c);
+                }
+              }
+              const finalList = Array.from(deduped.values());
+              setAllCoursesList(finalList);
             }
-            const finalList = Array.from(deduped.values());
-            setAllCoursesList(finalList);
+          } catch (e) {
+            console.error(e);
           }
-        } catch (e) {
-          console.error(e);
         }
       }
-    }
-    // Set isHydrated AFTER state is queued, so React batches both updates together
-    setIsHydrated(true);
+      setIsHydrated(true);
+    };
+
+    syncCourses();
+
+    window.addEventListener("storage", syncCourses);
+    window.addEventListener("imc_courses_updated", syncCourses);
+    return () => {
+      window.removeEventListener("storage", syncCourses);
+      window.removeEventListener("imc_courses_updated", syncCourses);
+    };
   }, []);
 
   useEffect(() => {
@@ -89,33 +112,48 @@ function CourseSearchFilterContent({ limit = 6, isHomePage = false }: CourseSear
     }
   }, [typeParam, categoryParam, searchParam]);
 
+  const cleanQuery = searchQuery.trim().toLowerCase();
+  const isActivelySearching = cleanQuery.length > 0;
+
   const filteredCourses = allCoursesList
     .filter((course) => course.isPublished !== false) // Only show active/published
     .sort((a, b) => (a.priority || 2) - (b.priority || 2)) // Sort by Priority (1 -> 2 -> 3)
     .filter((course) => {
-    // Tab filter
-    if (activeTab === "featured" && !course.isFeatured && !course.isPopular) return false;
-    if (activeTab === "fellowships" && course.courseType !== "FELLOWSHIP") return false;
-    if (activeTab === "diplomas" && course.courseType !== "PG_DIPLOMA") return false;
-    if (activeTab === "certificates" && course.courseType !== "ADVANCED_CERTIFICATE") return false;
+      // Tab filter
+      if (activeTab === "featured" && !course.isFeatured && !course.isPopular) return false;
+      if (activeTab === "fellowships" && course.courseType !== "FELLOWSHIP") return false;
+      if (activeTab === "diplomas" && course.courseType !== "PG_DIPLOMA") return false;
+      if (activeTab === "certificates" && course.courseType !== "ADVANCED_CERTIFICATE") return false;
 
-    // Category filter
-    const matchesCategory =
-      selectedCategory === "all" ||
-      categories.find((c) => c.slug === selectedCategory)?.id === course.categoryId;
+      // Category filter (if actively searching and user typed a specific query, let it match across categories if no match in selected category)
+      const matchesCategory =
+        selectedCategory === "all" ||
+        categories.find((c) => c.slug === selectedCategory)?.id === course.categoryId;
 
-    // Search query filter
-    const matchesQuery =
-      searchQuery === "" ||
-      course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.tagline.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.categoryName.toLowerCase().includes(searchQuery.toLowerCase());
+      // Multi-token intelligent search matching
+      if (!isActivelySearching) return matchesCategory;
 
-    return matchesCategory && matchesQuery;
-  });
+      const terms = cleanQuery.split(/\s+/).filter(Boolean);
+      const searchableBlob = [
+        course.title,
+        course.tagline,
+        course.categoryName,
+        course.slug,
+        course.courseType,
+        course.eligibility,
+        ...(course.skillsCovered || []),
+        ...(course.careerOpportunities || []),
+        ...(course.clinicalHospitals || []),
+      ].join(" ").toLowerCase();
 
-  // If limit is set (homepage) and not expanded, show max 6
-  const displayedCourses = (limit && !isExpanded) ? filteredCourses.slice(0, limit) : filteredCourses;
+      const matchesQuery = terms.every((term) => searchableBlob.includes(term));
+      return matchesCategory && matchesQuery;
+    });
+
+  // If limit is set (homepage) and not expanded and not searching, show max limit (e.g. 6)
+  const displayedCourses = (limit && !isExpanded && !isActivelySearching)
+    ? filteredCourses.slice(0, limit)
+    : filteredCourses;
   const hasMore = limit ? filteredCourses.length > limit : false;
 
   return (
@@ -297,15 +335,16 @@ function CourseSearchFilterContent({ limit = 6, isHomePage = false }: CourseSear
                 </div>
               </div>
 
-              {/* Card Footer: Fees & View Button */}
+              {/* Card Footer: Clinical Attachment Details & View Button */}
               <div className="p-5 pt-3 bg-slate-50/60 border-t border-slate-100 flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] text-slate-400 font-bold uppercase">Tuition & EMI</div>
-                  <div className="text-sm font-black text-slate-900">
-                    {formatINR(course.feeINR)}
+                  <div className="text-[10px] text-slate-400 font-bold uppercase">Clinical Training</div>
+                  <div className="text-xs font-black text-slate-900 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#0D9468]" />
+                    <span>Hospital Rotations</span>
                   </div>
-                  <div className="text-[10px] text-emerald-700 font-extrabold">
-                    0% EMI from {formatINR(course.emiStartingINR)}/mo
+                  <div className="text-[10px] text-[#0B4F9C] font-extrabold">
+                    CPD UK Accredited
                   </div>
                 </div>
 
@@ -322,7 +361,7 @@ function CourseSearchFilterContent({ limit = 6, isHomePage = false }: CourseSear
         </div>
 
         {/* Show More / View Full Catalog Action Bar */}
-        {hasMore && (
+        {hasMore && !isActivelySearching && (
           <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={() => setIsExpanded(!isExpanded)}
@@ -345,7 +384,7 @@ function CourseSearchFilterContent({ limit = 6, isHomePage = false }: CourseSear
               href="/courses"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#0B4F9C] hover:bg-[#083E7D] text-white text-xs sm:text-sm font-black py-3 px-6 rounded-2xl shadow-md shadow-blue-900/20 transition-all hover:scale-105"
             >
-              <span>Explore All 150+ Course Catalog</span>
+              <span>Explore All Courses</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -356,8 +395,20 @@ function CourseSearchFilterContent({ limit = 6, isHomePage = false }: CourseSear
             <Filter className="w-10 h-10 text-slate-300 mx-auto mb-2" />
             <h4 className="text-base font-bold text-slate-800">No programs found</h4>
             <p className="text-xs text-slate-500 mt-1">
-              Try adjusting your specialty or course format filter to see available programs.
+              Try adjusting your specialty or search term to see available medical programs.
             </p>
+            {(isActivelySearching || selectedCategory !== "all" || activeTab !== "all") && (
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedCategory("all");
+                  setActiveTab("all");
+                }}
+                className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+              >
+                <span>Reset All Filters & Search</span>
+              </button>
+            )}
           </div>
         )}
 

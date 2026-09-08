@@ -42,7 +42,6 @@ export const headerMenu: DynamicMenu = {
     { id: 104, label: "Hospital Partners", url: "/placement-partners", badgeText: "50+ Networks" },
     { id: 105, label: "Faculty", url: "/faculty" },
     { id: 106, label: "Success Stories", url: "/success-stories" },
-    { id: 107, label: "Scholarships", url: "/scholarship", badgeText: "Up to 40% Off", badgeColor: "bg-amber-500" },
     { id: 108, label: "Contact", url: "/contact" },
   ],
 };
@@ -267,7 +266,7 @@ export const courses: Course[] = [
     "isFeatured": true,
     "isPopular": true,
     "isAdmissionOpen": true,
-    "heroImage": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&auto=format&fit=crop&q=80",
+    "heroImage": "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&auto=format&fit=crop&q=80",
     "curriculum": [
       {
         "moduleNumber": 1,
@@ -347,7 +346,7 @@ export const courses: Course[] = [
     "isFeatured": true,
     "isPopular": true,
     "isAdmissionOpen": true,
-    "heroImage": "https://images.unsplash.com/photo-1579165466741-7f35e4755660?w=800&auto=format&fit=crop&q=80",
+    "heroImage": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&auto=format&fit=crop&q=80",
     "curriculum": [
       {
         "moduleNumber": 1,
@@ -427,7 +426,7 @@ export const courses: Course[] = [
     "isFeatured": true,
     "isPopular": true,
     "isAdmissionOpen": true,
-    "heroImage": "https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800&auto=format&fit=crop&q=80",
+    "heroImage": "https://images.unsplash.com/photo-1512290900672-1f41b31278c7?w=800&auto=format&fit=crop&q=80",
     "curriculum": [
       {
         "moduleNumber": 1,
@@ -1051,7 +1050,7 @@ export const courses: Course[] = [
     "isFeatured": true,
     "isPopular": true,
     "isAdmissionOpen": true,
-    "heroImage": "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&auto=format&fit=crop&q=80",
+    "heroImage": "https://images.unsplash.com/photo-1628348068343-c6a848d2b6dd?w=800&auto=format&fit=crop&q=80",
     "curriculum": [
       {
         "moduleNumber": 1,
@@ -1127,7 +1126,7 @@ export const courses: Course[] = [
     "isFeatured": true,
     "isPopular": true,
     "isAdmissionOpen": true,
-    "heroImage": "https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800&auto=format&fit=crop&q=80",
+    "heroImage": "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&auto=format&fit=crop&q=80",
     "curriculum": [
       {
         "moduleNumber": 1,
@@ -1194,7 +1193,7 @@ export const courses: Course[] = [
     "isFeatured": true,
     "isPopular": true,
     "isAdmissionOpen": true,
-    "heroImage": "https://images.unsplash.com/photo-1551076805-e1869033e561?w=800&auto=format&fit=crop&q=80",
+    "heroImage": "https://images.unsplash.com/photo-1579165466741-7f35e4755660?w=800&auto=format&fit=crop&q=80",
     "curriculum": [
       {
         "moduleNumber": 1,
@@ -1324,7 +1323,7 @@ export const courses: Course[] = [
     "isFeatured": true,
     "isPopular": true,
     "isAdmissionOpen": true,
-    "heroImage": "https://images.unsplash.com/photo-1579154204601-01588f351e67?w=800&auto=format&fit=crop&q=80",
+    "heroImage": "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&auto=format&fit=crop&q=80",
     "curriculum": [
       {
         "moduleNumber": 1,
@@ -1512,7 +1511,7 @@ export const courses: Course[] = [
     "isFeatured": false,
     "isPopular": true,
     "isAdmissionOpen": true,
-    "heroImage": "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&auto=format&fit=crop&q=80",
+    "heroImage": "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=800&auto=format&fit=crop&q=80",
     "curriculum": [
       {
         "moduleNumber": 1,
@@ -1576,7 +1575,7 @@ export const courses: Course[] = [
     "isFeatured": true,
     "isPopular": false,
     "isAdmissionOpen": true,
-    "heroImage": "https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800&auto=format&fit=crop&q=80",
+    "heroImage": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&auto=format&fit=crop&q=80",
     "curriculum": [
       {
         "moduleNumber": 1,
@@ -1641,7 +1640,7 @@ export const courses: Course[] = [
     "isFeatured": true,
     "isPopular": true,
     "isAdmissionOpen": true,
-    "heroImage": "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=800&auto=format&fit=crop&q=80",
+    "heroImage": "https://images.unsplash.com/photo-1587351021759-3e566b6af7cc?w=800&auto=format&fit=crop&q=80",
     "curriculum": [
       {
         "moduleNumber": 1,
@@ -1707,7 +1706,7 @@ export const courses: Course[] = [
     "isFeatured": true,
     "isPopular": true,
     "isAdmissionOpen": true,
-    "heroImage": "https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800&auto=format&fit=crop&q=80",
+    "heroImage": "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&auto=format&fit=crop&q=80",
     "curriculum": [
       {
         "moduleNumber": 1,
@@ -1772,7 +1771,7 @@ export const courses: Course[] = [
     "isFeatured": true,
     "isPopular": true,
     "isAdmissionOpen": true,
-    "heroImage": "https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800&auto=format&fit=crop&q=80",
+    "heroImage": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&auto=format&fit=crop&q=80",
     "curriculum": [
       {
         "moduleNumber": 1,
@@ -1837,7 +1836,7 @@ export const courses: Course[] = [
     "isFeatured": false,
     "isPopular": true,
     "isAdmissionOpen": true,
-    "heroImage": "https://images.unsplash.com/photo-1579154204601-01588f351e67?w=800&auto=format&fit=crop&q=80",
+    "heroImage": "https://images.unsplash.com/photo-1531983412531-1f49a365ffed?w=800&auto=format&fit=crop&q=80",
     "curriculum": [
       {
         "moduleNumber": 1,
@@ -1903,7 +1902,7 @@ export const courses: Course[] = [
     "isFeatured": false,
     "isPopular": true,
     "isAdmissionOpen": true,
-    "heroImage": "https://images.unsplash.com/photo-1530497610245-94d3c16cda28?w=800&auto=format&fit=crop&q=80",
+    "heroImage": "https://images.unsplash.com/photo-1579154204601-01588f351e67?w=800&auto=format&fit=crop&q=80",
     "curriculum": [
       {
         "moduleNumber": 1,
@@ -1967,7 +1966,7 @@ export const courses: Course[] = [
     "isFeatured": true,
     "isPopular": true,
     "isAdmissionOpen": true,
-    "heroImage": "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&auto=format&fit=crop&q=80",
+    "heroImage": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&auto=format&fit=crop&q=80",
     "curriculum": [
       {
         "moduleNumber": 1,
@@ -2031,7 +2030,7 @@ export const courses: Course[] = [
     "isFeatured": true,
     "isPopular": true,
     "isAdmissionOpen": true,
-    "heroImage": "https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800&auto=format&fit=crop&q=80",
+    "heroImage": "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=800&auto=format&fit=crop&q=80",
     "curriculum": [
       {
         "moduleNumber": 1,
@@ -2096,7 +2095,7 @@ export const courses: Course[] = [
     "isFeatured": true,
     "isPopular": true,
     "isAdmissionOpen": true,
-    "heroImage": "https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800&auto=format&fit=crop&q=80",
+    "heroImage": "https://images.unsplash.com/photo-1512290900672-1f41b31278c7?w=800&auto=format&fit=crop&q=80",
     "curriculum": [
       {
         "moduleNumber": 1,
@@ -2161,7 +2160,7 @@ export const courses: Course[] = [
     "isFeatured": false,
     "isPopular": true,
     "isAdmissionOpen": true,
-    "heroImage": "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&auto=format&fit=crop&q=80",
+    "heroImage": "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=800&auto=format&fit=crop&q=80",
     "curriculum": [
       {
         "moduleNumber": 1,
@@ -2786,9 +2785,9 @@ export const faqs: FaqItem[] = [
   },
   {
     id: 11,
-    category: "Fees & EMI",
-    question: "What are the 0% Interest EMI & Scholarship Options?",
-    answer: "We provide 3, 6, 9, and 12-month zero-interest EMI financing through our banking partners with no hidden processing fees. Merit scholarships and early-bird fee waivers of up to 40% are also available based on academic background and counsellor review.",
+    category: "Admissions Policy",
+    question: "What is the Policy on Refunds and Discontinuation?",
+    answer: "Indian Medical Course maintains a strict non-refundable policy. Because limited hospital slots, faculty assignments, and CPD UK accreditation credentials are bound upon admission, fees once remitted are non-refundable and non-transferable under any circumstances, even if a student discontinues in-between.",
   },
   {
     id: 12,

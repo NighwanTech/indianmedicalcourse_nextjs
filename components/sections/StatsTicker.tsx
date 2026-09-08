@@ -5,7 +5,7 @@ export function StatsTicker() {
   const stats = [
     {
       icon: <GraduationCap className="w-6 h-6 text-blue-600" />,
-      value: "150+",
+      value: "25+",
       label: "Clinical Specializations",
       subtext: "Fellowships & PG Diplomas",
     },

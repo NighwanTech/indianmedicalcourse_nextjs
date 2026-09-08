@@ -38,12 +38,12 @@ export function WhyChooseUs() {
       borderColor: "border-purple-100",
     },
     {
-      icon: <Award className="w-6 h-6 text-amber-600" />,
-      title: "0% EMI & Scholarship Grants",
-      description: "Affordable medical upskilling with flexible 3-12 month zero-interest EMI financing and merit scholarships of up to 40% for early applicants.",
-      badge: "Financial Aid",
-      bgColor: "bg-amber-50/60",
-      borderColor: "border-amber-100",
+      icon: <Award className="w-6 h-6 text-blue-600" />,
+      title: "Hospital Bedside Practical Training",
+      description: "Hands-on clinical attachments and real procedure logbook cases conducted under senior consultants across Apollo, Fortis, and Max healthcare networks.",
+      badge: "Clinical Mastery",
+      bgColor: "bg-blue-50/60",
+      borderColor: "border-blue-100",
     },
   ];
 

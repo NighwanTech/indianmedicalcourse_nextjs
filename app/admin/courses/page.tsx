@@ -102,32 +102,42 @@ export default function AdminCoursesPage() {
 
   // Client-side hydration sync to guarantee latest localStorage courses are loaded
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          const parsed: AdminCourseItem[] = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            // Deduplicate by slug (keep LAST occurrence = most recently saved)
-            const deduped = new Map<string, AdminCourseItem>();
-            for (const c of parsed) {
-              deduped.set(c.slug?.toLowerCase(), c);
-            }
-            // Append any missing defaults
-            for (const c of formattedDefaults) {
-              if (!deduped.has(c.slug?.toLowerCase())) {
+    const syncAdminCourses = () => {
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          try {
+            const parsed: AdminCourseItem[] = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              // Deduplicate by slug (keep LAST occurrence = most recently saved)
+              const deduped = new Map<string, AdminCourseItem>();
+              for (const c of parsed) {
                 deduped.set(c.slug?.toLowerCase(), c);
               }
+              // Append any missing defaults
+              for (const c of formattedDefaults) {
+                if (!deduped.has(c.slug?.toLowerCase())) {
+                  deduped.set(c.slug?.toLowerCase(), c);
+                }
+              }
+              setCoursesList(Array.from(deduped.values()));
             }
-            setCoursesList(Array.from(deduped.values()));
+          } catch (e) {
+            console.error("Failed to sync courses from localStorage on mount:", e);
           }
-        } catch (e) {
-          console.error("Failed to sync courses from localStorage on mount:", e);
         }
       }
-    }
-    // Set isHydrated AFTER state update is queued so React batches both
-    setIsHydrated(true);
+      setIsHydrated(true);
+    };
+
+    syncAdminCourses();
+
+    window.addEventListener("storage", syncAdminCourses);
+    window.addEventListener("imc_courses_updated", syncAdminCourses);
+    return () => {
+      window.removeEventListener("storage", syncAdminCourses);
+      window.removeEventListener("imc_courses_updated", syncAdminCourses);
+    };
   }, []);
 
   const [search, setSearch] = useState("");
@@ -151,18 +161,20 @@ export default function AdminCoursesPage() {
   const [isCompressingImage, setIsCompressingImage] = useState(false);
   const directImageInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Sync state changes to localStorage with safe quota fallback
+  // Sync state changes to localStorage with safe quota fallback and event dispatch
   const updateCoursesState = (newList: AdminCourseItem[]) => {
     setCoursesList(newList);
     if (typeof window !== "undefined") {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(newList));
+        window.dispatchEvent(new Event("imc_courses_updated"));
       } catch (err) {
         console.warn("Storage quota limit reached when persisting courses:", err);
         try {
           // Free up secondary cache to protect course catalog persistence
           localStorage.removeItem("imc_user_uploaded_media");
           localStorage.setItem(STORAGE_KEY, JSON.stringify(newList));
+          window.dispatchEvent(new Event("imc_courses_updated"));
         } catch (err2) {
           console.error("Could not write courses to localStorage even after cleaning media cache:", err2);
           showNotification("Changes updated in memory! (Browser storage is currently full)");
@@ -303,9 +315,10 @@ export default function AdminCoursesPage() {
     try {
       setIsCompressingImage(true);
       const result = await compressImageFile(file, {
-        maxWidth: 1200,
-        maxHeight: 720,
-        quality: 0.8,
+        maxWidth: 800,
+        maxHeight: 480,
+        quality: 0.7,
+        mimeType: "image/webp",
       });
       setEditingCourse((prev) => (prev ? { ...prev, heroImage: result.dataUrl } : null));
       showNotification(`Image "${file.name}" compressed (${result.sizeFormatted}) & attached!`);

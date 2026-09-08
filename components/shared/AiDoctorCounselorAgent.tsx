@@ -88,12 +88,12 @@ export function AiDoctorCounselorAgent() {
     {
       id: "1",
       sender: "ai",
-      text: "Namaste Doctor! 🩺 I am Dr. IMC, your Medical Academic AI Advisor. I have answers to all queries about our 150+ CPD-accredited Fellowships, eligibility without NEET PG, hands-on hospital bedside rotations, and 0% EMI financing. How can I help your clinical career today?",
+      text: "Namaste Doctor! 🩺 I am Dr. IMC, your Medical Academic AI Advisor. I have answers to all queries about our CPD-accredited Fellowships, eligibility without NEET PG, hands-on hospital bedside rotations, and admissions guidance. How can I help your clinical career today?",
       relatedFaqs: [
         "Who is eligible to apply for fellowship?",
         "Can I apply without NEET PG?",
         "How do hospital bedside rotations work?",
-        "What are the 0% Interest EMI tuition options?",
+        "What is the fellowship curriculum structure?",
         "Are certificates CPD UK accredited?",
         "Tell me about Fellowship in Clinical Cardiology",
       ],
@@ -397,13 +397,13 @@ export function AiDoctorCounselorAgent() {
         }
       }
     } else {
-      replyText = `Thank you for your question, Doctor. Indian Medical Course offers 150+ CPD-accredited Post-Graduate Fellowships across Cardiology, Critical Care, Laparoscopy, Dermatology, and Fetal Medicine with hands-on bedside hospital attachments at Apollo, Fortis, and Max hospitals. Admission is open for MBBS / MD graduates without NEET PG.`;
+      replyText = `Thank you for your question, Doctor. Indian Medical Course offers CPD-accredited Post-Graduate Fellowships across Cardiology, Critical Care, Laparoscopy, Dermatology, and Fetal Medicine with hands-on bedside hospital attachments at Apollo, Fortis, and Max hospitals. Admission is open for MBBS / MD graduates without NEET PG.`;
       category = "Admissions & Fellowships";
       showLeadCapture = true;
       relatedFaqs = [
         "Who is eligible to apply for fellowship?",
         "Can I apply without NEET PG?",
-        "What are the 0% Interest EMI tuition options?",
+        "Which hospital networks are available for rotations?",
         "How do hospital bedside rotations work?",
       ];
     }
