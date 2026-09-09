@@ -118,7 +118,7 @@ export default async function DynamicLandingPage({ params }: { params: Promise<{
   // Lookup or fallback dynamically
   const landingData = LANDING_PAGES_MAP[slug] || {
     title: slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
-    subtitle: "Accredited Clinical Fellowship with Hands-on Hospital Bedside Rotations, Expert Mentorship & 0% EMI Options.",
+    subtitle: "Accredited Clinical Fellowship with Hands-on Hospital Bedside Rotations, Expert Mentorship & Recognized Certification.",
     badge: "🚀 ADMISSIONS OPEN 2026",
     targetCourse: "Post-Graduate Clinical Fellowship",
     clinicalHighlights: [
@@ -181,8 +181,8 @@ export default async function DynamicLandingPage({ params }: { params: Promise<{
                 <div className="text-xs font-extrabold text-blue-700 mt-0.5 truncate">{landingData.hospitalCenters}</div>
               </div>
               <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs col-span-2 sm:col-span-1">
-                <div className="text-[10px] uppercase font-black text-slate-400">Tuition EMI</div>
-                <div className="text-xs font-extrabold text-emerald-700 mt-0.5">{landingData.emiINR}</div>
+                <div className="text-[10px] uppercase font-black text-slate-400">Accreditation</div>
+                <div className="text-xs font-extrabold text-emerald-700 mt-0.5">CPD Certified</div>
               </div>
             </div>
 
@@ -231,7 +231,7 @@ export default async function DynamicLandingPage({ params }: { params: Promise<{
                   Apply for {landingData.intakeMonth}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Receive the clinical syllabus, hospital rotation slots, and 0% EMI breakdown on WhatsApp.
+                  Receive the clinical syllabus and hospital rotation schedule on WhatsApp.
                 </p>
               </div>
 

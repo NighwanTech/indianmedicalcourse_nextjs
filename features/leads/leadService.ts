@@ -136,7 +136,7 @@ export class LeadService {
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; line-height: 1.6;">
               <h2 style="color: #0B4F9C; margin-top: 0;">Dear Dr. ${data.name},</h2>
               <p>Thank you for expressing your interest in the <strong>${courseTitle}</strong> at Indian Medical Course.</p>
-              <p>Your application has been received and prioritized. Our Senior Clinical Admissions Advisor will contact you shortly with the complete clinical rotation schedule, university eligibility matrix, and 0% EMI financing options.</p>
+              <p>Your application has been received and prioritized. Our Senior Clinical Admissions Advisor will contact you shortly with the complete clinical rotation schedule, university eligibility matrix, and batch registration details.</p>
               
               <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 8px; margin: 20px 0;">
                 <p style="margin: 0; color: #166534; font-size: 13px;">

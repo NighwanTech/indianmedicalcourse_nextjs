@@ -202,9 +202,10 @@ export function CourseDetailView({ initialCourse, slug }: CourseDetailViewProps)
                 </div>
 
                 <div className="bg-slate-900/90 p-3 rounded-2xl border border-slate-800">
-                  <div className="text-[10px] text-slate-400">Starting EMI</div>
-                  <div className="text-sm font-bold text-amber-300 flex items-center gap-1.5 mt-0.5">
-                    {formatINR(course.emiStartingINR || 7800)}/mo
+                  <div className="text-[10px] text-slate-400">Accreditation</div>
+                  <div className="text-sm font-bold text-emerald-400 flex items-center gap-1.5 mt-0.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    CPD Certified
                   </div>
                 </div>
               </div>
@@ -381,9 +382,12 @@ export function CourseDetailView({ initialCourse, slug }: CourseDetailViewProps)
                   <span className="text-xs text-slate-500 font-bold">Total Program Fee</span>
                   <span className="text-lg font-black text-slate-900">{formatINR(course.feeINR)}</span>
                 </div>
-                <div className="flex items-center justify-between text-xs text-emerald-700 bg-emerald-50 p-2.5 rounded-xl border border-emerald-200 font-bold">
-                  <span>0% Interest EMI from</span>
-                  <span>{formatINR(course.emiStartingINR || 7800)} / month</span>
+                <div className="flex items-center justify-between text-xs text-blue-700 bg-blue-50 p-2.5 rounded-xl border border-blue-100 font-bold">
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+                    Hospital Hands-on Rotations
+                  </span>
+                  <span className="text-emerald-700">Included</span>
                 </div>
               </div>
 

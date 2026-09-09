@@ -233,10 +233,10 @@ function ThankYouContent() {
                   3
                 </div>
                 <h3 className="text-sm font-bold text-slate-900 mb-1">
-                  Batch Enrollment & 0% EMI Setup
+                  Batch Enrollment & Orientation
                 </h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Secure your seat with simple installment plans, access LMS study materials, and receive your welcome kit.
+                  Confirm your enrollment, access accredited LMS study materials, and receive your clinical schedule.
                 </p>
               </div>
               <div className="mt-4 pt-3 border-t border-amber-200/60 flex items-center gap-1.5 text-[11px] font-bold text-amber-800">

@@ -331,7 +331,7 @@ export function BlogDetailClientView({
                   Elevate Your Clinical Practice in {post.category}
                 </h3>
                 <p className="text-xs sm:text-sm text-blue-100 leading-relaxed">
-                  Join 1,800+ doctors mastering advanced bedside protocols, Cath Lab rotations, and CPD-accredited diagnostic skills with 0% EMI options.
+                  Join 1,800+ doctors mastering advanced bedside protocols, Cath Lab rotations, and CPD-accredited diagnostic skills with hands-on hospital training.
                 </p>
                 <div className="pt-3 flex items-center gap-3 flex-wrap">
                   <Link
@@ -395,8 +395,8 @@ export function BlogDetailClientView({
                     <strong className="text-slate-800 truncate block">{relatedCourse.eligibility}</strong>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block font-bold uppercase">0% EMI From</span>
-                    <strong className="text-emerald-700 font-bold">₹{relatedCourse.emiStartingINR?.toLocaleString('en-IN')}/mo</strong>
+                    <span className="text-[10px] text-slate-400 block font-bold uppercase">Accreditation</span>
+                    <strong className="text-emerald-700 font-bold">CPD Certified</strong>
                   </div>
                 </div>
 

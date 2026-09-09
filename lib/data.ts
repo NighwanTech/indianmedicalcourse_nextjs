@@ -9,7 +9,7 @@ export const siteSettings: SiteSettings = {
   registeredAddress: "Narayni Polly clinic dhimshri shamshabad near police chowk and DAV inter College, Agra - UP, 283125, India",
   googleRating: "4.9",
   reviewsCount: 2480,
-  announcementText: "Admissions Open for 2026 Batches | Limited Clinical Training Seats Available | 0% Interest EMI Options",
+  announcementText: "Admissions Open for 2026 Batches | Limited Clinical Training Seats Available | Hands-on Hospital Rotations",
   announcementExpiry: "2026-08-31",
   googleAdsConversionId: "AW-11234567890",
   metaPixelId: "987654321098765",
@@ -2781,7 +2781,7 @@ export const faqs: FaqItem[] = [
     id: 10,
     category: "Admissions",
     question: "How Do I Apply for a Fellowship Program?",
-    answer: "Applying is simple and straightforward:\n1. Choose your desired fellowship or PG diploma on our website.\n2. Submit the online application form with your contact details.\n3. An Academic Admissions Counsellor will contact you to evaluate eligibility, explain clinical attachment dates, and assist with 0% EMI enrollment.\n4. Submit your degree and council registration to receive your official admission confirmation letter.",
+    answer: "Applying is simple and straightforward:\n1. Choose your desired fellowship or PG diploma on our website.\n2. Submit the online application form with your contact details.\n3. An Academic Admissions Counsellor will contact you to evaluate eligibility, explain clinical attachment dates, and assist with your batch registration.\n4. Submit your degree and council registration to receive your official admission confirmation letter.",
   },
   {
     id: 11,

@@ -34,8 +34,8 @@ const DEFAULT_HERO = {
   card2Subtitle: "Apollo, Fortis, Max",
   card3Title: "CPD (UK)",
   card3Subtitle: "Valid Letterhead",
-  card4Title: "0% EMI",
-  card4Subtitle: "From ₹6,500/mo",
+  card4Title: "Hospital Training",
+  card4Subtitle: "Bedside Rotations",
   searchPlaceholder: "Search Cardiology, ICU, Laparoscopy, Ultrasound...",
   trendingKeywords: "Cardiology, Critical Care ICU, Fetal Ultrasound, Laparoscopy",
   cta1Sub: "Admissions Desk",
@@ -141,10 +141,10 @@ export default function AdminHomepageSectionsPage() {
       const saved = localStorage.getItem("imc_announcement_text");
       if (saved && saved.trim()) return saved;
     }
-    return "Admissions Open for 2026 Batches | Limited Clinical Training Seats Available | 0% Interest EMI Options";
+    return "Admissions Open for 2026 Batches | Limited Clinical Training Seats Available | Hands-on Hospital Rotations";
   });
 
-  const DEFAULT_ANNOUNCEMENT = "Admissions Open for 2026 Batches | Limited Clinical Training Seats Available | 0% Interest EMI Options";
+  const DEFAULT_ANNOUNCEMENT = "Admissions Open for 2026 Batches | Limited Clinical Training Seats Available | Hands-on Hospital Rotations";
 
   const executeResetRibbon = () => {
     setAnnouncementText(DEFAULT_ANNOUNCEMENT);
@@ -622,10 +622,10 @@ export default function AdminHomepageSectionsPage() {
 
                 {/* Card 4 */}
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
-                  <div className="text-[10px] font-black text-purple-800 uppercase">Card 4 (0% EMI)</div>
+                  <div className="text-[10px] font-black text-purple-800 uppercase">Card 4 (Hospital Training)</div>
                   <input
                     type="text"
-                    value={sections.hero.card4Title || "0% EMI"}
+                    value={sections.hero.card4Title || "Hospital Training"}
                     onChange={(e) => setSections({
                       ...sections,
                       hero: { ...sections.hero, card4Title: e.target.value }

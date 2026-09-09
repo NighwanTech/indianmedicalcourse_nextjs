@@ -32,7 +32,7 @@ export function FinalCtaBanner() {
 
         {/* Subhead */}
         <p className="text-xs sm:text-sm text-blue-100 max-w-2xl mx-auto leading-relaxed">
-          Speak with our Senior Medical Admissions Advisor today. Get your eligibility verified, receive customized course roadmaps, and explore 0% interest EMI options.
+          Speak with our Senior Medical Admissions Advisor today. Get your eligibility verified, receive customized course roadmaps, and secure your clinical training seat.
         </p>
 
         {/* CTA Button Duo */}

@@ -6,7 +6,7 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Admission Process & Batch Eligibility 2026 | Indian Medical Course",
-  description: "Learn about the 4-step streamlined admission process, document screening, hospital rotation allocations, and 0% EMI financing.",
+  description: "Learn about the 4-step streamlined admission process, document screening, and hospital rotation allocations.",
 };
 
 export default function AdmissionProcessPage() {

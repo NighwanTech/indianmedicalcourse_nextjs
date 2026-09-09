@@ -87,8 +87,8 @@ export function FellowshipGuideHub() {
       id: 8,
       category: "Benefits & Fees",
       question: "What are the Key Benefits of a Fellowship Program?",
-      summary: "Advanced procedures, 50+ hospital networks, 0% EMI financing, and verifiable CPD credentials.",
-      answer: "• Professional Development: Enhance clinical knowledge, access modern case studies, and acquire new surgical & diagnostic techniques.\n• Hospital Attachments: Bedside training at 50+ tertiary hospital networks (Apollo, Fortis, Max, Medanta).\n• Networking: Connect with renowned faculty and peers, opening doors to consultant job opportunities and referrals.\n• Funding & Zero-Cost EMI: Flexible 0% interest EMI options through banking partners, easing the financial investment.\n• Prestige: Earning a fellowship credential boosts your professional reputation, OPD patient trust, and institutional credibility.",
+      summary: "Advanced procedures, 50+ hospital networks, verified clinical rotations, and CPD credentials.",
+      answer: "• Professional Development: Enhance clinical knowledge, access modern case studies, and acquire new surgical & diagnostic techniques.\n• Hospital Attachments: Bedside training at 50+ tertiary hospital networks (Apollo, Fortis, Max, Medanta).\n• Networking: Connect with renowned faculty and peers, opening doors to consultant job opportunities and referrals.\n• Bedside Exposure: Structured clinical logbooks, procedural observer-ships, and supervised case discussions.\n• Prestige: Earning a fellowship credential boosts your professional reputation, OPD patient trust, and institutional credibility.",
     },
     {
       id: 9,
@@ -102,7 +102,7 @@ export function FellowshipGuideHub() {
       category: "Admissions & Apply",
       question: "How Do I Apply for a Fellowship Program?",
       summary: "Simple 4-step online form, counsellor evaluation, and council credential submission.",
-      answer: "Applying for an IMC fellowship is a simple, 4-step process:\n1. Identify the program matching your career goals on our website.\n2. Submit the online application form with your basic details.\n3. An Academic Admissions Counsellor will contact you to evaluate eligibility, explain clinical attachment schedules, and arrange 0% EMI financing.\n4. Submit your degree transcripts and medical council registration to receive your official confirmation letter.",
+      answer: "Applying for an IMC fellowship is a simple, 4-step process:\n1. Identify the program matching your career goals on our website.\n2. Submit the online application form with your basic details.\n3. An Academic Admissions Counsellor will contact you to evaluate eligibility and explain clinical attachment schedules.\n4. Submit your degree transcripts and medical council registration to receive your official confirmation letter.",
     },
     {
       id: 11,

@@ -17,7 +17,7 @@ import {
 
 export function ContactHubSection() {
   const whatsappUrl = `https://wa.me/${siteSettings.whatsappNumber.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
-    "Hello Indian Medical Course Admissions Desk, I would like to inquire about Fellowship eligibility, clinical attachment dates, and 0% EMI enrollment."
+    "Hello Indian Medical Course Admissions Desk, I would like to inquire about Fellowship eligibility, clinical attachment dates, and admission process."
   )}`;
 
   return (
@@ -33,7 +33,7 @@ export function ContactHubSection() {
           Connect with Our <span className="text-[#0B4F9C]">Clinical Admissions Board</span>
         </h2>
         <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-          Get personalized guidance on clinical fellowship eligibility, hospital attachment schedules, 0% EMI financing, and international accreditation.
+          Get personalized guidance on clinical fellowship eligibility, hospital attachment schedules, and international accreditation.
         </p>
       </div>
 

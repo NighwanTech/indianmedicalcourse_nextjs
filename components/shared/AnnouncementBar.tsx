@@ -8,18 +8,23 @@ const ANNOUNCEMENT_STORAGE_KEY = "imc_announcement_text";
 
 export function AnnouncementBar() {
   const [isVisible, setIsVisible] = useState(true);
+  const sanitizeAnnouncement = (text: string) =>
+    text
+      .replace(/\|\s*0%\s*Interest\s*EMI\s*Options?/gi, "| Hands-on Hospital Rotations")
+      .replace(/0%\s*Interest\s*EMI\s*(Options?)?/gi, "Hands-on Hospital Rotations");
+
   const [announcementText, setAnnouncementText] = useState<string>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem(ANNOUNCEMENT_STORAGE_KEY);
-      if (saved && saved.trim()) return saved;
+      if (saved && saved.trim()) return sanitizeAnnouncement(saved);
     }
-    return siteSettings.announcementText;
+    return sanitizeAnnouncement(siteSettings.announcementText);
   });
 
   useEffect(() => {
     const handleStorage = () => {
       const saved = localStorage.getItem(ANNOUNCEMENT_STORAGE_KEY);
-      if (saved) setAnnouncementText(saved);
+      if (saved) setAnnouncementText(sanitizeAnnouncement(saved));
     };
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
@@ -53,8 +58,8 @@ export function AnnouncementBar() {
           </div>
 
           <div className="flex items-center gap-1 text-blue-200">
-            <Percent className="w-3.5 h-3.5 text-amber-300" />
-            <span>0% Interest EMI</span>
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Hospital Rotations</span>
           </div>
 
           <a

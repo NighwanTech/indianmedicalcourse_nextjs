@@ -118,7 +118,7 @@ Sitemap: https://indianmedicalcourse.com/sitemap.xml`);
 
   // WhatsApp Configuration State
   const [whatsappMode, setWhatsappMode] = useState<"MANUAL" | "META_API">("MANUAL");
-  const [waMessageTemplate, setWaMessageTemplate] = useState("Hello IMC Admissions Team, I want to know more about 2026 Medical Fellowships, Clinical Rotations & 0% EMI options.");
+  const [waMessageTemplate, setWaMessageTemplate] = useState("Hello IMC Admissions Team, I want to know more about 2026 Medical Fellowships and Clinical Rotations.");
   const [waAccessToken, setWaAccessToken] = useState("");
   const [waPhoneNumberId, setWaPhoneNumberId] = useState("");
   const [waBusinessAccountId, setWaBusinessAccountId] = useState("");

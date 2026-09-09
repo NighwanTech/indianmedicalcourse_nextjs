@@ -7,7 +7,7 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Book Free 1-on-1 Medical Academic Counselling | Indian Medical Course",
-  description: "Schedule a personalized 1-on-1 consultation with our senior clinical advisors. Discuss course eligibility, hospital attachment schedules, and 0% EMI financing.",
+  description: "Schedule a personalized 1-on-1 consultation with our senior clinical advisors. Discuss course eligibility and hospital attachment schedules.",
 };
 
 export default function BookCounsellingPage() {

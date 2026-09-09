@@ -68,7 +68,7 @@ export function AiDoctorCounselorAgent() {
               question: item.question,
               answer: item.answer,
               keywords: item.question.toLowerCase().split(/\s+/),
-              suggestedFollowUps: ["What are the 0% EMI options?", "How do hospital rotations work?"],
+              suggestedFollowUps: ["What is the course eligibility?", "How do hospital rotations work?"],
             }));
 
             // Deduplicate by question title
@@ -273,7 +273,7 @@ export function AiDoctorCounselorAgent() {
               question: item.question,
               answer: item.answer,
               keywords: item.question.toLowerCase().split(/\s+/),
-              suggestedFollowUps: ["What are the 0% EMI options?", "How do hospital rotations work?"],
+              suggestedFollowUps: ["What is the course eligibility?", "How do hospital rotations work?"],
             }));
             const existingQuestions = new Set(customMapped.map((c) => c.question.toLowerCase()));
             const nonDuplicates = medicalKnowledgeBase.filter((k) => !existingQuestions.has(k.question.toLowerCase()));
@@ -446,7 +446,7 @@ export function AiDoctorCounselorAgent() {
       {
         id: Date.now().toString(),
         sender: "ai",
-        text: `Thank you, ${doctorName || "Doctor"}! 🙏 Our Senior Academic Director has been notified. The complete clinical logbook, hospital attachment schedule, and 0% EMI calculation have been dispatched to ${doctorPhone} on WhatsApp.`,
+        text: `Thank you, ${doctorName || "Doctor"}! 🙏 Our Senior Academic Director has been notified. The complete clinical logbook and hospital attachment schedule have been dispatched to ${doctorPhone} on WhatsApp.`,
       },
     ]);
   };
@@ -607,7 +607,7 @@ export function AiDoctorCounselorAgent() {
                   >
                     <div className="text-xs font-bold text-emerald-950 flex items-center gap-1">
                       <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Get Official Prospectus, Syllabus & 0% EMI on WhatsApp:</span>
+                      <span>Get Official Prospectus & Syllabus on WhatsApp:</span>
                     </div>
                     <div className="space-y-1.5">
                       <input

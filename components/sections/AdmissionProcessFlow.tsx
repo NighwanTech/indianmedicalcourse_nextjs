@@ -26,8 +26,8 @@ export function AdmissionProcessFlow() {
     {
       stepNumber: "03",
       icon: <CreditCard className="w-6 h-6 text-purple-600" />,
-      title: "Seat Booking & 0% EMI",
-      description: "Reserve your seat with flexible payment milestones or instant 0% interest monthly installments via our verified banking partners.",
+      title: "Seat Booking & Enrollment",
+      description: "Reserve your seat with flexible payment milestones and direct bank transfer via verified partner payment channels.",
     },
     {
       stepNumber: "04",

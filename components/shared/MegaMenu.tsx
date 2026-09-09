@@ -191,7 +191,7 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
                 Talk to a Senior Medical Admissions Counsellor
               </h4>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Get a customized curriculum roadmap, check clinical batch dates, and evaluate 0% EMI financing.
+                Get a customized curriculum roadmap, check clinical batch dates, and verify eligibility.
               </p>
             </div>
 

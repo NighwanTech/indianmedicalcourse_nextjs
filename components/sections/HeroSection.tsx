@@ -90,7 +90,7 @@ export function HeroSection() {
 
   const phoneHref = `tel:${siteSettings.hotlinePhone.replace(/[^0-9+]/g, "") || "+918295843006"}`;
   const whatsappHref = `https://wa.me/${siteSettings.whatsappNumber.replace(/[^0-9]/g, "") || "918295843006"}?text=${encodeURIComponent(
-    "Hello IMC Admissions Team, I want to know more about 2026 Medical Fellowships, Clinical Rotations & 0% EMI options."
+    "Hello IMC Admissions Team, I want to know more about 2026 Medical Fellowships and Clinical Rotations."
   )}`;
 
   const trendingList = heroContent.trendingKeywords
@@ -357,7 +357,7 @@ export function HeroSection() {
                   Apply for Clinical Fellowship
                 </h3>
                 <p className="text-[10px] text-blue-100">
-                  Get full clinical curriculum, hospital slots & 0% EMI quote on WhatsApp
+                  Get full clinical curriculum & hospital slots on WhatsApp
                 </p>
               </div>
 

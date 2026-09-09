@@ -35,7 +35,7 @@ export function FellowshipSpotlightBanner() {
         "180+ Hours Cath Lab & Angiography Observation",
         "PCI Stenting, Transradial Access & TPI Insertion",
         "IVUS, OCT & FFR Physiological Guidance",
-        "Fee ₹1,85,000 | 0% Interest EMI from ₹7,700/mo",
+        "Fee ₹1,85,000 | CPD UK Accredited",
       ],
     },
     {
@@ -53,7 +53,7 @@ export function FellowshipSpotlightBanner() {
         "Facial Anatomy, Botox Injections & Dermal Fillers",
         "Q-Switched Nd:YAG, Fractional CO2 & Chemical Peels",
         "PRP/GFC Hair Restoration & Dermatosurgery",
-        "Fee ₹1,85,000 | 0% Interest EMI from ₹7,700/mo",
+        "Fee ₹1,85,000 | CPD UK Accredited",
       ],
     },
     {
@@ -71,7 +71,7 @@ export function FellowshipSpotlightBanner() {
         "Da Vinci Robotic Console Simulation & Docking",
         "Pelvitrainer Intracorporeal Knotting & Suturing",
         "Live Lap Cholecystectomy, Appendectomy & Hernia",
-        "Fee ₹1,85,000 | 0% Interest EMI from ₹7,700/mo",
+        "Fee ₹1,85,000 | CPD UK Accredited",
       ],
     },
     {
@@ -89,7 +89,7 @@ export function FellowshipSpotlightBanner() {
         "11-14 Wk NT/NB Scans & First Trimester Preeclampsia",
         "Target Anomaly Scan (TIFFA / Level-II Ultrasound)",
         "Fetal Echocardiography & Doppler Velocimetry (UA/MCA)",
-        "Fee ₹1,85,000 | 0% Interest EMI from ₹7,700/mo",
+        "Fee ₹1,85,000 | CPD UK Accredited",
       ],
     },
   ];

@@ -142,7 +142,7 @@ export async function captureLead(input: CreateLeadInput) {
       htmlContent: `
         <h2>Thank you, Dr. ${input.name}</h2>
         <p>We have received your admission enquiry for <strong>${input.interestedCourseName || "Clinical Fellowship"}</strong>.</p>
-        <p>A Senior Medical Admissions Counsellor will connect with you within 30 minutes to provide your course syllabus, verify eligibility, and outline the 0% interest EMI options.</p>
+        <p>A Senior Medical Admissions Counsellor will connect with you within 30 minutes to provide your course syllabus, verify eligibility, and outline your batch schedule and hospital attachment details.</p>
         <br/>
         <p>Admissions Desk, Indian Medical Course</p>
       `,
