@@ -68,7 +68,7 @@ export async function GET(request: Request) {
         clinicalHospitals: c.clinicalHospitalsText || "",
         placementSupport: c.placementSupportText || "",
         overviewHtml: c.overviewHtml || "",
-        nextBatchDate: c.nextBatchDate,
+        nextBatchDate: c.nextBatchDate instanceof Date ? c.nextBatchDate.toISOString().split("T")[0] : (c.nextBatchDate ? String(c.nextBatchDate) : "2026-09-15"),
         totalEnrolled: c.totalEnrolled,
         ratingVal: Number(c.ratingVal),
         ratingCount: c.ratingCount,
@@ -79,8 +79,8 @@ export async function GET(request: Request) {
         faqs: c.faqs.map((f) => ({ question: f.question, answer: f.answer })),
         metaTitle: c.metaTitle,
         metaDescription: c.metaDescription,
-        createdAt: c.createdAt,
-        updatedAt: c.updatedAt,
+        createdAt: c.createdAt ? c.createdAt.toISOString() : undefined,
+        updatedAt: c.updatedAt ? c.updatedAt.toISOString() : undefined,
       }));
 
       return NextResponse.json({ courses: transformed, source: "database" });

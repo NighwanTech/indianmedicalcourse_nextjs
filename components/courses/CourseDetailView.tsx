@@ -71,6 +71,20 @@ export function CourseDetailView({ initialCourse, slug }: CourseDetailViewProps)
     );
   }
 
+  const displayBatchDate = (() => {
+    if (!course.nextBatchDate) return "1st of Next Month";
+    if (typeof course.nextBatchDate === "string") return course.nextBatchDate;
+    try {
+      return new Date(course.nextBatchDate).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+    } catch {
+      return String(course.nextBatchDate);
+    }
+  })();
+
   const courseJsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -101,7 +115,7 @@ export function CourseDetailView({ initialCourse, slug }: CourseDetailViewProps)
           "@type": "CourseInstance",
           "courseMode": "Blended",
           "duration": course.duration,
-          "startDate": course.nextBatchDate || "2026-09-01",
+          "startDate": displayBatchDate || "2026-09-01",
           "location": {
             "@type": "Place",
             "name": "Apollo Hospitals, Fortis Healthcare & Partner Clinical Network",
@@ -164,7 +178,7 @@ export function CourseDetailView({ initialCourse, slug }: CourseDetailViewProps)
             <div className="lg:col-span-7 space-y-4">
               <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-3 py-1 rounded-full text-xs font-bold">
                 <Sparkles className="w-3.5 h-3.5" />
-                Admissions Open for Next Batch • Starting {course.nextBatchDate || "1st of Next Month"}
+                Admissions Open for Next Batch • Starting {displayBatchDate}
               </div>
 
               <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight font-display">

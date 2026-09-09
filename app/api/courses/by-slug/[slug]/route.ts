@@ -60,7 +60,7 @@ export async function GET(
         careerScope: course.careerScopeJson || [],
         clinicalHospitals: course.clinicalHospitalsText || "",
         placementSupport: course.placementSupportText || "",
-        nextBatchDate: course.nextBatchDate,
+        nextBatchDate: course.nextBatchDate instanceof Date ? course.nextBatchDate.toISOString().split("T")[0] : (course.nextBatchDate ? String(course.nextBatchDate) : "2026-09-15"),
         totalEnrolled: course.totalEnrolled,
         ratingVal: Number(course.ratingVal),
         ratingCount: course.ratingCount,
@@ -87,8 +87,8 @@ export async function GET(
         })),
         metaTitle: course.metaTitle,
         metaDescription: course.metaDescription,
-        createdAt: course.createdAt,
-        updatedAt: course.updatedAt,
+        createdAt: course.createdAt ? course.createdAt.toISOString() : undefined,
+        updatedAt: course.updatedAt ? course.updatedAt.toISOString() : undefined,
       };
 
       return NextResponse.json({ course: transformed, source: "database" });

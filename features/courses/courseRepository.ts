@@ -24,6 +24,7 @@ export class CourseRepository {
         where,
         include: {
           category: true,
+          heroImageMedia: true,
           facultyMembers: { include: { faculty: true } },
           downloads: true,
           faqs: true,
@@ -44,6 +45,7 @@ export class CourseRepository {
         where: { slug },
         include: {
           category: true,
+          heroImageMedia: true,
           facultyMembers: { include: { faculty: true } },
           downloads: true,
           faqs: true,
