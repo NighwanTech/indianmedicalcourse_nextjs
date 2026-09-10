@@ -74,11 +74,11 @@ export default function AdminHomepageSectionsPage() {
         headlineHighlight: "Fellowship Programs",
         pulseAnimation: true,
         card1Title: "Fellowship in Clinical Cardiology",
-        card1FeeINR: "₹1,25,000",
-        card1EmiINR: "₹7,800/mo",
+        card1FeeINR: "Available on Enquiry",
+        card1EmiINR: "Hospital Rotations",
         card2Title: "Fellowship in Critical Care Medicine",
-        card2FeeINR: "₹1,35,000",
-        card2EmiINR: "₹8,500/mo",
+        card2FeeINR: "Available on Enquiry",
+        card2EmiINR: "Hospital Rotations",
       },
       aboutUs: {
         isEnabled: true,
@@ -635,7 +635,7 @@ export default function AdminHomepageSectionsPage() {
                   />
                   <input
                     type="text"
-                    value={sections.hero.card4Subtitle || "From ₹6,500/mo"}
+                    value={sections.hero.card4Subtitle || "Bedside Rotations"}
                     onChange={(e) => setSections({
                       ...sections,
                       hero: { ...sections.hero, card4Subtitle: e.target.value }

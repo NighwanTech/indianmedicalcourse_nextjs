@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { courses as defaultCourses } from "@/lib/data";
-import { formatINR } from "@/lib/utils";
 import { DEFAULT_MEDICAL_BANNER } from "@/lib/imageUtils";
 import { UniversalAdmissionForm } from "@/components/forms/UniversalAdmissionForm";
 import { HospitalPartnersMarquee } from "@/components/sections/HospitalPartnersMarquee";
@@ -105,9 +104,7 @@ export function CourseDetailView({ initialCourse, slug }: CourseDetailViewProps)
           : "Advanced Certificate of Clinical Competence",
         "offers": {
           "@type": "Offer",
-          "price": course.feeINR,
-          "priceCurrency": "INR",
-          "category": "Paid",
+          "category": "Medical Fellowship & Training",
           "url": `https://indianmedicalcourse.com/courses/${course.slug}`,
           "availability": "https://schema.org/InStock",
         },
@@ -390,11 +387,13 @@ export function CourseDetailView({ initialCourse, slug }: CourseDetailViewProps)
           <div className="lg:col-span-4">
             <div className="sticky top-24 space-y-6">
               
-              {/* Fee & EMI Summary Box */}
+              {/* Program Training & Accreditation Summary */}
               <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500 font-bold">Total Program Fee</span>
-                  <span className="text-lg font-black text-slate-900">{formatINR(course.feeINR)}</span>
+                  <span className="text-xs text-slate-500 font-bold">Fee Structure</span>
+                  <span className="text-xs font-black text-[#0B4F9C] bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">
+                    Available on Enquiry
+                  </span>
                 </div>
                 <div className="flex items-center justify-between text-xs text-blue-700 bg-blue-50 p-2.5 rounded-xl border border-blue-100 font-bold">
                   <span className="flex items-center gap-1.5">

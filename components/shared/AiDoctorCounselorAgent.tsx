@@ -584,8 +584,8 @@ export function AiDoctorCounselorAgent() {
                     </div>
 
                     <div className="pt-1.5 flex items-center justify-between border-t border-slate-100">
-                      <span className="text-xs font-extrabold text-slate-900">
-                        ₹{msg.recommendation.feeINR.toLocaleString()}
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                        CPD UK Accredited
                       </span>
                       <Link
                         href={`/courses/${msg.recommendation.slug}`}

@@ -16,7 +16,7 @@ export function GeoMedicalSchema() {
         "description": "Premier medical education platform offering CPD-accredited post-graduate clinical fellowships, PG diplomas, and hospital observer-ships for doctors across India and internationally.",
         "telephone": siteSettings.hotlinePhone,
         "email": siteSettings.admissionsEmail,
-        "priceRange": "₹45,000 - ₹2,20,000",
+        "priceRange": "$$",
         "address": {
           "@type": "PostalAddress",
           "streetAddress": "Narayni Polly clinic dhimshri shamshabad near police chowk and DAV inter College",

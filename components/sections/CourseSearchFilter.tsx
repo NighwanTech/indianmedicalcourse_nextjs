@@ -4,7 +4,6 @@ import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { categories, courses } from "@/lib/data";
-import { formatINR } from "@/lib/utils";
 import { DEFAULT_MEDICAL_BANNER } from "@/lib/imageUtils";
 import { 
   Search, 

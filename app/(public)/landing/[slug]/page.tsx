@@ -33,8 +33,6 @@ const LANDING_PAGES_MAP: Record<string, {
   seatsRemaining: number;
   hospitalCenters: string;
   duration: string;
-  priceINR: string;
-  emiINR: string;
 }> = {
   "cardiology-fellowship-2026": {
     title: "Clinical Cardiology Fellowship 2026",
@@ -51,8 +49,6 @@ const LANDING_PAGES_MAP: Record<string, {
     seatsRemaining: 6,
     hospitalCenters: "Apollo Hospitals & Fortis Escorts",
     duration: "12 Months (Hybrid + Hospital Rotations)",
-    priceINR: "₹1,25,000",
-    emiINR: "₹7,800/mo (0% EMI)",
   },
   "critical-care-icu-mastery": {
     title: "Fellowship in Critical Care Medicine",
@@ -69,8 +65,6 @@ const LANDING_PAGES_MAP: Record<string, {
     seatsRemaining: 4,
     hospitalCenters: "Medanta The Medicity & Max Super Speciality",
     duration: "12 Months (Hybrid + Hospital Rotations)",
-    priceINR: "₹1,35,000",
-    emiINR: "₹8,500/mo (0% EMI)",
   },
   "laparoscopic-surgery-fellowship": {
     title: "Fellowship in Laparoscopic Surgery",
@@ -87,8 +81,6 @@ const LANDING_PAGES_MAP: Record<string, {
     seatsRemaining: 5,
     hospitalCenters: "Apex Surgical Hospitals & Fortis Network",
     duration: "12 Months (Hybrid + OT Wet Labs)",
-    priceINR: "₹1,50,000",
-    emiINR: "₹9,200/mo (0% EMI)",
   },
 };
 
@@ -131,8 +123,6 @@ export default async function DynamicLandingPage({ params }: { params: Promise<{
     seatsRemaining: 5,
     hospitalCenters: "Pan-India NABH Hospital Networks",
     duration: "6–12 Months",
-    priceINR: "₹1,25,000",
-    emiINR: "₹7,500/mo",
   };
 
   return (
