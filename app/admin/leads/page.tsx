@@ -1254,8 +1254,8 @@ export default function AdminLeadsPage() {
       {/* MASTER LEADS TABLE WITH EXACT DATE & TIME TIMESTAMP COLUMN                */}
       {/* ========================================================================= */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="w-full">
-          <table className="w-full text-left border-collapse table-auto">
+        <div className="w-full overflow-x-auto" style={{ scrollbarWidth: "thin" }}>
+          <table className="w-full text-left border-collapse table-auto min-w-[1040px]">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 text-[10px] sm:text-[11px] font-extrabold uppercase text-slate-500 tracking-wider">
                 <th className="py-3 px-2 w-8 text-center">
@@ -1277,13 +1277,13 @@ export default function AdminLeadsPage() {
                 <th className="py-3 px-2 whitespace-nowrap">Traffic Source</th>
                 <th className="py-3 px-2 whitespace-nowrap text-center">Priority</th>
                 <th className="py-3 px-2 whitespace-nowrap text-center">Status</th>
-                <th className="py-3 px-3 min-w-[210px] max-w-[300px]">
+                <th className="py-3 px-2.5 min-w-[170px] max-w-[240px]">
                   <div className="flex items-center gap-1.5">
                     <MessageSquare className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                     <span>Counsellor Feedback / Notes</span>
                   </div>
                 </th>
-                <th className="py-3 px-2.5 text-right whitespace-nowrap">Actions</th>
+                <th className="py-3 px-3 text-right whitespace-nowrap min-w-[145px] w-[145px] sticky right-0 bg-slate-50/95 backdrop-blur-xs z-10 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">Actions</th>
               </tr>
             </thead>
 
@@ -1298,7 +1298,7 @@ export default function AdminLeadsPage() {
                 return (
                   <tr
                     key={lead.id}
-                    className={`hover:bg-blue-50/40 transition-colors ${
+                    className={`group hover:bg-blue-50/40 transition-colors ${
                       isSelected ? "bg-blue-50/60" : ""
                     }`}
                   >
@@ -1407,7 +1407,7 @@ export default function AdminLeadsPage() {
                     </td>
 
                     {/* Counsellor Feedback / Notes Inline Cell */}
-                    <td className="py-2 px-3 min-w-[210px] max-w-[300px]">
+                    <td className="py-2 px-2.5 min-w-[170px] max-w-[240px]">
                       {editingFeedbackId === lead.id ? (
                         <div className="flex items-center gap-1.5 w-full">
                           <input
@@ -1423,7 +1423,7 @@ export default function AdminLeadsPage() {
                               }
                             }}
                             placeholder="Enter counselling feedback..."
-                            className="w-full text-xs px-2.5 py-1.5 bg-white border-2 border-blue-500 rounded-lg focus:outline-none shadow-xs text-slate-900 font-medium"
+                            className="w-full text-xs px-2 py-1 bg-white border-2 border-blue-500 rounded-lg focus:outline-none shadow-xs text-slate-900 font-medium"
                           />
                           <button
                             type="button"
@@ -1450,7 +1450,7 @@ export default function AdminLeadsPage() {
                             setEditingFeedbackId(lead.id);
                             setEditingFeedbackText(lead.notes || "");
                           }}
-                          className="group/fb flex items-center justify-between gap-2 p-1.5 rounded-lg hover:bg-blue-50/80 cursor-pointer border border-transparent hover:border-blue-200 transition-all"
+                          className="group/fb flex items-center justify-between gap-1.5 p-1.5 rounded-lg hover:bg-blue-50/80 cursor-pointer border border-transparent hover:border-blue-200 transition-all"
                           title="Click to edit counsellor feedback"
                         >
                           {lead.notes && lead.notes.trim() ? (
@@ -1469,14 +1469,16 @@ export default function AdminLeadsPage() {
                     </td>
 
                     {/* Direct Actions (Compact WhatsApp, Call, Eye Profile Logo, Trash) */}
-                    <td className="py-2.5 px-2.5 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1">
+                    <td className={`py-2.5 px-3 text-right whitespace-nowrap min-w-[145px] w-[145px] sticky right-0 z-10 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)] transition-colors ${
+                      isSelected ? "bg-blue-50/90" : "bg-white group-hover:bg-blue-50/60"
+                    }`}>
+                      <div className="flex items-center justify-end gap-1.5 shrink-0">
                         {/* 1-Click WhatsApp */}
                         <a
                           href={whatsappLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white shadow-2xs transition-all cursor-pointer hover:scale-105 active:scale-95"
+                          className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white shadow-2xs transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0"
                           title="Chat on WhatsApp"
                         >
                           <svg className="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24">
@@ -1487,7 +1489,7 @@ export default function AdminLeadsPage() {
                         {/* Direct Phone Call */}
                         <a
                           href={`tel:${lead.mobile}`}
-                          className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-800 text-white shadow-2xs transition-all cursor-pointer hover:scale-105 active:scale-95"
+                          className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-800 text-white shadow-2xs transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0"
                           title="Call Doctor"
                         >
                           <Phone className="w-3 h-3 text-amber-300" />
@@ -1496,7 +1498,7 @@ export default function AdminLeadsPage() {
                         {/* View Details Eye Icon Button */}
                         <button
                           onClick={() => setSelectedLead(lead)}
-                          className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-blue-50 hover:bg-blue-100 text-[#0B4F9C] shadow-2xs transition-all cursor-pointer hover:scale-105 active:scale-95"
+                          className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-blue-50 hover:bg-blue-100 text-[#0B4F9C] shadow-2xs transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0"
                           title="View Full Lead Profile & History"
                         >
                           <Eye className="w-3.5 h-3.5" />
@@ -1505,7 +1507,7 @@ export default function AdminLeadsPage() {
                         {/* Delete Lead */}
                         <button
                           onClick={() => handleDeleteLead(lead.id, lead.name)}
-                          className="inline-flex items-center justify-center w-7 h-7 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 cursor-pointer transition-colors"
+                          className="inline-flex items-center justify-center w-7 h-7 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 cursor-pointer transition-colors shrink-0"
                           title="Delete Lead"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
