@@ -161,11 +161,8 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const rawName = String(body.name || body.fullName || "Doctor Applicant").trim();
-    const cleanName = rawName.replace(/^dr\.?\s*/i, "").trim();
-    const docName = cleanName
-      ? `Dr. ${cleanName.split(/\s+/).map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ")}`
-      : "Doctor Applicant";
+    const rawName = String(body.name || body.fullName || "Applicant").trim();
+    const docName = rawName || "Applicant";
 
     const rawMobile = String(body.mobile || body.mobileNumber || body.phone || "").trim();
     const cleanMobile = rawMobile.replace(/[^0-9+]/g, "");

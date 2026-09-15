@@ -143,8 +143,7 @@ export function FloatingConversionLayer() {
     setFormError("");
     setIsSubmitting(true);
 
-    const cleanName = fullName.trim().replace(/^dr\.?\s*/i, "").trim();
-    const docName = cleanName ? `Dr. ${cleanName.charAt(0).toUpperCase() + cleanName.slice(1)}` : "Doctor";
+    const docName = fullName.trim() || "Applicant";
     const crsName = courseCategory || "Clinical Fellowship";
 
     setSubmittedName(docName);

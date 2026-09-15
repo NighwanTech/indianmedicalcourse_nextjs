@@ -116,8 +116,7 @@ export function UniversalAdmissionForm({
     setIsSubmitting(true);
 
     const attribution = getOrCreateVisitorAttribution();
-    const cleanName = fullName.trim().replace(/^dr\.?\s*/i, "").trim();
-    const docName = cleanName ? `Dr. ${cleanName.charAt(0).toUpperCase() + cleanName.slice(1)}` : "Doctor";
+    const docName = fullName.trim() || "Applicant";
     const crsName = initialCourseName || courseCategory || "Clinical Fellowship";
 
     // Remember submitted values for the success card before clearing

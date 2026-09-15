@@ -221,10 +221,8 @@ function normalizeLead(raw: any, index: number): LeadItem {
     }
   }
 
-  let rawName = String(raw.name || raw.fullName || "Doctor Applicant").trim();
-  // Strip duplicate 'dr.' or 'dr' prefixes
-  rawName = rawName.replace(/^dr\.?\s*/i, "").replace(/^dr\.?\s*/i, "").trim();
-  const cleanedDoctorName = rawName ? `Dr. ${rawName.split(/\s+/).map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ")}` : "Doctor Applicant";
+  let rawName = String(raw.name || raw.fullName || "Applicant").trim();
+  const cleanedDoctorName = rawName || "Applicant";
 
   return {
     id: String(raw.id || raw.uuid || index + 1),
@@ -232,9 +230,9 @@ function normalizeLead(raw: any, index: number): LeadItem {
     name: cleanedDoctorName,
     mobile: String(raw.mobile || raw.mobileNumber || raw.phone || "Not Provided"),
     email: String(raw.email || raw.emailAddress || "Not Provided"),
-    qualification: String(raw.qualification || "MBBS"),
+    qualification: raw.qualification && raw.qualification !== "null" && raw.qualification !== "undefined" ? String(raw.qualification) : "",
     interestedCourse: String(raw.interestedCourse || raw.interestedCourseName || raw.course || "Fellowship Program"),
-    city: String(raw.city || ""),
+    city: String(raw.city || "").trim(),
     state: String(raw.state || raw.country || raw.addressCountry || "India"),
     country: String(raw.country || "India"),
     formSource: String(raw.formSource || raw.source || "Hero Main Form"),
@@ -1339,10 +1337,16 @@ export default function AdminLeadsPage() {
                         {lead.name}
                       </div>
                       <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
-                        <span className="font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded-xs">
-                          {lead.qualification || "MBBS"}
-                        </span>
-                        {lead.city && <span className="truncate max-w-[80px]">· {lead.city}</span>}
+                        {lead.qualification ? (
+                          <span className="font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded-xs">
+                            {lead.qualification}
+                          </span>
+                        ) : null}
+                        {lead.city && (
+                          <span className="truncate max-w-[80px]">
+                            {lead.qualification ? `· ${lead.city}` : lead.city}
+                          </span>
+                        )}
                       </div>
                     </td>
 

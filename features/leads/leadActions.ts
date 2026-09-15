@@ -46,17 +46,8 @@ export interface LeadSubmissionData {
 const recentSubmissions = new Map<string, { timestamp: number; refId: string }>();
 
 function cleanDoctorName(rawName: string): string {
-  if (!rawName) return "Doctor";
-  let trimmed = rawName.trim();
-  // Strip leading dr. / dr / DR / Dr.
-  trimmed = trimmed.replace(/^dr\.?\s*/i, "").trim();
-  if (!trimmed) return "Doctor";
-  // Capitalize each word nicely
-  const formatted = trimmed
-    .split(/\s+/)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
-  return `Dr. ${formatted}`;
+  if (!rawName) return "Applicant";
+  return rawName.trim();
 }
 
 export async function submitLeadAction(
@@ -66,10 +57,10 @@ export async function submitLeadAction(
     let raw: LeadSubmissionData;
 
     if (input instanceof FormData) {
-      const nameVal = (input.get("name") || input.get("fullName") || "Doctor") as string;
+      const nameVal = (input.get("name") || input.get("fullName") || "Applicant") as string;
       const mobileVal = (input.get("mobile") || input.get("mobileNumber") || "") as string;
       const emailVal = (input.get("email") || input.get("emailAddress") || "") as string;
-      const qualVal = (input.get("qualification") || input.get("specialty") || "MBBS") as string;
+      const qualVal = (input.get("qualification") || input.get("specialty") || "") as string;
       const courseVal = (input.get("interestedCourseName") || input.get("interestedCourse") || input.get("courseName") || "Clinical Fellowship") as string;
       const cityVal = (input.get("city") || "") as string;
       const countryVal = (input.get("country") || "India") as string;
