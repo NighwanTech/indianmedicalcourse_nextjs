@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loginAction } from "@/features/auth/authActions";
@@ -10,7 +10,10 @@ import {
   Mail, 
   ArrowRight, 
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  EyeOff,
+  CheckCircle2
 } from "lucide-react";
 
 function LoginForm() {
@@ -21,17 +24,49 @@ function LoginForm() {
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(urlError);
+
+  // Restore remembered credentials on component mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("imc_remember_admin");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.email) setEmail(parsed.email);
+        if (parsed.password) setPassword(parsed.password);
+        setRememberMe(true);
+      }
+    } catch (e) {
+      console.warn("Could not read saved credentials:", e);
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
     
+    // Save or clear remembered password in browser storage
+    try {
+      if (rememberMe) {
+        localStorage.setItem(
+          "imc_remember_admin",
+          JSON.stringify({ email: email.trim(), password })
+        );
+      } else {
+        localStorage.removeItem("imc_remember_admin");
+      }
+    } catch (e) {
+      console.warn("Storage quota error:", e);
+    }
+
     const formData = new FormData();
     formData.append("email", email);
     formData.append("password", password);
+    formData.append("rememberMe", rememberMe ? "true" : "false");
 
     const result = await loginAction(formData);
 
@@ -77,13 +112,16 @@ function LoginForm() {
 
       <form onSubmit={handleLogin} className="space-y-4 text-left">
         <div>
-          <label className="block text-xs font-bold text-slate-300 mb-1">
+          <label htmlFor="email" className="block text-xs font-bold text-slate-300 mb-1">
             Email Address
           </label>
           <div className="relative group">
             <input
+              id="email"
+              name="email"
               type="email"
               required
+              autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="e.g. name@domain.com"
@@ -94,34 +132,63 @@ function LoginForm() {
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="block text-xs font-bold text-slate-300">
-              Password
-            </label>
-            <Link 
-              href="/admin/forgot-password" 
-              className="text-[10px] font-bold text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              Forgot Password?
-            </Link>
-          </div>
+          <label htmlFor="password" className="block text-xs font-bold text-slate-300 mb-1">
+            Password
+          </label>
           <div className="relative group">
             <input
-              type="password"
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
               required
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full pl-9 pr-3.5 py-3 bg-slate-800/80 border border-slate-700 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/80 focus:border-blue-500/80 transition-all shadow-inner"
+              className="w-full pl-9 pr-10 py-3 bg-slate-800/80 border border-slate-700 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/80 focus:border-blue-500/80 transition-all shadow-inner"
             />
             <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3.5 group-focus-within:text-blue-400 transition-colors" />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-3.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              title={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
           </div>
+        </div>
+
+        {/* Remember Password & Forgot Password Bar */}
+        <div className="flex items-center justify-between pt-1">
+          <label className="flex items-center gap-2 cursor-pointer select-none group">
+            <input
+              type="checkbox"
+              id="rememberPassword"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="w-4 h-4 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900 cursor-pointer accent-blue-600"
+            />
+            <span className="text-xs font-semibold text-slate-300 group-hover:text-white transition-colors">
+              Remember Password
+            </span>
+          </label>
+          <Link 
+            href="/admin/forgot-password" 
+            className="text-[11px] font-bold text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            Forgot Password?
+          </Link>
         </div>
 
         <button
           type="submit"
           disabled={isLoading || !email || !password}
-          className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white text-sm font-bold py-3.5 px-4 rounded-xl shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:shadow-[0_0_25px_rgba(37,99,235,0.5)] transition-all disabled:opacity-75 disabled:cursor-not-allowed mt-4"
+          className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white text-sm font-bold py-3.5 px-4 rounded-xl shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:shadow-[0_0_25px_rgba(37,99,235,0.5)] transition-all disabled:opacity-75 disabled:cursor-not-allowed mt-4 cursor-pointer"
         >
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

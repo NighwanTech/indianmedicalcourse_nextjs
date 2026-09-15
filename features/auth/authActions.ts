@@ -1,19 +1,21 @@
 export async function loginAction(formData: FormData) {
   const email = (formData.get("email") as string || "").trim();
   const password = (formData.get("password") as string || "").trim();
+  const rememberMe = formData.get("rememberMe") === "true";
 
   if (!email || !password) {
     return { error: "Email and password are required" };
   }
 
   const normalizedEmail = email.toLowerCase().trim();
+  const cookieMaxAge = rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60;
 
   // 1. Attempt server-side API login first (when running on full Next.js Node server)
   try {
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, rememberMe }),
     });
 
     const text = await res.text();
@@ -33,8 +35,11 @@ export async function loginAction(formData: FormData) {
           name: "IMC Admissions Desk",
         };
         sessionStorage.setItem("imc_admin_session", JSON.stringify(userObj));
+        if (rememberMe) {
+          localStorage.setItem("imc_admin_session", JSON.stringify(userObj));
+        }
         if (userObj.role === "COUNSELLOR") {
-          document.cookie = `imc_auth_token=counsellor_session_${Date.now()}; path=/; max-age=${7 * 24 * 60 * 60}`;
+          document.cookie = `imc_auth_token=counsellor_session_${Date.now()}; path=/; max-age=${cookieMaxAge}`;
         }
       }
       return { success: true, error: "" };
@@ -94,7 +99,10 @@ export async function loginAction(formData: FormData) {
 
     if (typeof window !== "undefined") {
       sessionStorage.setItem("imc_admin_session", JSON.stringify(adminUser));
-      document.cookie = `imc_auth_token=super_admin_${Date.now()}; path=/; max-age=${7 * 24 * 60 * 60}`;
+      if (rememberMe) {
+        localStorage.setItem("imc_admin_session", JSON.stringify(adminUser));
+      }
+      document.cookie = `imc_auth_token=super_admin_${Date.now()}; path=/; max-age=${cookieMaxAge}`;
     }
 
     return { success: true, error: "" };
