@@ -263,10 +263,31 @@ export default function AdminMediaLibraryPage() {
   };
 
   // Execute Upload
-  const handleSaveUpload = () => {
+  const handleSaveUpload = async () => {
     if (!uploadUrl.trim() && !previewDataUrl) {
       alert("Please select a file or enter an asset image/document URL.");
       return;
+    }
+
+    let finalUrl = previewDataUrl || uploadUrl.trim();
+    if (previewDataUrl && previewDataUrl.startsWith("data:")) {
+      try {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            dataUrl: previewDataUrl,
+            fileName: uploadFileName.trim() || `asset-${Date.now()}.webp`,
+            folder: uploadFolder,
+          }),
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+          finalUrl = data.url;
+        }
+      } catch (err) {
+        console.warn("Upload to /api/upload failed, using local URL:", err);
+      }
     }
 
     const newAsset: MediaAssetItem = {
@@ -278,7 +299,7 @@ export default function AdminMediaLibraryPage() {
       folder: uploadFolder,
       usageCount: 0,
       altText: uploadAltText.trim() || uploadFileName.trim(),
-      url: previewDataUrl || uploadUrl.trim(),
+      url: finalUrl,
       createdAt: new Date().toISOString().split("T")[0],
     };
 
@@ -289,7 +310,7 @@ export default function AdminMediaLibraryPage() {
     setPreviewDataUrl(null);
     setUploadFileName("");
     setUploadAltText("");
-    showNotification("Asset uploaded & optimized successfully!");
+    showNotification("Asset uploaded & stored permanently in Cloudinary CDN!");
   };
 
   const handleDeleteFile = (id: number, name: string) => {

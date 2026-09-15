@@ -241,7 +241,29 @@ export function MediaLibraryPickerModal({
     }
   };
 
-  const handleConfirmUpload = () => {
+  const uploadFileToServer = async (): Promise<{ url: string; id: number } | null> => {
+    if (!uploadPreview) return null;
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dataUrl: uploadPreview.previewUrl,
+          fileName: uploadPreview.file.name,
+          folder: "courses",
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        return { url: data.url, id: data.mediaFileId || Date.now() };
+      }
+    } catch (e) {
+      console.warn("Upload to /api/upload failed, falling back to dataUrl:", e);
+    }
+    return { url: uploadPreview.previewUrl, id: Date.now() };
+  };
+
+  const handleConfirmUpload = async () => {
     if (!uploadPreview) return;
     setIsUploading(true);
 
@@ -250,11 +272,15 @@ export function MediaLibraryPickerModal({
     else if (uploadPreview.file.type.includes("video")) fileType = "VIDEO";
     else if (!uploadPreview.file.type.includes("image")) fileType = "DOCUMENT";
 
+    const uploadResult = await uploadFileToServer();
+    const finalUrl = uploadResult?.url || uploadPreview.previewUrl;
+    const finalId = uploadResult?.id || Date.now();
+
     const newItem: MediaItem = {
-      id: Date.now(),
+      id: finalId,
       fileName: uploadPreview.file.name,
       fileType,
-      url: uploadPreview.previewUrl,
+      url: finalUrl,
       mimeType: uploadPreview.file.type || "image/webp",
       fileSize: uploadPreview.sizeFormatted,
     };
@@ -263,7 +289,7 @@ export function MediaLibraryPickerModal({
     try {
       const existing = JSON.parse(localStorage.getItem("imc_user_uploaded_media") || "[]");
       // Keep most recent 30 items to protect storage quota
-      const updated = [newItem, ...existing].slice(0, 30);
+      const updated = [newItem, ...existing.filter((x: any) => x.url !== finalUrl)].slice(0, 30);
       localStorage.setItem("imc_user_uploaded_media", JSON.stringify(updated));
     } catch (e) {
       console.warn("Storage quota warning:", e);
@@ -276,7 +302,7 @@ export function MediaLibraryPickerModal({
     setActiveTab("library");
   };
 
-  const handleConfirmSelect = () => {
+  const handleConfirmSelect = async () => {
     if (activeTab === "url" && customUrl.trim()) {
       onSelect({
         id: Date.now(),
@@ -291,16 +317,35 @@ export function MediaLibraryPickerModal({
     }
 
     if (uploadPreview) {
-      // User is on upload tab with preview ready
-      handleConfirmUpload();
-      onSelect({
-        id: Date.now(),
+      // User is on upload tab with preview ready — upload to Cloudinary CDN first
+      setIsUploading(true);
+      const uploadResult = await uploadFileToServer();
+      const finalUrl = uploadResult?.url || uploadPreview.previewUrl;
+      const finalId = uploadResult?.id || Date.now();
+
+      let fileType: "IMAGE" | "PDF" | "VIDEO" | "DOCUMENT" = "IMAGE";
+      if (uploadPreview.file.type.includes("pdf")) fileType = "PDF";
+      else if (uploadPreview.file.type.includes("video")) fileType = "VIDEO";
+
+      const newItem: MediaItem = {
+        id: finalId,
         fileName: uploadPreview.file.name,
-        fileType: "IMAGE",
-        url: uploadPreview.previewUrl,
-        mimeType: uploadPreview.file.type || "image/png",
+        fileType,
+        url: finalUrl,
+        mimeType: uploadPreview.file.type || "image/webp",
         fileSize: uploadPreview.sizeFormatted,
-      });
+      };
+
+      try {
+        const existing = JSON.parse(localStorage.getItem("imc_user_uploaded_media") || "[]");
+        const updated = [newItem, ...existing.filter((x: any) => x.url !== finalUrl)].slice(0, 30);
+        localStorage.setItem("imc_user_uploaded_media", JSON.stringify(updated));
+      } catch (e) {
+        console.warn("Storage quota warning:", e);
+      }
+
+      setIsUploading(false);
+      onSelect(newItem);
       onClose();
       return;
     }

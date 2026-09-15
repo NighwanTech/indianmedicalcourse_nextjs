@@ -70,8 +70,11 @@ export default async function CourseDetailPage({
         ...fallback,
         ...dbCourse,
         nextBatchDate: formattedBatchDate,
-        heroImage: (dbCourse as any).heroImageMedia?.storagePath || (dbCourse as any).heroImage || fallback?.heroImage || "",
         categoryName: (dbCourse as any).category?.name || fallback?.categoryName || "",
+        heroImage: (() => {
+          const raw = (dbCourse as any).heroImageMedia?.storagePath || (dbCourse as any).heroImage;
+          return raw && !raw.startsWith("/uploads/") ? raw : (fallback?.heroImage || raw || "");
+        })(),
         curriculum: (dbCourse as any).curriculumJson || fallback?.curriculum || [],
         skillsCovered: (dbCourse as any).skillsCoveredJson || fallback?.skillsCovered || [],
         careerOpportunities: (dbCourse as any).careerScopeJson || fallback?.careerOpportunities || [],

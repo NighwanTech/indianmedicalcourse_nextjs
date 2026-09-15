@@ -53,7 +53,11 @@ export async function GET(
         feeUSD: course.feeUSD ? Number(course.feeUSD) : 0,
         emiStartingINR: course.emiStartingINR ? Number(course.emiStartingINR) : 0,
         eligibility: course.eligibility,
-        heroImage: course.heroImageMedia?.storagePath || "",
+        heroImage: (() => {
+          const raw = course.heroImageMedia?.storagePath || "";
+          const fb = fallbackCourses.find((f) => f.slug === course.slug || f.title.toLowerCase() === course.title.toLowerCase());
+          return raw && !raw.startsWith("/uploads/") ? raw : (fb?.heroImage || raw || "https://images.unsplash.com/photo-1551076805-e1869033e561?w=800&auto=format&fit=crop&q=80");
+        })(),
         overviewHtml: course.overviewHtml || "",
         curriculum: course.curriculumJson || [],
         skillsCovered: course.skillsCoveredJson || [],

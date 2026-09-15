@@ -46,28 +46,38 @@ export async function GET(request: Request) {
 
     if (courses.length > 0) {
       // Transform for frontend consumption
-      const transformed = courses.map((c) => ({
-        id: c.id,
-        slug: c.slug,
-        title: c.title,
-        tagline: c.tagline,
-        courseType: c.courseType,
-        categoryName: c.category.name,
-        categorySlug: c.category.slug,
-        duration: c.duration,
-        clinicalHours: c.clinicalHours,
-        feeINR: c.feeINR ? Number(c.feeINR) : 0,
-        feeUSD: c.feeUSD ? Number(c.feeUSD) : 0,
-        emiStartingINR: c.emiStartingINR ? Number(c.emiStartingINR) : 0,
-        eligibility: c.eligibility,
-        heroImage: c.heroImageMedia?.storagePath || "",
-        heroImageMediaId: c.heroImageMediaId,
-        curriculum: c.curriculumJson || [],
-        skillsCovered: c.skillsCoveredJson || [],
-        careerScope: c.careerScopeJson || [],
-        clinicalHospitals: c.clinicalHospitalsText || "",
-        placementSupport: c.placementSupportText || "",
-        overviewHtml: c.overviewHtml || "",
+      const transformed = courses.map((c) => {
+        const rawHero = c.heroImageMedia?.storagePath || "";
+        const fallback = fallbackCourses.find(
+          (f) => f.slug === c.slug || f.title.toLowerCase() === c.title.toLowerCase()
+        );
+        const resolvedHero =
+          rawHero && !rawHero.startsWith("/uploads/")
+            ? rawHero
+            : (fallback?.heroImage || rawHero || "https://images.unsplash.com/photo-1551076805-e1869033e561?w=800&auto=format&fit=crop&q=80");
+
+        return {
+          id: c.id,
+          slug: c.slug,
+          title: c.title,
+          tagline: c.tagline,
+          courseType: c.courseType,
+          categoryName: c.category.name,
+          categorySlug: c.category.slug,
+          duration: c.duration,
+          clinicalHours: c.clinicalHours,
+          feeINR: c.feeINR ? Number(c.feeINR) : 0,
+          feeUSD: c.feeUSD ? Number(c.feeUSD) : 0,
+          emiStartingINR: c.emiStartingINR ? Number(c.emiStartingINR) : 0,
+          eligibility: c.eligibility,
+          heroImage: resolvedHero,
+          heroImageMediaId: c.heroImageMediaId,
+          curriculum: c.curriculumJson || [],
+          skillsCovered: c.skillsCoveredJson || [],
+          careerScope: c.careerScopeJson || [],
+          clinicalHospitals: c.clinicalHospitalsText || "",
+          placementSupport: c.placementSupportText || "",
+          overviewHtml: c.overviewHtml || "",
         nextBatchDate: c.nextBatchDate instanceof Date ? c.nextBatchDate.toISOString().split("T")[0] : (c.nextBatchDate ? String(c.nextBatchDate) : "2026-09-15"),
         totalEnrolled: c.totalEnrolled,
         ratingVal: Number(c.ratingVal),
@@ -81,7 +91,8 @@ export async function GET(request: Request) {
         metaDescription: c.metaDescription,
         createdAt: c.createdAt ? c.createdAt.toISOString() : undefined,
         updatedAt: c.updatedAt ? c.updatedAt.toISOString() : undefined,
-      }));
+      };
+    });
 
       return NextResponse.json({ courses: transformed, source: "database" });
     }
@@ -122,6 +133,30 @@ export async function POST(request: Request) {
       }
     }
 
+    let heroImageMediaId = body.heroImageMediaId || null;
+    if (body.heroImage && typeof body.heroImage === "string" && body.heroImage.trim()) {
+      const trimmedUrl = body.heroImage.trim();
+      const existingMedia = await prisma.mediaFile.findFirst({
+        where: { storagePath: trimmedUrl },
+      });
+      if (existingMedia) {
+        heroImageMediaId = existingMedia.id;
+      } else {
+        const newMedia = await prisma.mediaFile.create({
+          data: {
+            originalName: body.title ? `${body.title.slice(0, 40)}_hero.webp` : "course_hero.webp",
+            fileName: `${Date.now()}_hero.webp`,
+            fileType: "IMAGE",
+            mimeType: "image/webp",
+            fileSizeBytes: BigInt(45000),
+            storageProvider: trimmedUrl.includes("cloudinary.com") ? "CLOUDINARY" : "LOCAL",
+            storagePath: trimmedUrl,
+          },
+        });
+        heroImageMediaId = newMedia.id;
+      }
+    }
+
     const course = await prisma.course.create({
       data: {
         categoryId,
@@ -136,7 +171,7 @@ export async function POST(request: Request) {
         feeINR: body.feeINR || null,
         feeUSD: body.feeUSD || null,
         emiStartingINR: body.emiStartingINR || null,
-        heroImageMediaId: body.heroImageMediaId || null,
+        heroImageMediaId,
         curriculumJson: body.curriculum || null,
         skillsCoveredJson: body.skillsCovered || null,
         careerScopeJson: body.careerScope || null,

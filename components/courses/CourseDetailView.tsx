@@ -160,6 +160,9 @@ export function CourseDetailView({ initialCourse, slug }: CourseDetailViewProps)
             key={`bg-${course.heroImage}`}
             src={course.heroImage}
             alt={course.title}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = DEFAULT_MEDICAL_BANNER;
+            }}
             className="absolute inset-0 w-full h-full object-cover opacity-15 filter blur-[2px] scale-105 pointer-events-none transition-opacity duration-300"
           />
         )}

@@ -413,6 +413,7 @@ export default function AdminCoursesPage() {
         feeUSD: editingCourse.feeUSD || 0,
         emiStartingINR: editingCourse.emiStartingINR || 0,
         eligibility: editingCourse.eligibility,
+        heroImage: editingCourse.heroImage,
         heroImageMediaId: (editingCourse as any).heroImageMediaId || undefined,
         curriculum: editingCourse.curriculum || [],
         skillsCovered: skills,

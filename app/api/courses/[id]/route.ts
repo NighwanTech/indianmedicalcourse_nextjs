@@ -91,9 +91,30 @@ export async function PUT(
     if (body.eligibility !== undefined) updateData.eligibility = body.eligibility;
     if (body.feeINR !== undefined) updateData.feeINR = body.feeINR;
     if (body.feeUSD !== undefined) updateData.feeUSD = body.feeUSD;
-    if (body.emiStartingINR !== undefined) updateData.emiStartingINR = body.emiStartingINR;
-    if (body.heroImageMediaId !== undefined) updateData.heroImageMediaId = body.heroImageMediaId;
-    if (body.curriculum !== undefined) updateData.curriculumJson = body.curriculum;
+    if (body.heroImage && typeof body.heroImage === "string" && body.heroImage.trim()) {
+      const trimmedUrl = body.heroImage.trim();
+      const existingMedia = await prisma.mediaFile.findFirst({
+        where: { storagePath: trimmedUrl },
+      });
+      if (existingMedia) {
+        updateData.heroImageMediaId = existingMedia.id;
+      } else {
+        const newMedia = await prisma.mediaFile.create({
+          data: {
+            originalName: body.title ? `${body.title.slice(0, 40)}_hero.webp` : "course_hero.webp",
+            fileName: `${Date.now()}_hero.webp`,
+            fileType: "IMAGE",
+            mimeType: "image/webp",
+            fileSizeBytes: BigInt(45000),
+            storageProvider: trimmedUrl.includes("cloudinary.com") ? "CLOUDINARY" : "LOCAL",
+            storagePath: trimmedUrl,
+          },
+        });
+        updateData.heroImageMediaId = newMedia.id;
+      }
+    } else if (body.heroImageMediaId !== undefined) {
+      updateData.heroImageMediaId = body.heroImageMediaId;
+    }
     if (body.skillsCovered !== undefined) updateData.skillsCoveredJson = body.skillsCovered;
     if (body.careerScope !== undefined) updateData.careerScopeJson = body.careerScope;
     if (body.clinicalHospitals !== undefined) updateData.clinicalHospitalsText = body.clinicalHospitals;
