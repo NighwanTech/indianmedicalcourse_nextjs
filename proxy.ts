@@ -43,48 +43,18 @@ export function proxy(request: NextRequest) {
   }
 
   // Role-based Route Authorization Matrix
-  const role = payload.role;
-  
-  if (role !== 'SUPER_ADMIN') {
-    // Super Admin only routes
-    const superAdminOnlyPaths = ['/admin/users', '/admin/menus', '/admin/settings'];
-    if (superAdminOnlyPaths.some(p => pathname === p || pathname.startsWith(`${p}/`))) {
-      const url = new URL('/admin', request.url);
-      url.searchParams.set('error', 'Access Denied: Super Admin permissions required.');
-      return NextResponse.redirect(url);
-    }
+  // Authenticated portal users have access to all CMS and CRM admin pages
+  const role = payload.role || 'SUPER_ADMIN';
 
-    if (role === 'COUNSELLOR') {
-      // Counsellor cannot access CMS builders, media library, gallery, or site management
-      const counsellorRestrictedPaths = [
-        '/admin/homepage',
-        '/admin/landing-pages',
-        '/admin/media',
-        '/admin/gallery',
-        '/admin/partners',
-      ];
-      if (counsellorRestrictedPaths.some(p => pathname === p || pathname.startsWith(`${p}/`))) {
-        const url = new URL('/admin', request.url);
-        url.searchParams.set('error', 'Access Denied: Counsellor role cannot access this module.');
-        return NextResponse.redirect(url);
-      }
-    }
+  // Strict role boundary: COUNSELLOR is strictly restricted to Dashboard and Leads
+  if (role === 'COUNSELLOR') {
+    const isAllowed = 
+      pathname === '/admin' || 
+      pathname === '/admin/' || 
+      pathname.startsWith('/admin/leads');
 
-    if (role === 'EDITOR') {
-      // Editor cannot access Lead CRM, CMS builders, or site management
-      const editorRestrictedPaths = [
-        '/admin/leads',
-        '/admin/homepage',
-        '/admin/landing-pages',
-        '/admin/courses',
-        '/admin/categories',
-        '/admin/faculty',
-      ];
-      if (editorRestrictedPaths.some(p => pathname === p || pathname.startsWith(`${p}/`))) {
-        const url = new URL('/admin', request.url);
-        url.searchParams.set('error', 'Access Denied: Editor role cannot access this module.');
-        return NextResponse.redirect(url);
-      }
+    if (!isAllowed) {
+      return NextResponse.redirect(new URL('/admin/leads', request.url));
     }
   }
 

@@ -4,7 +4,7 @@ import { verifyToken, hashPassword } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { Role } from "@prisma/client";
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 const defaultAdminUsers = [
   {
@@ -18,19 +18,10 @@ const defaultAdminUsers = [
   },
   {
     id: 2,
-    name: "Senior Admissions Counsellor",
-    email: "counsellor@indianmedicalcourses.com",
-    phone: "+91 9876543210",
-    role: "COUNSELLOR",
-    isActive: true,
-    lastLoginAt: null,
-  },
-  {
-    id: 3,
-    name: "Curriculum & CMS Editor",
-    email: "editor@indianmedicalcourses.com",
-    phone: "+91 9876543211",
-    role: "EDITOR",
+    name: "Sandeep",
+    email: "sandeep@nighwantech.com",
+    phone: "+91 8985025794",
+    role: "SUPER_ADMIN",
     isActive: true,
     lastLoginAt: null,
   },
@@ -38,23 +29,9 @@ const defaultAdminUsers = [
 
 export async function GET() {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("imc_auth_token")?.value;
-    
-    if (token) {
-      const payload = verifyToken(token);
-      if (!payload || (payload.role !== "SUPER_ADMIN" && payload.role !== "ADMIN")) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
-    }
-
-    try {
-      const users = await authRepository.listAllUsers();
-      if (users && users.length > 0) {
-        return NextResponse.json(users, { status: 200 });
-      }
-    } catch (dbErr) {
-      console.warn("[Admin Users API] Falling back to default admin users list");
+    const users = await authRepository.listAllUsers();
+    if (users && users.length > 0) {
+      return NextResponse.json(users, { status: 200 });
     }
 
     return NextResponse.json(defaultAdminUsers, { status: 200 });
@@ -116,20 +93,29 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, name, email, phone, role, isActive } = body;
+    const { id, name, email, phone, role, isActive, password } = body;
 
     if (!id) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400 });
     }
 
     try {
-      const updated = await authRepository.updateUser(Number(id), {
-        name,
-        email,
-        phone,
-        role,
-        isActive,
-      });
+      const updateData: any = {};
+      if (name !== undefined) updateData.name = name;
+      if (email !== undefined) updateData.email = email;
+      if (phone !== undefined) updateData.phone = phone;
+      if (role !== undefined) updateData.role = role;
+      if (isActive !== undefined) updateData.isActive = isActive;
+
+      if (password && String(password).trim().length >= 6) {
+        const passwordHash = await hashPassword(String(password).trim());
+        await authRepository.updatePassword(Number(id), passwordHash);
+      }
+
+      const updated = Object.keys(updateData).length > 0
+        ? await authRepository.updateUser(Number(id), updateData)
+        : await authRepository.findUserById(Number(id));
+
       return NextResponse.json({ success: true, user: updated }, { status: 200 });
     } catch (dbErr: any) {
       return NextResponse.json({ success: true, user: body }, { status: 200 });

@@ -50,11 +50,14 @@ import {
   Eye,
   EyeOff,
   AlertCircle,
-  Play
+  Play,
+  Bell,
+  Send,
+  Info
 } from "lucide-react";
 
 export default function AdminSettingsPage() {
-  const [activeGroup, setActiveGroup] = useState("CRM_INTEGRATION");
+  const [activeGroup, setActiveGroup] = useState("LEAD_NOTIFICATIONS");
   const [isSaved, setIsSaved] = useState(false);
   const [notificationMsg, setNotificationMsg] = useState("Settings Saved Successfully!");
 
@@ -125,6 +128,32 @@ Sitemap: https://indianmedicalcourse.com/sitemap.xml`);
   const [waWebhookToken, setWaWebhookToken] = useState("");
 
   // =========================================================================
+  // LEAD NOTIFICATIONS ENGINE (EMAIL & WHATSAPP) STATE
+  // =========================================================================
+  const [notificationEmails, setNotificationEmails] = useState("admissions@indianmedicalcourses.com");
+  const [leadEmailAlertsEnabled, setLeadEmailAlertsEnabled] = useState(true);
+  const [doctorAutoReplyEnabled, setDoctorAutoReplyEnabled] = useState(false);
+  const [smtpHost, setSmtpHost] = useState("smtp.gmail.com");
+  const [smtpPort, setSmtpPort] = useState("587");
+  const [smtpUser, setSmtpUser] = useState("admissions@indianmedicalcourses.com");
+  const [smtpPass, setSmtpPass] = useState("");
+  const [smtpSecure, setSmtpSecure] = useState(false);
+  const [smtpFromName, setSmtpFromName] = useState("Indian Medical Course Admissions");
+  const [smtpFromEmail, setSmtpFromEmail] = useState("admissions@indianmedicalcourses.com");
+  const [showSmtpPass, setShowSmtpPass] = useState(false);
+  const [isTestingSmtp, setIsTestingSmtp] = useState(false);
+  const [smtpTestResult, setSmtpTestResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  // WhatsApp Notification State
+  const [notificationWhatsApp, setNotificationWhatsApp] = useState("+91 8295843006");
+  const [leadWhatsAppAlertsEnabled, setLeadWhatsAppAlertsEnabled] = useState(true);
+  const [alertWhatsappMode, setAlertWhatsappMode] = useState<"WEBHOOK" | "META_API">("WEBHOOK");
+  const [whatsappWebhookUrl, setWhatsappWebhookUrl] = useState("");
+  const [whatsappMetaPhoneId, setWhatsappMetaPhoneId] = useState("");
+  const [whatsappMetaToken, setWhatsappMetaToken] = useState("");
+  const [showMetaToken, setShowMetaToken] = useState(false);
+  const [isTestingWhatsApp, setIsTestingWhatsApp] = useState(false);
+  const [whatsappTestResult, setWhatsappTestResult] = useState<{ success: boolean; message: string } | null>(null);
   // ENTERPRISE CRM INTEGRATION STATE
   // =========================================================================
   const [crmConfig, setCrmConfig] = useState<CRMConfiguration>(DEFAULT_CRM_CONFIG);
@@ -196,6 +225,38 @@ Sitemap: https://indianmedicalcourse.com/sitemap.xml`);
       const loadedCrmConfig = crmService.getConfig();
       setCrmConfig(loadedCrmConfig);
       setQueueJobs(crmQueue.getJobs());
+
+      // Load Site Settings from Database
+      fetch("/api/settings")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.settings) {
+            const s = data.settings;
+            if (s.notification_emails) setNotificationEmails(s.notification_emails);
+            if (s.lead_email_alerts_enabled !== undefined) setLeadEmailAlertsEnabled(s.lead_email_alerts_enabled === "true");
+            if (s.doctor_auto_reply_enabled !== undefined) setDoctorAutoReplyEnabled(s.doctor_auto_reply_enabled === "true");
+            if (s.smtp_host) setSmtpHost(s.smtp_host);
+            if (s.smtp_port) setSmtpPort(s.smtp_port);
+            if (s.smtp_user) setSmtpUser(s.smtp_user);
+            if (s.smtp_pass) setSmtpPass(s.smtp_pass);
+            if (s.smtp_secure !== undefined) setSmtpSecure(s.smtp_secure === "true");
+            if (s.smtp_from_name) setSmtpFromName(s.smtp_from_name);
+            if (s.smtp_from_email) setSmtpFromEmail(s.smtp_from_email);
+            if (s.notification_whatsapp) setNotificationWhatsApp(s.notification_whatsapp);
+            if (s.lead_whatsapp_alerts_enabled !== undefined) setLeadWhatsAppAlertsEnabled(s.lead_whatsapp_alerts_enabled === "true");
+            if (s.whatsapp_mode) setAlertWhatsappMode(s.whatsapp_mode as any);
+            if (s.whatsapp_webhook_url) setWhatsappWebhookUrl(s.whatsapp_webhook_url);
+            if (s.whatsapp_meta_phone_id) setWhatsappMetaPhoneId(s.whatsapp_meta_phone_id);
+            if (s.whatsapp_meta_token) setWhatsappMetaToken(s.whatsapp_meta_token);
+            if (s.brand_name) setBrandName(s.brand_name);
+            if (s.hotline_phone) setPhone(s.hotline_phone);
+            if (s.whatsapp_number) setWhatsapp(s.whatsapp_number);
+            if (s.support_email) setEmail(s.support_email);
+            if (s.registered_address) setAddress(s.registered_address);
+            if (s.announcement_text) setAnnouncement(s.announcement_text);
+          }
+        })
+        .catch((e) => console.warn("Failed to load /api/settings:", e));
     }
   }, []);
 
@@ -205,7 +266,7 @@ Sitemap: https://indianmedicalcourse.com/sitemap.xml`);
     setTimeout(() => setIsSaved(false), 3000);
   };
 
-  const handleSaveAll = (e: React.FormEvent) => {
+  const handleSaveAll = async (e: React.FormEvent) => {
     e.preventDefault();
     if (typeof window !== "undefined") {
       localStorage.setItem("imc_brand_name", brandName);
@@ -237,7 +298,129 @@ Sitemap: https://indianmedicalcourse.com/sitemap.xml`);
       // Save CRM Config
       crmService.saveConfig(crmConfig);
     }
-    showToast("All Website & Enterprise CRM Settings Saved!");
+
+    // Persist all settings to MySQL Database
+    try {
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          settings: {
+            brand_name: brandName,
+            hotline_phone: phone,
+            whatsapp_number: whatsapp,
+            support_email: email,
+            registered_address: address,
+            announcement_text: announcement,
+            notification_emails: notificationEmails,
+            lead_email_alerts_enabled: String(leadEmailAlertsEnabled),
+            doctor_auto_reply_enabled: String(doctorAutoReplyEnabled),
+            smtp_host: smtpHost,
+            smtp_port: smtpPort,
+            smtp_user: smtpUser,
+            smtp_pass: smtpPass,
+            smtp_secure: String(smtpSecure),
+            smtp_from_name: smtpFromName,
+            smtp_from_email: smtpFromEmail,
+            notification_whatsapp: notificationWhatsApp,
+            lead_whatsapp_alerts_enabled: String(leadWhatsAppAlertsEnabled),
+            whatsapp_mode: alertWhatsappMode,
+            whatsapp_webhook_url: whatsappWebhookUrl,
+            whatsapp_meta_phone_id: whatsappMetaPhoneId,
+            whatsapp_meta_token: whatsappMetaToken,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("Settings & Lead Alerts Saved to Database!");
+      } else {
+        showToast("Saved locally, DB sync error: " + (data.error || "Unknown"));
+      }
+    } catch {
+      showToast("Saved locally!");
+    }
+  };
+
+  // SMTP Test Action
+  const handleTestSmtpConnection = async () => {
+    setIsTestingSmtp(true);
+    setSmtpTestResult(null);
+    try {
+      const recipient = notificationEmails.split(",")[0]?.trim() || smtpUser;
+      const res = await fetch("/api/settings/test-smtp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          host: smtpHost,
+          port: smtpPort,
+          user: smtpUser,
+          pass: smtpPass,
+          secure: smtpSecure,
+          fromName: smtpFromName,
+          fromEmail: smtpFromEmail,
+          testEmail: recipient,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSmtpTestResult({
+          success: true,
+          message: data.message || `SMTP verified! Test email sent to ${recipient}`,
+        });
+        showToast("SMTP Verified! Test Email Sent.");
+      } else {
+        setSmtpTestResult({
+          success: false,
+          message: data.error || "SMTP verification failed. Check credentials.",
+        });
+        showToast("SMTP Test Failed");
+      }
+    } catch (e: any) {
+      setSmtpTestResult({
+        success: false,
+        message: e.message || "Network connection error while testing SMTP",
+      });
+    } finally {
+      setIsTestingSmtp(false);
+    }
+  };
+
+  // WhatsApp Test Action
+  const handleTestWhatsAppConnection = async () => {
+    setIsTestingWhatsApp(true);
+    setWhatsappTestResult(null);
+    try {
+      const res = await fetch("/api/settings/test-whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          webhookUrl: whatsappWebhookUrl,
+          notificationWhatsApp,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setWhatsappTestResult({
+          success: true,
+          message: data.message || "Test WhatsApp notification sent successfully!",
+        });
+        showToast("WhatsApp Alert Sent!");
+      } else {
+        setWhatsappTestResult({
+          success: false,
+          message: data.error || "Failed to dispatch WhatsApp test alert.",
+        });
+        showToast("WhatsApp Test Failed");
+      }
+    } catch (e: any) {
+      setWhatsappTestResult({
+        success: false,
+        message: e.message || "Network error",
+      });
+    } finally {
+      setIsTestingWhatsApp(false);
+    }
   };
 
   // CRM Connection Test Action
@@ -372,6 +555,7 @@ Sitemap: https://indianmedicalcourse.com/sitemap.xml`);
   };
 
   const settingGroups = [
+    { key: "LEAD_NOTIFICATIONS", label: "🔔 Lead Alerts, Email & WhatsApp", badge: "Live Alerts" },
     { key: "CRM_INTEGRATION", label: "⚡ Enterprise CRM & Webhooks", badge: "Live Queue" },
     { key: "ANALYTICS_GTM", label: "📊 Google Analytics & GTM", badge: "Official" },
     { key: "GLOBAL_SEO", label: "🔍 Search Console & SEO", badge: "Live" },
@@ -440,6 +624,415 @@ Sitemap: https://indianmedicalcourse.com/sitemap.xml`);
         <div className="lg:col-span-3">
           <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6">
             <form onSubmit={handleSaveAll} className="space-y-6">
+
+              {/* ========================================================================= */}
+              {/* TAB 0: LIVE LEAD ALERTS ENGINE (EMAIL & WHATSAPP)                         */}
+              {/* ========================================================================= */}
+              {activeGroup === "LEAD_NOTIFICATIONS" && (
+                <div className="space-y-6">
+                  
+                  {/* Top Title & Master Dispatch Toggles */}
+                  <div className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-base font-black text-slate-900 font-display flex items-center gap-2">
+                        <Bell className="w-5 h-5 text-[#0B4F9C]" />
+                        <span>Instant Lead Alerts Engine (Email & WhatsApp)</span>
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Receive instant notifications with doctor details, mobile number, course, and Google Ads attribution whenever an inquiry arrives.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      {/* Email Toggle */}
+                      <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-2xl border border-slate-200">
+                        <span className="text-xs font-bold text-slate-700">Email:</span>
+                        <button
+                          type="button"
+                          onClick={() => setLeadEmailAlertsEnabled(!leadEmailAlertsEnabled)}
+                          className={`text-xs font-extrabold px-3 py-1 rounded-xl transition-all cursor-pointer ${
+                            leadEmailAlertsEnabled
+                              ? "bg-emerald-600 text-white shadow-xs"
+                              : "bg-slate-200 text-slate-600"
+                          }`}
+                        >
+                          {leadEmailAlertsEnabled ? "ACTIVE (ON)" : "OFF"}
+                        </button>
+                      </div>
+
+                      {/* WhatsApp Toggle */}
+                      <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-2xl border border-slate-200">
+                        <span className="text-xs font-bold text-slate-700">WhatsApp:</span>
+                        <button
+                          type="button"
+                          onClick={() => setLeadWhatsAppAlertsEnabled(!leadWhatsAppAlertsEnabled)}
+                          className={`text-xs font-extrabold px-3 py-1 rounded-xl transition-all cursor-pointer ${
+                            leadWhatsAppAlertsEnabled
+                              ? "bg-emerald-600 text-white shadow-xs"
+                              : "bg-slate-200 text-slate-600"
+                          }`}
+                        >
+                          {leadWhatsAppAlertsEnabled ? "ACTIVE (ON)" : "OFF"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 1. Alert Destination Settings */}
+                  <div className="p-5 rounded-2xl bg-blue-50/50 border border-blue-200 space-y-4">
+                    <h4 className="text-xs font-extrabold uppercase text-[#0B4F9C] tracking-wider flex items-center gap-1.5">
+                      <Send className="w-4 h-4 text-[#0B4F9C]" />
+                      <span>1. Lead Notification Destinations (Where to Send Leads)</span>
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Recipient Emails */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-800 mb-1">
+                          Notification Receiver Email(s)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={notificationEmails}
+                            onChange={(e) => setNotificationEmails(e.target.value)}
+                            placeholder="admissions@indianmedicalcourses.com, dr.sandeep@gmail.com"
+                            className="w-full text-xs font-mono p-2.5 bg-white border border-slate-200 rounded-xl focus:border-blue-500"
+                          />
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-1">
+                          Comma-separated list of emails to receive instant doctor inquiry alerts.
+                        </p>
+                      </div>
+
+                      {/* Recipient WhatsApp */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-800 mb-1">
+                          Notification Receiver WhatsApp Number
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={notificationWhatsApp}
+                            onChange={(e) => setNotificationWhatsApp(e.target.value)}
+                            placeholder="+91 8295843006"
+                            className="w-full text-xs font-mono p-2.5 bg-white border border-slate-200 rounded-xl focus:border-blue-500"
+                          />
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-1">
+                          Phone number to receive automated WhatsApp lead notifications.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Applicant Acknowledgment Email Toggle */}
+                    <div className="pt-2 border-t border-blue-200/60 flex items-center justify-between">
+                      <div>
+                        <div className="text-xs font-bold text-slate-800">
+                          Applicant Confirmation Auto-Reply Email
+                        </div>
+                        <div className="text-[11px] text-slate-500">
+                          Automatically send &quot;Application Received - Thank you for applying&quot; email to the doctor applicant.
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setDoctorAutoReplyEnabled(!doctorAutoReplyEnabled)}
+                        className={`text-xs font-extrabold px-3 py-1 rounded-xl transition-all cursor-pointer ${
+                          doctorAutoReplyEnabled
+                            ? "bg-emerald-600 text-white"
+                            : "bg-slate-200 text-slate-600"
+                        }`}
+                      >
+                        {doctorAutoReplyEnabled ? "ENABLED" : "DISABLED"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 2. Outgoing SMTP Mail Server Configuration */}
+                  <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <h4 className="text-xs font-extrabold uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
+                        <Mail className="w-4 h-4 text-blue-600" />
+                        <span>2. Outgoing SMTP Server Configuration</span>
+                      </h4>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                        smtpPass ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                      }`}>
+                        {smtpPass ? "Credentials Set" : "⚠️ SMTP Password Needed"}
+                      </span>
+                    </div>
+
+                    {/* Gmail / Google Workspace Helper */}
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-xs text-amber-900">
+                      <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <div className="font-bold">Google Workspace / Gmail Setup Instructions:</div>
+                        <div className="text-[11px] leading-relaxed">
+                          For Google Workspace or Gmail accounts (e.g. <code>admissions@indianmedicalcourses.com</code>), Google requires a 16-character <strong>Google App Password</strong>:
+                          <ol className="list-decimal ml-4 mt-1 space-y-0.5">
+                            <li>Go to your <strong>Google Account ➔ Security</strong>.</li>
+                            <li>Ensure <strong>2-Step Verification</strong> is ON.</li>
+                            <li>Search for <strong>App Passwords</strong>, name it &quot;IMC Website&quot;, and copy the generated 16-character code into the SMTP Password field below.</li>
+                          </ol>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {/* Host */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">SMTP Host</label>
+                        <input
+                          type="text"
+                          value={smtpHost}
+                          onChange={(e) => setSmtpHost(e.target.value)}
+                          placeholder="smtp.gmail.com"
+                          className="w-full text-xs font-mono p-2.5 bg-white border border-slate-200 rounded-xl"
+                        />
+                      </div>
+
+                      {/* Port */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">SMTP Port</label>
+                        <input
+                          type="text"
+                          value={smtpPort}
+                          onChange={(e) => setSmtpPort(e.target.value)}
+                          placeholder="587"
+                          className="w-full text-xs font-mono p-2.5 bg-white border border-slate-200 rounded-xl"
+                        />
+                        <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-500">
+                          <span>Standard: 587 (TLS) or 465 (SSL)</span>
+                        </div>
+                      </div>
+
+                      {/* Secure / SSL */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Security Protocol</label>
+                        <select
+                          value={smtpSecure ? "true" : "false"}
+                          onChange={(e) => setSmtpSecure(e.target.value === "true")}
+                          className="w-full text-xs font-bold p-2.5 bg-white border border-slate-200 rounded-xl cursor-pointer"
+                        >
+                          <option value="false">STARTTLS (Port 587 - Recommended)</option>
+                          <option value="true">SSL / TLS (Port 465)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Username */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">SMTP Username / Email</label>
+                        <input
+                          type="email"
+                          value={smtpUser}
+                          onChange={(e) => setSmtpUser(e.target.value)}
+                          placeholder="admissions@indianmedicalcourses.com"
+                          className="w-full text-xs font-mono p-2.5 bg-white border border-slate-200 rounded-xl"
+                        />
+                      </div>
+
+                      {/* Password */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          SMTP Password / App Password
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showSmtpPass ? "text" : "password"}
+                            value={smtpPass}
+                            onChange={(e) => setSmtpPass(e.target.value)}
+                            placeholder="16-character App Password (e.g. abcd efgh ijkl mnop)"
+                            className="w-full text-xs font-mono p-2.5 pr-10 bg-white border border-slate-200 rounded-xl focus:border-blue-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowSmtpPass(!showSmtpPass)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                          >
+                            {showSmtpPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Sender Name */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Sender From Name</label>
+                        <input
+                          type="text"
+                          value={smtpFromName}
+                          onChange={(e) => setSmtpFromName(e.target.value)}
+                          placeholder="Indian Medical Course Admissions"
+                          className="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-xl"
+                        />
+                      </div>
+
+                      {/* Sender Email */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Sender From Email</label>
+                        <input
+                          type="email"
+                          value={smtpFromEmail}
+                          onChange={(e) => setSmtpFromEmail(e.target.value)}
+                          placeholder="admissions@indianmedicalcourses.com"
+                          className="w-full text-xs font-mono p-2.5 bg-white border border-slate-200 rounded-xl"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Test SMTP Button & Diagnostic Output */}
+                    <div className="pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <button
+                        type="button"
+                        onClick={handleTestSmtpConnection}
+                        disabled={isTestingSmtp}
+                        className="inline-flex items-center gap-2 bg-[#0B4F9C] hover:bg-[#083E7D] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        <Play className={`w-3.5 h-3.5 ${isTestingSmtp ? "animate-spin" : ""}`} />
+                        <span>{isTestingSmtp ? "Connecting to SMTP..." : "Test SMTP Connection & Send Test Email"}</span>
+                      </button>
+
+                      {smtpTestResult && (
+                        <div className={`text-xs font-bold p-3 rounded-xl flex items-center gap-2.5 max-w-lg ${
+                          smtpTestResult.success
+                            ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
+                            : "bg-red-100 text-red-900 border border-red-300"
+                        }`}>
+                          {smtpTestResult.success ? (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          ) : (
+                            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                          )}
+                          <span className="leading-snug">{smtpTestResult.message}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 3. WhatsApp Automated Dispatch Configuration */}
+                  <div className="p-5 rounded-2xl bg-emerald-50/50 border border-emerald-200 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <h4 className="text-xs font-extrabold uppercase text-emerald-900 tracking-wider flex items-center gap-1.5">
+                        <Send className="w-4 h-4 text-emerald-600" />
+                        <span>3. WhatsApp Automated Alerts Dispatcher</span>
+                      </h4>
+                      <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">
+                        Real-time Doctor Dispatch
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* WhatsApp Dispatch Mode */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          WhatsApp Dispatch Method
+                        </label>
+                        <select
+                          value={alertWhatsappMode}
+                          onChange={(e: any) => setAlertWhatsappMode(e.target.value)}
+                          className="w-full text-xs font-bold p-2.5 bg-white border border-emerald-300 rounded-xl cursor-pointer"
+                        >
+                          <option value="WEBHOOK">Generic Webhook (Wati / AiSensy / Zapier / Make / Pabbly)</option>
+                          <option value="META_API">Meta WhatsApp Cloud API (Graph API)</option>
+                        </select>
+                      </div>
+
+                      {/* Webhook URL or Meta Phone ID */}
+                      {alertWhatsappMode === "WEBHOOK" ? (
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            WhatsApp Gateway Webhook URL
+                          </label>
+                          <input
+                            type="text"
+                            value={whatsappWebhookUrl}
+                            onChange={(e) => setWhatsappWebhookUrl(e.target.value)}
+                            placeholder="https://hooks.zapier.com/hooks/catch/... or Wati URL"
+                            className="w-full text-xs font-mono p-2.5 bg-white border border-emerald-300 rounded-xl focus:border-emerald-600"
+                          />
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            Meta WhatsApp Phone Number ID
+                          </label>
+                          <input
+                            type="text"
+                            value={whatsappMetaPhoneId}
+                            onChange={(e) => setWhatsappMetaPhoneId(e.target.value)}
+                            placeholder="e.g. 109823485729384"
+                            className="w-full text-xs font-mono p-2.5 bg-white border border-emerald-300 rounded-xl"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {alertWhatsappMode === "META_API" && (
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Meta Permanent Access Token
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showMetaToken ? "text" : "password"}
+                            value={whatsappMetaToken}
+                            onChange={(e) => setWhatsappMetaToken(e.target.value)}
+                            placeholder="EAA..."
+                            className="w-full text-xs font-mono p-2.5 pr-10 bg-white border border-emerald-300 rounded-xl"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowMetaToken(!showMetaToken)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                          >
+                            {showMetaToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="p-3 bg-white/80 border border-emerald-200 rounded-xl text-xs text-slate-600">
+                      <p className="font-bold text-emerald-950 mb-1">WhatsApp Alert Format:</p>
+                      <p className="font-mono text-[11px] text-slate-700 whitespace-pre-wrap leading-tight">
+                        {`🚨 *NEW DOCTOR LEAD CAPTURED*\n👨‍⚕️ Doctor: Dr. [Name]\n📞 Mobile: [Phone]\n🎓 Course: [Interested Course]\n🩺 Qualification: [MBBS/MD]\n📍 Location: [City, State]\n👉 Quick Call | 👉 Direct WhatsApp`}
+                      </p>
+                    </div>
+
+                    {/* Test WhatsApp Action */}
+                    <div className="pt-2 border-t border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <button
+                        type="button"
+                        onClick={handleTestWhatsAppConnection}
+                        disabled={isTestingWhatsApp}
+                        className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        <Play className={`w-3.5 h-3.5 ${isTestingWhatsApp ? "animate-spin" : ""}`} />
+                        <span>{isTestingWhatsApp ? "Pinging WhatsApp..." : "Send Test WhatsApp Alert"}</span>
+                      </button>
+
+                      {whatsappTestResult && (
+                        <div className={`text-xs font-bold p-3 rounded-xl flex items-center gap-2.5 max-w-lg ${
+                          whatsappTestResult.success
+                            ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
+                            : "bg-red-100 text-red-900 border border-red-300"
+                        }`}>
+                          {whatsappTestResult.success ? (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          ) : (
+                            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                          )}
+                          <span className="leading-snug">{whatsappTestResult.message}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+              )}
 
               {/* ========================================================================= */}
               {/* TAB 1: ENTERPRISE CRM INTEGRATION & VISUAL MAPPING BUILDER                 */}

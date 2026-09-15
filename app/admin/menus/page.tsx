@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { 
   Menu as MenuIcon, 
@@ -10,36 +10,25 @@ import {
   Eye, 
   EyeOff, 
   Save, 
-  ArrowUpDown, 
+  ArrowUp, 
+  ArrowDown, 
   CheckCircle2, 
-  ShieldCheck,
-  Sparkles,
-  X 
+  ShieldCheck, 
+  Sparkles, 
+  X,
+  RefreshCw,
+  AlertCircle,
+  ExternalLink
 } from "lucide-react";
 
 export default function AdminMenusPage() {
   const [selectedMenuSlug, setSelectedMenuSlug] = useState("admin_sidebar");
-  const [isSaved, setIsSaved] = useState(false);
+  const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSavedNotification, setIsSavedNotification] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeModal, setActiveModal] = useState<"create" | "edit" | null>(null);
-
-  const [menuItems, setMenuItems] = useState([
-    { id: 1, label: "Dashboard", url: "/admin", icon: "LayoutDashboard", permission: "ALL", isVisible: true, displayOrder: 1 },
-    { id: 2, label: "Homepage & Hero CMS", url: "/admin/homepage", icon: "Layout", badgeText: "Live", permission: "ADMIN", isVisible: true, displayOrder: 2 },
-    { id: 3, label: "Lead Management", url: "/admin/leads", icon: "Users", badgeText: "Live", permission: "ALL", isVisible: true, displayOrder: 3 },
-    { id: 4, label: "Media Library", url: "/admin/media", icon: "Image", permission: "ADMIN", isVisible: true, displayOrder: 4 },
-    { id: 5, label: "Courses Master", url: "/admin/courses", icon: "GraduationCap", permission: "ADMIN", isVisible: true, displayOrder: 5 },
-    { id: 6, label: "Categories", url: "/admin/categories", icon: "FolderTree", permission: "ADMIN", isVisible: true, displayOrder: 6 },
-    { id: 7, label: "Faculty / Mentors", url: "/admin/faculty", icon: "Award", permission: "ADMIN", isVisible: true, displayOrder: 7 },
-    { id: 8, label: "Landing Page Builder", url: "/admin/landing-pages", icon: "Layers", badgeText: "CRO", permission: "ADMIN", isVisible: true, displayOrder: 8 },
-    { id: 9, label: "Blogs & Articles", url: "/admin/blogs", icon: "FileText", permission: "ALL", isVisible: true, displayOrder: 9 },
-    { id: 10, label: "FAQs Manager", url: "/admin/faqs", icon: "HelpCircle", permission: "ALL", isVisible: true, displayOrder: 10 },
-    { id: 11, label: "Testimonials", url: "/admin/testimonials", icon: "MessageSquare", permission: "ALL", isVisible: true, displayOrder: 11 },
-    { id: 12, label: "Hospital & Partners", url: "/admin/partners", icon: "Building2", badgeText: "New", permission: "ADMIN", isVisible: true, displayOrder: 12 },
-    { id: 13, label: "Gallery Assets", url: "/admin/gallery", icon: "Sliders", permission: "ADMIN", isVisible: true, displayOrder: 13 },
-    { id: 14, label: "Menu Builder", url: "/admin/menus", icon: "Menu", permission: "SUPER_ADMIN", isVisible: true, displayOrder: 14 },
-    { id: 15, label: "Website Settings", url: "/admin/settings", icon: "Settings", permission: "SUPER_ADMIN", isVisible: true, displayOrder: 15 },
-    { id: 16, label: "Admin & Roles", url: "/admin/users", icon: "UserCheck", permission: "SUPER_ADMIN", isVisible: true, displayOrder: 16 },
-  ]);
 
   const [formData, setFormData] = useState({
     id: 0,
@@ -52,6 +41,28 @@ export default function AdminMenusPage() {
     displayOrder: 1,
   });
 
+  const loadMenu = async (slug: string) => {
+    try {
+      setIsLoading(true);
+      setErrorMessage(null);
+      const res = await fetch(`/api/admin/menus?slug=${slug}`);
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.items)) {
+        setMenuItems(data.items);
+      } else {
+        setMenuItems([]);
+      }
+    } catch (err: any) {
+      setErrorMessage("Failed to load menu items from database.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMenu(selectedMenuSlug);
+  }, [selectedMenuSlug]);
+
   const toggleVisibility = (id: number) => {
     setMenuItems((prev) =>
       prev.map((item) =>
@@ -60,11 +71,25 @@ export default function AdminMenusPage() {
     );
   };
 
+  const moveItem = (index: number, direction: "up" | "down") => {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= menuItems.length) return;
+
+    const updated = [...menuItems];
+    const temp = updated[index];
+    updated[index] = updated[targetIndex];
+    updated[targetIndex] = temp;
+
+    // Recalculate displayOrder
+    const reordered = updated.map((it, idx) => ({ ...it, displayOrder: idx + 1 }));
+    setMenuItems(reordered);
+  };
+
   const openCreateModal = () => {
     setFormData({
       id: Date.now(),
       label: "",
-      url: "/admin/",
+      url: selectedMenuSlug.startsWith("admin") ? "/admin/" : "/",
       icon: "Sparkles",
       permission: "ALL",
       badgeText: "",
@@ -79,11 +104,21 @@ export default function AdminMenusPage() {
     setActiveModal("edit");
   };
 
+  const deleteItem = async (id: number) => {
+    if (!confirm("Are you sure you want to remove this menu item?")) return;
+    setMenuItems((prev) => prev.filter((it) => it.id !== id));
+    if (id < 1000000000) {
+      try {
+        await fetch(`/api/admin/menus?id=${id}`, { method: "DELETE" });
+      } catch {}
+    }
+  };
+
   const handleSaveModal = () => {
     if (!formData.label.trim() || !formData.url.trim()) return;
 
     if (activeModal === "create") {
-      setMenuItems((prev) => [...prev, formData]);
+      setMenuItems((prev) => [...prev, { ...formData, displayOrder: prev.length + 1 }]);
     } else if (activeModal === "edit") {
       setMenuItems((prev) =>
         prev.map((it) => (it.id === formData.id ? formData : it))
@@ -91,13 +126,38 @@ export default function AdminMenusPage() {
     }
 
     setActiveModal(null);
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2500);
   };
 
-  const handleSave = () => {
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 3000);
+  const handleSaveToDatabase = async () => {
+    try {
+      setIsSaving(true);
+      setErrorMessage(null);
+
+      const res = await fetch("/api/admin/menus", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          menuSlug: selectedMenuSlug,
+          items: menuItems,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to save menu");
+      }
+
+      if (data.items) {
+        setMenuItems(data.items);
+      }
+
+      setIsSavedNotification(true);
+      setTimeout(() => setIsSavedNotification(false), 3500);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to save menu configuration");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -110,12 +170,12 @@ export default function AdminMenusPage() {
             Dynamic Menu & Navigation Builder
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Manage sidebar modules, header navigation, role permissions, and visibility with zero code changes.
+            Manage sidebar modules, header navigation, role permissions, and visibility with real MySQL persistence.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          {isSaved && (
+          {isSavedNotification && (
             <div className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-2 rounded-xl animate-in fade-in">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               <span>Saved to Database!</span>
@@ -123,14 +183,29 @@ export default function AdminMenusPage() {
           )}
 
           <button
+            onClick={() => loadMenu(selectedMenuSlug)}
+            title="Reload from database"
+            className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-blue-600" : ""}`} />
+          </button>
+
+          <button
             onClick={openCreateModal}
-            className="inline-flex items-center gap-1.5 bg-[#0B4F9C] hover:bg-[#083E7D] text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all"
+            className="inline-flex items-center gap-1.5 bg-[#0B4F9C] hover:bg-[#083E7D] text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add Menu Item</span>
           </button>
         </div>
       </div>
+
+      {errorMessage && (
+        <div className="bg-red-500/10 border border-red-500/30 text-red-600 text-xs font-bold px-4 py-3 rounded-2xl flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
 
       {/* Menu Selector Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
@@ -143,7 +218,7 @@ export default function AdminMenusPage() {
           <button
             key={tab.slug}
             onClick={() => setSelectedMenuSlug(tab.slug)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer ${
               selectedMenuSlug === tab.slug
                 ? "bg-slate-900 text-white"
                 : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
@@ -170,67 +245,112 @@ export default function AdminMenusPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {menuItems.map((item, idx) => (
-                <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="py-3.5 px-4 text-center font-bold text-slate-400">
-                    {idx + 1}
-                  </td>
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-2.5 font-bold text-slate-900">
-                      <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
-                        <DynamicIcon name={item.icon} className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div>{item.label}</div>
-                        <div className="text-[10px] text-slate-400 font-normal">
-                          Icon: {item.icon || "Folder"}
-                        </div>
-                      </div>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-slate-400">
+                    <div className="inline-flex items-center gap-2 text-xs font-bold">
+                      <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
+                      <span>Loading menu items from MySQL database...</span>
                     </div>
                   </td>
-                  <td className="py-3.5 px-4 font-mono text-slate-600">
-                    {item.url}
-                  </td>
-                  <td className="py-3.5 px-4">
-                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                      item.permission === "SUPER_ADMIN" ? "bg-purple-100 text-purple-800 border border-purple-200" :
-                      item.permission === "ADMIN" ? "bg-blue-100 text-blue-800 border border-blue-200" :
-                      item.permission === "COUNSELLOR" ? "bg-emerald-100 text-emerald-800 border border-emerald-200" :
-                      item.permission === "EDITOR" ? "bg-amber-100 text-amber-800 border border-amber-200" :
-                      "bg-slate-100 text-slate-800 border border-slate-200"
-                    }`}>
-                      {item.permission || "ALL"}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-4">
-                    {item.badgeText ? (
-                      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
-                        {item.badgeText}
-                      </span>
-                    ) : (
-                      <span className="text-slate-300">—</span>
-                    )}
-                  </td>
-                  <td className="py-3.5 px-4 text-center">
-                    <button
-                      onClick={() => toggleVisibility(item.id)}
-                      className={`p-1.5 rounded-lg text-xs font-bold transition-all ${
-                        item.isVisible ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-400"
-                      }`}
-                    >
-                      {item.isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                    </button>
-                  </td>
-                  <td className="py-3.5 px-4 text-right space-x-2">
-                    <button
-                      onClick={() => openEditModal(item)}
-                      className="text-xs font-bold text-blue-600 hover:text-blue-800"
-                    >
-                      Edit
-                    </button>
+                </tr>
+              ) : menuItems.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-slate-500">
+                    <p className="font-bold">No menu items found in this menu.</p>
+                    <p className="text-xs text-slate-400 mt-1">Click &quot;Add Menu Item&quot; above to create one.</p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                menuItems.map((item, idx) => (
+                  <tr key={item.id || idx} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3.5 px-4 text-center font-bold text-slate-400">
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => moveItem(idx, "up")}
+                          disabled={idx === 0}
+                          title="Move up"
+                          className="p-1 hover:bg-slate-200 rounded disabled:opacity-20 cursor-pointer"
+                        >
+                          <ArrowUp className="w-3 h-3" />
+                        </button>
+                        <span>{idx + 1}</span>
+                        <button
+                          onClick={() => moveItem(idx, "down")}
+                          disabled={idx === menuItems.length - 1}
+                          title="Move down"
+                          className="p-1 hover:bg-slate-200 rounded disabled:opacity-20 cursor-pointer"
+                        >
+                          <ArrowDown className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-2.5 font-bold text-slate-900">
+                        <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
+                          <DynamicIcon name={item.icon} className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div>{item.label}</div>
+                          <div className="text-[10px] text-slate-400 font-normal">
+                            Icon: {item.icon || "Folder"}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4 font-mono text-slate-600">
+                      <span className="bg-slate-50 border border-slate-200 px-2 py-1 rounded text-[11px]">
+                        {item.url}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full ${
+                        item.permission === "SUPER_ADMIN" ? "bg-purple-100 text-purple-800 border border-purple-200" :
+                        item.permission === "ADMIN" ? "bg-blue-100 text-blue-800 border border-blue-200" :
+                        item.permission === "COUNSELLOR" ? "bg-emerald-100 text-emerald-800 border border-emerald-200" :
+                        item.permission === "EDITOR" ? "bg-amber-100 text-amber-800 border border-amber-200" :
+                        "bg-slate-100 text-slate-800 border border-slate-200"
+                      }`}>
+                        {item.permission || "ALL"}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      {item.badgeText ? (
+                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          {item.badgeText}
+                        </span>
+                      ) : (
+                        <span className="text-slate-300">—</span>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4 text-center">
+                      <button
+                        onClick={() => toggleVisibility(item.id)}
+                        title={item.isVisible ? "Visible (click to hide)" : "Hidden (click to show)"}
+                        className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          item.isVisible ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "bg-slate-100 text-slate-400 hover:bg-slate-200"
+                        }`}
+                      >
+                        {item.isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                      </button>
+                    </td>
+                    <td className="py-3.5 px-4 text-right space-x-2">
+                      <button
+                        onClick={() => openEditModal(item)}
+                        className="text-xs font-bold text-blue-600 hover:underline cursor-pointer"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => deleteItem(item.id)}
+                        className="text-xs font-bold text-red-500 hover:underline cursor-pointer ml-2"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -240,10 +360,15 @@ export default function AdminMenusPage() {
             Database Driven • Changes take effect in real-time across all user sessions
           </div>
           <button
-            onClick={handleSave}
-            className="inline-flex items-center gap-1.5 bg-[#0B4F9C] hover:bg-[#083E7D] text-white text-xs font-bold py-2 px-5 rounded-xl shadow-xs"
+            onClick={handleSaveToDatabase}
+            disabled={isSaving || isLoading}
+            className="inline-flex items-center gap-1.5 bg-[#0B4F9C] hover:bg-[#083E7D] text-white text-xs font-bold py-2.5 px-6 rounded-xl shadow-xs transition-all disabled:opacity-50 cursor-pointer"
           >
-            <Save className="w-3.5 h-3.5" />
+            {isSaving ? (
+              <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <Save className="w-3.5 h-3.5" />
+            )}
             <span>Save Menu Configuration</span>
           </button>
         </div>
@@ -267,7 +392,7 @@ export default function AdminMenusPage() {
               </div>
               <button
                 onClick={() => setActiveModal(null)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -358,7 +483,7 @@ export default function AdminMenusPage() {
                 type="button"
                 disabled={!formData.label.trim() || !formData.url.trim()}
                 onClick={handleSaveModal}
-                className="inline-flex items-center gap-1.5 bg-[#0B4F9C] hover:bg-[#083E7D] text-white text-xs font-bold py-2.5 px-6 rounded-xl shadow-xs transition-all disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 bg-[#0B4F9C] hover:bg-[#083E7D] text-white text-xs font-bold py-2.5 px-6 rounded-xl shadow-xs transition-all disabled:opacity-50 cursor-pointer"
               >
                 <Save className="w-3.5 h-3.5" />
                 <span>Save Menu Item</span>

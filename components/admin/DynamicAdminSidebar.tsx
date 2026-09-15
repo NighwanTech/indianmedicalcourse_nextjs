@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { DynamicIcon } from "@/components/shared/DynamicIcon";
 import { 
   GraduationCap, 
@@ -33,10 +33,25 @@ interface DynamicAdminSidebarProps {
 
 export function DynamicAdminSidebar({
   items,
+  userRole,
   isOpen,
   onClose,
 }: DynamicAdminSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const visibleItems = userRole === "COUNSELLOR"
+    ? items.filter((item) => item.url === "/admin" || item.url === "/admin/leads")
+    : items;
+
+  const handleItemClick = (e: React.MouseEvent<HTMLAnchorElement>, url: string, openInNewTab?: boolean) => {
+    if (openInNewTab) return;
+
+    // Only close drawer on mobile viewports
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      onClose();
+    }
+  };
 
   return (
     <aside
@@ -45,8 +60,13 @@ export function DynamicAdminSidebar({
       } border-r border-slate-800/80 shadow-2xl`}
     >
       {/* Brand Header */}
-      <div className="flex items-center justify-between px-2 py-3 mb-4 border-b border-slate-800/80">
-        <Link href="/admin" className="flex items-center gap-2 bg-white px-2.5 py-1.5 rounded-xl shadow-xs">
+      <div className="flex items-center justify-between px-2 py-3 mb-4 border-b border-slate-800/80 shrink-0">
+        <Link 
+          href="/admin" 
+          prefetch={false}
+          onClick={(e) => handleItemClick(e, "/admin")}
+          className="flex items-center gap-2 bg-white px-2.5 py-1.5 rounded-xl shadow-xs"
+        >
           <img
             src="/images/imc-logo.png"
             alt="IMC Portal"
@@ -56,33 +76,40 @@ export function DynamicAdminSidebar({
 
         <button
           onClick={onClose}
-          className="lg:hidden text-slate-400 hover:text-white p-1"
+          className="lg:hidden text-slate-400 hover:text-white p-1 cursor-pointer"
+          aria-label="Close sidebar"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Dynamic Navigation Items from Database */}
-      <nav className="flex-1 space-y-1 overflow-y-auto no-scrollbar pr-1 pb-4">
-        {items.map((item) => {
+      {/* Dynamic Navigation Items */}
+      <nav 
+        className="flex-1 space-y-1 overflow-y-auto pr-1 pb-6 select-none"
+        style={{ scrollbarWidth: "thin", scrollbarColor: "#334155 transparent" }}
+      >
+        {visibleItems.map((item) => {
+          const currentPath = pathname ? pathname.replace(/\/$/, "") || "/admin" : "";
+          const targetUrl = item.url.replace(/\/$/, "") || "/admin";
           const isActive =
-            pathname === item.url ||
-            (item.url !== "/admin" && pathname.startsWith(item.url));
+            currentPath === targetUrl ||
+            (targetUrl !== "/admin" && currentPath.startsWith(targetUrl));
 
           return (
             <Link
               key={item.id}
               href={item.url}
+              prefetch={false}
               target={item.openInNewTab ? "_blank" : undefined}
-              onClick={onClose}
+              onClick={(e) => handleItemClick(e, item.url, item.openInNewTab)}
               title={item.label}
-              className={`flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap min-w-0 ${
+              className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap min-w-0 cursor-pointer ${
                 isActive
                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/30 font-extrabold"
-                  : "text-slate-400 hover:text-white hover:bg-slate-900/90"
+                  : "text-slate-400 hover:text-white hover:bg-slate-900/90 active:bg-slate-800"
               }`}
             >
-              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1 pointer-events-none">
                 <DynamicIcon
                   name={item.icon}
                   className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-slate-400"}`}
@@ -92,7 +119,7 @@ export function DynamicAdminSidebar({
 
               {item.badgeText && (
                 <span
-                  className={`text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap ${
+                  className={`text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap pointer-events-none ${
                     isActive
                       ? "bg-white/20 text-white"
                       : item.badgeColor === "red"

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DynamicAdminSidebar, MenuItemData } from "./DynamicAdminSidebar";
@@ -22,6 +22,27 @@ export function AdminLayoutClient({
 }: AdminLayoutClientProps) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [displayUser, setDisplayUser] = useState({
+    name: userName,
+    role: userRole,
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = sessionStorage.getItem("imc_admin_session");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          const email = (parsed.email || "").toLowerCase();
+          const isSuper = email === "sandeep@nighwantech.com" || email === "admissions@indianmedicalcourses.com" || parsed.role === "SUPER_ADMIN";
+          setDisplayUser({
+            name: parsed.name || userName,
+            role: isSuper ? "SUPER_ADMIN" : (parsed.role || userRole),
+          });
+        }
+      } catch {}
+    }
+  }, [userName, userRole]);
 
   // If on auth pages (login, forgot-password, reset-password), render clean full screen without sidebar
   const normalizedPath = pathname?.replace(/\/$/, "") || "";
@@ -35,11 +56,17 @@ export function AdminLayoutClient({
     return <>{children}</>;
   }
 
+  const effectiveRole = displayUser.role || userRole;
+  const filteredSidebarItems = effectiveRole === "COUNSELLOR"
+    ? sidebarItems.filter((item) => item.url === "/admin" || item.url === "/admin/leads")
+    : sidebarItems;
+
   return (
     <div className="min-h-screen bg-slate-100/70 text-slate-900 flex flex-col lg:flex-row">
       {/* Dynamic Database Driven Sidebar */}
       <DynamicAdminSidebar
-        items={sidebarItems}
+        items={filteredSidebarItems}
+        userRole={effectiveRole}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />
@@ -64,15 +91,17 @@ export function AdminLayoutClient({
           <div className="flex items-center gap-3">
             {/* Complete User Profile Card with Person Icon (Top Right) */}
             <div className="flex items-center gap-2.5 p-1.5 sm:px-3 sm:py-1.5 bg-[#09101D] text-slate-300 rounded-xl border border-slate-800 shadow-2xs">
-              <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-xs">
-                <User className="w-4 h-4" />
+              <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-xs text-xs font-black">
+                {displayUser.name.substring(0, 1).toUpperCase()}
               </div>
               <div className="text-left leading-none hidden sm:block">
                 <div className="text-xs font-bold text-white">
-                  {userName}
+                  {displayUser.name}
                 </div>
-                <div className="text-[9px] text-emerald-400 font-semibold mt-0.5">
-                  {userRole.replace("_", " ")}
+                <div className={`text-[9px] font-bold mt-0.5 ${
+                  displayUser.role === "SUPER_ADMIN" ? "text-purple-300" : "text-emerald-400"
+                }`}>
+                  {displayUser.role.replace("_", " ")}
                 </div>
               </div>
               <Link

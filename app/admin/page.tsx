@@ -32,6 +32,7 @@ import { deduplicateLeadsList } from "./leads/page";
 
 export default function AdminDashboardPage() {
   const [leads, setLeads] = useState<any[]>([]);
+  const [accessError, setAccessError] = useState<string | null>(null);
 
   const loadDashboardData = () => {
     if (typeof window !== "undefined") {
@@ -50,6 +51,12 @@ export default function AdminDashboardPage() {
   };
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const err = params.get("error");
+      if (err) setAccessError(err);
+    }
+
     loadDashboardData();
     const handleStorage = () => {
       loadDashboardData();
@@ -159,6 +166,21 @@ export default function AdminDashboardPage() {
           </Link>
         </div>
       </div>
+
+      {accessError && (
+        <div className="bg-red-50 border border-red-200 text-red-900 text-xs font-bold px-4 py-3 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+            <span>{accessError}</span>
+          </div>
+          <button
+            onClick={() => setAccessError(null)}
+            className="text-red-500 hover:text-red-800 text-[11px] font-bold px-2 py-1 rounded-lg hover:bg-red-100 cursor-pointer"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Primary KPI Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

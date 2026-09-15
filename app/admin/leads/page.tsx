@@ -36,7 +36,10 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Eye
+  Eye,
+  Check,
+  Edit3,
+  Plus
 } from "lucide-react";
 
 // Authentic Brand Logos (Google, Meta, WhatsApp)
@@ -243,7 +246,7 @@ function normalizeLead(raw: any, index: number): LeadItem {
     priority: (raw.priority === "URGENT" || raw.priority === "HIGH" || raw.priority === "MEDIUM" || raw.priority === "LOW") ? raw.priority : "HIGH",
     score: typeof raw.score === "number" ? raw.score : 85,
     createdAt: createdAt,
-    notes: String(raw.notes || ""),
+    notes: String(raw.notes || raw.message || ""),
     deviceType: raw.deviceType || "Desktop",
     browser: raw.browser || "Chrome",
     operatingSystem: raw.operatingSystem || "Windows",
@@ -409,6 +412,11 @@ export default function AdminLeadsPage() {
   };
 
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Dedicated Counsellor Feedback / Notes Inline State
+  const [editingFeedbackId, setEditingFeedbackId] = useState<string | null>(null);
+  const [editingFeedbackText, setEditingFeedbackText] = useState<string>("");
+  const [isSavingFeedback, setIsSavingFeedback] = useState<boolean>(false);
 
   // Fetch live leads from MySQL DB
   const fetchLeadsFromDB = async () => {
@@ -728,6 +736,37 @@ export default function AdminLeadsPage() {
         console.warn("Delete API sync notice:", e);
       }
     }
+  };
+
+  // Dedicated Counsellor Feedback / Notes Update Handler
+  const handleUpdateFeedback = async (leadId: string, newNotes: string) => {
+    const updated = leads.map((l) =>
+      l.id === leadId ? { ...l, notes: newNotes } : l
+    );
+    updateLeadsAndStorage(updated);
+    if (selectedLead?.id === leadId) {
+      setSelectedLead({ ...selectedLead, notes: newNotes });
+    }
+
+    try {
+      const res = await fetch(`/api/leads/${leadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: newNotes }),
+      });
+      if (res.ok) {
+        showNotification("Counsellor feedback saved!");
+      }
+    } catch (e) {
+      console.warn("Feedback update API sync notice:", e);
+    }
+  };
+
+  const handleSaveInlineFeedback = async (leadId: string) => {
+    setIsSavingFeedback(true);
+    await handleUpdateFeedback(leadId, editingFeedbackText);
+    setEditingFeedbackId(null);
+    setIsSavingFeedback(false);
   };
 
   // Real Excel / CSV Export Generator for Selected or All Leads
@@ -1238,6 +1277,12 @@ export default function AdminLeadsPage() {
                 <th className="py-3 px-2 whitespace-nowrap">Traffic Source</th>
                 <th className="py-3 px-2 whitespace-nowrap text-center">Priority</th>
                 <th className="py-3 px-2 whitespace-nowrap text-center">Status</th>
+                <th className="py-3 px-3 min-w-[210px] max-w-[300px]">
+                  <div className="flex items-center gap-1.5">
+                    <MessageSquare className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    <span>Counsellor Feedback / Notes</span>
+                  </div>
+                </th>
                 <th className="py-3 px-2.5 text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
@@ -1359,6 +1404,68 @@ export default function AdminLeadsPage() {
                       }`}>
                         {(lead.leadStatus || "NEW").replace("_", " ")}
                       </span>
+                    </td>
+
+                    {/* Counsellor Feedback / Notes Inline Cell */}
+                    <td className="py-2 px-3 min-w-[210px] max-w-[300px]">
+                      {editingFeedbackId === lead.id ? (
+                        <div className="flex items-center gap-1.5 w-full">
+                          <input
+                            type="text"
+                            autoFocus
+                            value={editingFeedbackText}
+                            onChange={(e) => setEditingFeedbackText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                handleSaveInlineFeedback(lead.id);
+                              } else if (e.key === "Escape") {
+                                setEditingFeedbackId(null);
+                              }
+                            }}
+                            placeholder="Enter counselling feedback..."
+                            className="w-full text-xs px-2.5 py-1.5 bg-white border-2 border-blue-500 rounded-lg focus:outline-none shadow-xs text-slate-900 font-medium"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleSaveInlineFeedback(lead.id)}
+                            disabled={isSavingFeedback}
+                            className="p-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-lg cursor-pointer transition-all shadow-2xs shrink-0"
+                            title="Save feedback (Enter)"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingFeedbackId(null)}
+                            disabled={isSavingFeedback}
+                            className="p-1.5 bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-700 rounded-lg cursor-pointer transition-all shrink-0"
+                            title="Cancel (Esc)"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div 
+                          onClick={() => {
+                            setEditingFeedbackId(lead.id);
+                            setEditingFeedbackText(lead.notes || "");
+                          }}
+                          className="group/fb flex items-center justify-between gap-2 p-1.5 rounded-lg hover:bg-blue-50/80 cursor-pointer border border-transparent hover:border-blue-200 transition-all"
+                          title="Click to edit counsellor feedback"
+                        >
+                          {lead.notes && lead.notes.trim() ? (
+                            <span className="text-slate-800 text-[11px] font-semibold truncate flex-1 leading-snug">
+                              {lead.notes}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 italic text-[11px] flex items-center gap-1 flex-1 font-normal">
+                              <Plus className="w-3 h-3 text-blue-500" />
+                              <span className="text-blue-600 font-medium">Add feedback...</span>
+                            </span>
+                          )}
+                          <Edit3 className="w-3.5 h-3.5 text-slate-400 group-hover/fb:text-blue-600 opacity-60 group-hover/fb:opacity-100 transition-opacity shrink-0" />
+                        </div>
+                      )}
                     </td>
 
                     {/* Direct Actions (Compact WhatsApp, Call, Eye Profile Logo, Trash) */}
@@ -1783,9 +1890,11 @@ export default function AdminLeadsPage() {
               </button>
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
+                  if (selectedLead) {
+                    await handleUpdateFeedback(selectedLead.id, selectedLead.notes || "");
+                  }
                   setSelectedLead(null);
-                  showNotification("Notes and status saved!");
                 }}
                 className="inline-flex items-center gap-1.5 bg-[#0B4F9C] hover:bg-[#083E7D] text-white text-xs font-bold py-2.5 px-6 rounded-xl shadow-xs cursor-pointer"
               >

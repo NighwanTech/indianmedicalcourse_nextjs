@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { DoctorQualification, LeadSource, LeadPriority, LeadStatus } from "@prisma/client";
+import { sendLeadAlertEmail, sendDoctorAcknowledgmentEmail } from "@/services/emailService";
+import { sendWhatsAppLeadAlert } from "@/services/whatsappService";
 
 export const dynamic = "force-dynamic";
 
@@ -276,6 +278,62 @@ export async function POST(request: Request) {
     } catch {
       // Non-critical activity log failure
     }
+
+    // 5. Automated Lead Dispatch: Email & WhatsApp Alerts (Non-blocking)
+    const leadDispatchData = {
+      id: newLead.id.toString(),
+      name: docName,
+      mobile: cleanMobile,
+      email: cleanEmail,
+      qualification: qualificationEnum,
+      interestedCourse: courseName,
+      city: body.city || undefined,
+      state: body.state || body.country || "India",
+      leadSource: leadSourceEnum,
+      utmSource: utmSource || undefined,
+      utmCampaign: utmCampaign || undefined,
+      gclid: gclid || undefined,
+      createdAt: newLead.createdAt.toISOString(),
+      notes: body.notes || body.message || undefined,
+    };
+
+    // Non-blocking notification dispatch
+    (async () => {
+      try {
+        // Send Email Alert to Admin/Admissions Team
+        const emailSent = await sendLeadAlertEmail({ lead: leadDispatchData });
+        if (emailSent) {
+          await prisma.leadActivity.create({
+            data: {
+              leadId: newLead.id,
+              activityType: "EMAIL_SENT",
+              title: "Email Alert Dispatched",
+              description: "Lead alert email sent to configured admissions notification email(s).",
+            },
+          }).catch(() => {});
+        }
+
+        // Send WhatsApp Alert to Admin
+        const waResult = await sendWhatsAppLeadAlert({ lead: leadDispatchData });
+        if (waResult?.success) {
+          await prisma.leadActivity.create({
+            data: {
+              leadId: newLead.id,
+              activityType: "WHATSAPP_SENT",
+              title: "WhatsApp Alert Dispatched",
+              description: waResult.message,
+            },
+          }).catch(() => {});
+        }
+
+        // Send Doctor Acknowledgment Email (if valid applicant email)
+        if (cleanEmail && !cleanEmail.includes("@imc-lead.in")) {
+          await sendDoctorAcknowledgmentEmail({ lead: leadDispatchData }).catch(() => {});
+        }
+      } catch (dispatchErr) {
+        console.error("[Lead Notification Error]:", dispatchErr);
+      }
+    })();
 
     return NextResponse.json({
       success: true,

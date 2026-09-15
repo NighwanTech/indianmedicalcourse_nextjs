@@ -33,7 +33,9 @@ export async function loginAction(formData: FormData) {
           name: "IMC Admissions Desk",
         };
         sessionStorage.setItem("imc_admin_session", JSON.stringify(userObj));
-        document.cookie = `imc_auth_token=admin_session_${Date.now()}; path=/; max-age=${7 * 24 * 60 * 60}`;
+        if (userObj.role === "COUNSELLOR") {
+          document.cookie = `imc_auth_token=counsellor_session_${Date.now()}; path=/; max-age=${7 * 24 * 60 * 60}`;
+        }
       }
       return { success: true, error: "" };
     }
@@ -162,11 +164,17 @@ export async function updateAdminUserAction(formData: FormData): Promise<{ succe
     const email = formData.get("email") as string;
     const phone = formData.get("phone") as string;
     const role = formData.get("role") as string;
+    const password = formData.get("password") as string;
+
+    const payload: any = { id, name, email, phone, role };
+    if (password && password.trim().length >= 6) {
+      payload.password = password.trim();
+    }
 
     const res = await fetch("/api/admin/users", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, name, email, phone, role }),
+      body: JSON.stringify(payload),
     });
 
     const text = await res.text();
@@ -180,3 +188,27 @@ export async function updateAdminUserAction(formData: FormData): Promise<{ succe
     return { success: false, error: err.message || "Failed to update user" };
   }
 }
+
+export async function changeUserPasswordAction(
+  userId: number,
+  newPassword: string
+): Promise<{ success: boolean; error?: string; message?: string }> {
+  try {
+    const res = await fetch("/api/admin/users/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, newPassword }),
+    });
+
+    const text = await res.text();
+    let data: any = {};
+    try { data = JSON.parse(text); } catch {}
+    if (!res.ok) {
+      return { success: false, error: data.error || "Failed to change password" };
+    }
+    return { success: true, message: data.message || "Password updated successfully" };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to change password" };
+  }
+}
+
