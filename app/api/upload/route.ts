@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { storageProvider } from "@/services/storage/LocalStorageProvider";
+import { storageProvider as localStorageProvider } from "@/services/storage/LocalStorageProvider";
+import { cloudinaryStorageProvider } from "@/services/storage/CloudinaryStorageProvider";
 
 export const dynamic = "force-dynamic";
 
 /**
  * POST /api/upload
  * Accepts base64 data URL (JSON) or raw file (FormData),
- * saves to public/uploads/ via LocalStorageProvider,
+ * saves to Cloudinary CDN (permanent) or public/uploads/ (local fallback),
  * and creates a MediaFile record in the DB.
  * Returns { url, mediaFileId, fileName, size }
  */
@@ -59,8 +60,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unsupported content type" }, { status: 400 });
     }
 
-    // Save file to disk via LocalStorageProvider
-    const uploadResult = await storageProvider.uploadFile(
+    // Determine storage provider: Cloudinary (permanent cloud) if configured, else Local
+    const hasCloudinary = Boolean(
+      process.env.CLOUDINARY_API_KEY && 
+      process.env.CLOUDINARY_API_SECRET && 
+      process.env.CLOUDINARY_CLOUD_NAME
+    );
+
+    const activeProvider = hasCloudinary ? cloudinaryStorageProvider : localStorageProvider;
+    const providerEnum = hasCloudinary ? "CLOUDINARY" : "LOCAL";
+
+    // Upload file via active provider
+    const uploadResult = await activeProvider.uploadFile(
       fileBuffer,
       originalName,
       mimeType,
@@ -83,7 +94,7 @@ export async function POST(request: Request) {
           fileType,
           mimeType,
           fileSizeBytes: BigInt(uploadResult.fileSizeBytes),
-          storageProvider: "LOCAL",
+          storageProvider: providerEnum,
           storagePath: uploadResult.storagePath,
           width: uploadResult.width || null,
           height: uploadResult.height || null,
@@ -91,7 +102,7 @@ export async function POST(request: Request) {
       });
       mediaFileId = mediaFile.id;
     } catch (dbError) {
-      console.warn("Could not save MediaFile to DB (file is saved on disk):", dbError);
+      console.warn("Could not save MediaFile to DB:", dbError);
     }
 
     const sizeKB = Math.round(fileBuffer.length / 1024);
