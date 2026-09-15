@@ -13,6 +13,7 @@ export const siteSettings: SiteSettings = {
   announcementExpiry: "2026-08-31",
   googleAdsConversionId: "AW-11234567890",
   metaPixelId: "987654321098765",
+  facebookUrl: "https://www.facebook.com/indiamedicalcourses",
 };
 
 export const headerMenu: DynamicMenu = {

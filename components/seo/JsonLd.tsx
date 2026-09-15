@@ -28,11 +28,8 @@ export function OrganizationSchema() {
       addressCountry: "IN",
     },
     sameAs: [
-      (siteSettings as any).socialLinks?.facebook || siteSettings.facebookUrl || "https://facebook.com/indianmedicalcourses",
-      (siteSettings as any).socialLinks?.instagram || siteSettings.instagramUrl || "https://instagram.com/indianmedicalcourses",
-      (siteSettings as any).socialLinks?.youtube || siteSettings.youtubeUrl || "https://youtube.com/@indianmedicalcourses",
-      (siteSettings as any).socialLinks?.linkedin || siteSettings.linkedinUrl || "https://linkedin.com/company/indianmedicalcourses",
-    ],
+      siteSettings.facebookUrl || "https://www.facebook.com/indiamedicalcourses",
+    ].filter(Boolean),
     contactPoint: {
       "@type": "ContactPoint",
       telephone: siteSettings.hotlinePhone || "+91 8295843006",
