@@ -1,4 +1,5 @@
 import { getOrCreateVisitorAttribution } from "@/lib/attribution";
+import { validateLeadQuality } from "@/lib/leadUtils";
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -14,6 +15,10 @@ export interface LeadSubmissionData {
   email?: string;
   qualification?: string;
   specialty?: string;
+  honeypot?: string;
+  formStartTime?: number;
+  captchaAnswer?: string;
+  expectedCaptcha?: string;
   interestedCourse?: string;
   interestedCourseName?: string;
   city?: string;
@@ -66,12 +71,21 @@ export async function submitLeadAction(
       const countryVal = (input.get("country") || "India") as string;
       const sourceVal = (input.get("leadSource") || input.get("formSource") || "WEBSITE_FORM") as string;
 
+      const honeypotVal = (input.get("doctor_special_registration") || input.get("hp_medical_council_id") || "") as string;
+      const formStartTime = Number(input.get("formStartTime")) || undefined;
+      const captchaAnswer = (input.get("captchaAnswer") || "") as string;
+      const expectedCaptcha = (input.get("expectedCaptcha") || "") as string;
+
       raw = {
         name: nameVal,
         mobile: mobileVal,
         email: emailVal,
         qualification: qualVal,
         specialty: qualVal,
+        honeypot: honeypotVal,
+        formStartTime: formStartTime,
+        captchaAnswer: captchaAnswer,
+        expectedCaptcha: expectedCaptcha,
         interestedCourse: courseVal,
         interestedCourseName: courseVal,
         city: cityVal,
@@ -95,6 +109,27 @@ export async function submitLeadAction(
       };
     } else {
       raw = { ...input };
+    }
+
+    // 0. GATEKEEPER: Fake Lead, Bot Trap & Mandatory Doctor Qualification Check
+    const qualityCheck = validateLeadQuality({
+      name: raw.name,
+      mobile: raw.mobile,
+      email: raw.email,
+      country: raw.country,
+      qualification: raw.qualification || raw.specialty,
+      honeypot: raw.honeypot,
+      formStartTime: raw.formStartTime,
+      captchaAnswer: raw.captchaAnswer,
+      expectedCaptcha: raw.expectedCaptcha,
+    });
+
+    if (!qualityCheck.isValid) {
+      console.warn(`🛡️ [Fake Lead Blocked]: ${qualityCheck.error} (Name: ${raw.name}, Mobile: ${raw.mobile})`);
+      return {
+        success: false,
+        error: qualityCheck.error || "Submission could not be verified.",
+      };
     }
 
     const cleanMobile = (raw.mobile || "").replace(/\D/g, "");

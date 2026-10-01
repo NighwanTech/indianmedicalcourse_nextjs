@@ -23,8 +23,11 @@ import {
   BookOpen,
   Lock,
   Link2,
-  Share2
+  Share2,
+  RefreshCw,
+  AlertCircle
 } from "lucide-react";
+import { validateLeadQuality } from "@/lib/leadUtils";
 
 export function FloatingConversionLayer() {
   const [showExitModal, setShowExitModal] = useState(false);
@@ -91,6 +94,26 @@ export function FloatingConversionLayer() {
   const [submittedName, setSubmittedName] = useState("");
   const [submittedCourse, setSubmittedCourse] = useState("");
 
+  // Gatekeeper Security & Bot Trap States
+  const [honeypot, setHoneypot] = useState("");
+  const [formStartTime, setFormStartTime] = useState<number>(Date.now());
+  const [captchaNum1, setCaptchaNum1] = useState(3);
+  const [captchaNum2, setCaptchaNum2] = useState(6);
+  const [captchaAnswer, setCaptchaAnswer] = useState("");
+
+  const refreshCaptcha = () => {
+    const n1 = Math.floor(Math.random() * 8) + 2;
+    const n2 = Math.floor(Math.random() * 7) + 1;
+    setCaptchaNum1(n1);
+    setCaptchaNum2(n2);
+    setCaptchaAnswer("");
+  };
+
+  useEffect(() => {
+    setFormStartTime(Date.now());
+    refreshCaptcha();
+  }, []);
+
   const resetFloatingForm = () => {
     setFullName("");
     setSpecialtyStatus("MBBS Doctor");
@@ -99,6 +122,9 @@ export function FloatingConversionLayer() {
     setEmailAddress("");
     setCity("");
     setAddressCountry("India");
+    setHoneypot("");
+    setCaptchaAnswer("");
+    refreshCaptcha();
     setFormError("");
     setIsSubmitted(false);
     setIsSubmitting(false);
@@ -134,9 +160,35 @@ export function FloatingConversionLayer() {
       setFormError("Please enter Doctor Full Name.");
       return;
     }
+    if (specialtyStatus.toLowerCase().includes("not a doctor")) {
+      setFormError("Clinical fellowships are restricted to registered medical doctors.");
+      return;
+    }
     const cleanDigits = mobileNumber.replace(/\D/g, "");
     if (!mobileNumber.trim() || cleanDigits.length < 8) {
       setFormError("Please enter a valid mobile number.");
+      return;
+    }
+    if (captchaAnswer.trim() !== String(captchaNum1 + captchaNum2)) {
+      setFormError(`Security verification code incorrect. What is ${captchaNum1} + ${captchaNum2}?`);
+      return;
+    }
+
+    // Comprehensive Gatekeeper Check
+    const qualityCheck = validateLeadQuality({
+      name: fullName,
+      mobile: mobileNumber,
+      email: emailAddress,
+      country: targetCountry,
+      qualification: specialtyStatus,
+      honeypot,
+      formStartTime,
+      captchaAnswer,
+      expectedCaptcha: String(captchaNum1 + captchaNum2),
+    });
+
+    if (!qualityCheck.isValid && qualityCheck.error) {
+      setFormError(qualityCheck.error);
       return;
     }
 
@@ -161,7 +213,19 @@ export function FloatingConversionLayer() {
       formPayload.set("city", city || "");
       formPayload.set("leadSource", "QUICK_COUNSELLING_DRAWER");
 
-      await submitLeadAction(formPayload);
+      // Gatekeeper Security Tokens
+      formPayload.set("doctor_special_registration", honeypot);
+      formPayload.set("formStartTime", String(formStartTime));
+      formPayload.set("captchaAnswer", captchaAnswer);
+      formPayload.set("expectedCaptcha", String(captchaNum1 + captchaNum2));
+
+      const res = await submitLeadAction(formPayload);
+      if (!res.success) {
+        setFormError(res.error || "Submission could not be validated. Please check your details.");
+        refreshCaptcha();
+        setIsSubmitting(false);
+        return;
+      }
 
       // Track in Google Ads Conversion + GA4 generate_lead + GTM DataLayer
       fireLeadConversionSuccess({
@@ -428,6 +492,18 @@ export function FloatingConversionLayer() {
 
                   <form onSubmit={handleSubmit} className="space-y-3">
                     
+                    {/* Hidden Honeypot Field for Automated Bot Trap */}
+                    <input
+                      type="text"
+                      name="doctor_special_registration"
+                      value={honeypot}
+                      onChange={(e) => setHoneypot(e.target.value)}
+                      tabIndex={-1}
+                      autoComplete="off"
+                      aria-hidden="true"
+                      style={{ display: "none", position: "absolute", left: "-9999px" }}
+                    />
+
                     {/* Doctor Full Name */}
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 mb-1">
@@ -443,24 +519,38 @@ export function FloatingConversionLayer() {
                       />
                     </div>
 
-                    {/* Specialty / Status */}
+                    {/* Doctor Qualification & Eligibility Gatekeeper */}
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                        Specialty / Status <span className="text-red-500">*</span>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1 flex items-center justify-between">
+                        <span>Are you a licensed doctor? <span className="text-red-500">*</span></span>
+                        <span className="text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 flex items-center gap-1">
+                          <ShieldCheck className="w-2.5 h-2.5 text-emerald-600" />
+                          <span>Medical Gate</span>
+                        </span>
                       </label>
                       <select
                         value={specialtyStatus}
                         onChange={(e) => setSpecialtyStatus(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-hidden focus:border-[#0B4F9C] focus:ring-1 focus:ring-blue-500 transition-all cursor-pointer"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-hidden focus:border-[#0B4F9C] focus:ring-1 focus:ring-blue-500 transition-all cursor-pointer font-medium"
                       >
-                        <option value="MBBS Doctor">MBBS Doctor</option>
-                        <option value="Junior Resident">Junior Resident</option>
-                        <option value="Postgraduate (MD/MS/DNB)">Postgraduate (MD/MS/DNB)</option>
-                        <option value="Senior Resident / Specialist">Senior Resident / Specialist</option>
-                        <option value="Consultant">Consultant</option>
-                        <option value="Medical Student / Intern">Medical Student / Intern</option>
-                        <option value="AYUSH / Dental (BDS/MDS)">AYUSH / Dental (BDS/MDS)</option>
+                        <option value="MBBS Doctor">Yes — MBBS Doctor</option>
+                        <option value="Junior / Senior Resident">Yes — Junior / Senior Resident</option>
+                        <option value="Postgraduate (MD/MS/DNB)">Yes — Postgraduate (MD/MS/DNB)</option>
+                        <option value="Senior Resident / Specialist">Yes — Senior Resident / Specialist</option>
+                        <option value="Consultant">Yes — Consultant Specialist</option>
+                        <option value="Medical Student / Intern">Yes — Medical Student / MBBS Intern</option>
+                        <option value="AYUSH / Dental (BDS/MDS)">Yes — AYUSH / Dental (BDS/MDS)</option>
+                        <option value="Not a Doctor (Student / General Public)">No — Not a Licensed Doctor</option>
                       </select>
+
+                      {specialtyStatus === "Not a Doctor (Student / General Public)" && (
+                        <div className="mt-1.5 p-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[10px] leading-relaxed flex items-start gap-1.5 animate-in fade-in">
+                          <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                          <span>
+                            <strong>Eligibility Notice:</strong> Clinical fellowships are restricted exclusively to licensed medical doctors. Non-medical applicants cannot be admitted.
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Country (Col 1) + Mobile Number (Col 2) in a Single Row */}
@@ -571,9 +661,42 @@ export function FloatingConversionLayer() {
                       </div>
                     </div>
 
+                    {/* Doctor Human Verification / CAPTCHA Challenge */}
+                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                          <Lock className="w-3.5 h-3.5 text-[#0B4F9C]" />
+                          <span>Doctor Verification Challenge <span className="text-red-500">*</span></span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={refreshCaptcha}
+                          className="text-[10px] font-bold text-[#0B4F9C] hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-0 p-0"
+                          title="Get a new math problem"
+                        >
+                          <RefreshCw className="w-2.5 h-2.5" />
+                          <span>New Code</span>
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="bg-white px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-black tracking-wider text-slate-800 select-none shadow-xs">
+                          Solve: {captchaNum1} + {captchaNum2} = ?
+                        </div>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          required
+                          placeholder="Answer"
+                          value={captchaAnswer}
+                          onChange={(e) => setCaptchaAnswer(e.target.value)}
+                          className="w-24 px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 text-center bg-white focus:outline-hidden focus:border-[#0B4F9C]"
+                        />
+                      </div>
+                    </div>
+
                     {formError && (
-                      <div className="p-2 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold flex items-center gap-1.5 animate-in fade-in">
-                        <span>⚠</span>
+                      <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold flex items-start gap-1.5 animate-in fade-in">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                         <span>{formError}</span>
                       </div>
                     )}
@@ -582,11 +705,17 @@ export function FloatingConversionLayer() {
                     <div className="pt-2">
                       <button
                         type="submit"
-                        disabled={isSubmitting}
-                        className="w-full bg-[#1A73E8] hover:bg-[#1557B0] active:scale-[0.99] text-white text-xs sm:text-sm font-extrabold py-3 px-4 rounded-xl shadow-md shadow-blue-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+                        disabled={isSubmitting || specialtyStatus === "Not a Doctor (Student / General Public)"}
+                        className={`w-full text-xs sm:text-sm font-extrabold py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                          specialtyStatus === "Not a Doctor (Student / General Public)"
+                            ? "bg-slate-300 text-slate-500 cursor-not-allowed shadow-none"
+                            : "bg-[#1A73E8] hover:bg-[#1557B0] active:scale-[0.99] text-white shadow-blue-600/25 disabled:opacity-75"
+                        }`}
                       >
                         {isSubmitting ? (
-                          <span>Submitting...</span>
+                          <span>Verifying & Submitting...</span>
+                        ) : specialtyStatus === "Not a Doctor (Student / General Public)" ? (
+                          <span>Registration Restricted to Doctors</span>
                         ) : (
                           <>
                             <span>Submit Form</span>

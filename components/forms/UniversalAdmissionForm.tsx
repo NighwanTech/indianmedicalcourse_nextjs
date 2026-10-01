@@ -17,11 +17,14 @@ import {
   HelpCircle,
   AlertCircle,
   RotateCcw,
-  PlusCircle
+  PlusCircle,
+  RefreshCw,
+  Lock
 } from "lucide-react";
 import { trackGoogleAdsConversion } from "@/components/shared/GoogleAdsTracker";
 import { fireLeadConversionSuccess, trackFormSubmit } from "@/lib/analytics";
 import { getOrCreateVisitorAttribution } from "@/lib/attribution";
+import { validateLeadQuality } from "@/lib/leadUtils";
 
 interface UniversalAdmissionFormProps {
   initialCourseType?: string;
@@ -59,6 +62,26 @@ export function UniversalAdmissionForm({
   const [submittedDoctorName, setSubmittedDoctorName] = useState("");
   const [submittedCourseName, setSubmittedCourseName] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  
+  // Gatekeeper Security & Bot Trap States
+  const [honeypot, setHoneypot] = useState("");
+  const [formStartTime, setFormStartTime] = useState<number>(Date.now());
+  const [captchaNum1, setCaptchaNum1] = useState(4);
+  const [captchaNum2, setCaptchaNum2] = useState(7);
+  const [captchaAnswer, setCaptchaAnswer] = useState("");
+
+  const refreshCaptcha = () => {
+    const n1 = Math.floor(Math.random() * 8) + 2;
+    const n2 = Math.floor(Math.random() * 7) + 1;
+    setCaptchaNum1(n1);
+    setCaptchaNum2(n2);
+    setCaptchaAnswer("");
+  };
+
+  useEffect(() => {
+    setFormStartTime(Date.now());
+    refreshCaptcha();
+  }, []);
 
   // Dynamically load courses from API
   useEffect(() => {
@@ -81,6 +104,9 @@ export function UniversalAdmissionForm({
     setEmailAddress("");
     setCity("");
     setAddressCountry("India");
+    setHoneypot("");
+    setCaptchaAnswer("");
+    refreshCaptcha();
     setErrors({});
     setIsSubmitted(false);
     setIsSubmitting(false);
@@ -94,6 +120,11 @@ export function UniversalAdmissionForm({
     if (!targetCountry) {
       errs.targetCountry = "Select country";
     }
+
+    if (specialtyStatus.toLowerCase().includes("not a doctor")) {
+      errs.specialtyStatus = "Clinical fellowships are restricted to registered medical doctors.";
+    }
+
     const cleanDigits = mobileNumber.replace(/\D/g, "");
     if (!mobileNumber.trim() || cleanDigits.length < 8) {
       errs.mobileNumber = "Please enter a valid mobile number";
@@ -101,6 +132,39 @@ export function UniversalAdmissionForm({
     if (emailAddress && !/^\S+@\S+\.\S+$/.test(emailAddress)) {
       errs.emailAddress = "Please enter a valid email address";
     }
+
+    if (captchaAnswer.trim() !== String(captchaNum1 + captchaNum2)) {
+      errs.captcha = `Security code incorrect. What is ${captchaNum1} + ${captchaNum2}?`;
+    }
+
+    // Comprehensive Gatekeeper Check (fake numbers, repeating digits, bots, test names)
+    const qualityCheck = validateLeadQuality({
+      name: fullName,
+      mobile: mobileNumber,
+      email: emailAddress,
+      country: targetCountry,
+      qualification: specialtyStatus,
+      honeypot,
+      formStartTime,
+      captchaAnswer,
+      expectedCaptcha: String(captchaNum1 + captchaNum2),
+    });
+
+    if (!qualityCheck.isValid && qualityCheck.error) {
+      const errLower = qualityCheck.error.toLowerCase();
+      if (errLower.includes("mobile") || errLower.includes("phone") || errLower.includes("digit")) {
+        errs.mobileNumber = qualityCheck.error;
+      } else if (errLower.includes("name")) {
+        errs.fullName = qualityCheck.error;
+      } else if (errLower.includes("email")) {
+        errs.emailAddress = qualityCheck.error;
+      } else if (errLower.includes("security") || errLower.includes("code")) {
+        errs.captcha = qualityCheck.error;
+      } else {
+        errs.form = qualityCheck.error;
+      }
+    }
+
     return errs;
   };
 
@@ -135,6 +199,12 @@ export function UniversalAdmissionForm({
       formPayload.set("country", targetCountry);
       formPayload.set("leadSource", source);
 
+      // Gatekeeper Security Tokens
+      formPayload.set("doctor_special_registration", honeypot);
+      formPayload.set("formStartTime", String(formStartTime));
+      formPayload.set("captchaAnswer", captchaAnswer);
+      formPayload.set("expectedCaptcha", String(captchaNum1 + captchaNum2));
+
       // Attribution
       formPayload.set("sessionId", attribution.sessionId);
       if (attribution.utmSource) formPayload.set("utmSource", attribution.utmSource);
@@ -155,6 +225,12 @@ export function UniversalAdmissionForm({
       formPayload.set("trafficType", attribution.trafficType);
 
       const res = await submitLeadAction(formPayload);
+      if (!res.success) {
+        setErrors({ form: res.error || "Submission could not be validated. Please check your details." });
+        refreshCaptcha();
+        setIsSubmitting(false);
+        return;
+      }
       const leadRefId = res.data?.refId || `lead_${Date.now()}`;
 
       // Track conversion: Google Ads Conversion + GA4 generate_lead + GTM DataLayer
@@ -283,6 +359,18 @@ export function UniversalAdmissionForm({
 
       <form onSubmit={handleSubmit} noValidate className="space-y-2">
         
+        {/* Hidden Honeypot Field for Automated Bot Trap */}
+        <input
+          type="text"
+          name="doctor_special_registration"
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={{ display: "none", position: "absolute", left: "-9999px" }}
+        />
+
         {/* 1. Doctor Full Name */}
         <div>
           <label className="block text-[10px] font-bold text-slate-700 mb-0.5">
@@ -311,29 +399,45 @@ export function UniversalAdmissionForm({
           )}
         </div>
 
-        {/* 2. Specialty / Status Dropdown */}
+        {/* 2. Doctor Qualification & Eligibility Gatekeeper */}
         <div>
-          <label className="block text-[10px] font-bold text-slate-700 mb-0.5">
-            Specialty / Status <span className="text-red-500">*</span>
+          <label className="block text-[10px] font-bold text-slate-700 mb-0.5 flex items-center justify-between">
+            <span>Are you a licensed doctor? <span className="text-red-500">*</span></span>
+            <span className="text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-100 flex items-center gap-1">
+              <ShieldCheck className="w-2.5 h-2.5 text-emerald-600" />
+              <span>Medical Gate</span>
+            </span>
           </label>
           <select
             value={specialtyStatus}
-            onChange={(e) => setSpecialtyStatus(e.target.value)}
-            className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:bg-white focus:outline-hidden focus:border-[#0B4F9C] transition-all cursor-pointer"
+            onChange={(e) => {
+              setSpecialtyStatus(e.target.value);
+              if (errors.specialtyStatus) setErrors((prev) => ({ ...prev, specialtyStatus: "" }));
+            }}
+            className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:bg-white focus:outline-hidden focus:border-[#0B4F9C] transition-all cursor-pointer font-medium"
           >
-            <option value="MBBS Doctor">MBBS Doctor</option>
-            <option value="Junior Resident">Junior Resident</option>
-            <option value="Postgraduate (MD/MS/DNB)">Postgraduate (MD/MS/DNB)</option>
-            <option value="Senior Resident / Specialist">Senior Resident / Specialist</option>
-            <option value="Consultant">Consultant</option>
-            <option value="Medical Student / Intern">Medical Student / Intern</option>
-            <option value="BDS / MDS (Dental)">BDS / MDS (Dental)</option>
-            <option value="AYUSH Doctor (BAMS/BHMS)">AYUSH Doctor (BAMS/BHMS)</option>
-            <option value="Healthcare Professional">Healthcare Professional</option>
+            <option value="MBBS Doctor">Yes — MBBS Doctor</option>
+            <option value="Junior / Senior Resident">Yes — Junior / Senior Resident</option>
+            <option value="Postgraduate (MD/MS/DNB)">Yes — Postgraduate (MD/MS/DNB)</option>
+            <option value="Senior Resident / Specialist">Yes — Senior Resident / Specialist</option>
+            <option value="Consultant">Yes — Consultant Specialist</option>
+            <option value="Medical Student / Intern">Yes — Medical Student / MBBS Intern</option>
+            <option value="AYUSH Doctor (BAMS/BHMS)">Yes — AYUSH Doctor (BAMS/BHMS)</option>
+            <option value="BDS / MDS (Dental Surgeon)">Yes — BDS / MDS (Dental Surgeon)</option>
+            <option value="Not a Doctor (Student / General Public)">No — Not a Licensed Doctor</option>
           </select>
+
+          {specialtyStatus === "Not a Doctor (Student / General Public)" && (
+            <div className="mt-1.5 p-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[10px] leading-relaxed flex items-start gap-1.5 animate-in fade-in">
+              <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+              <span>
+                <strong>Eligibility Notice:</strong> Indian Medical Course clinical fellowships and PG diplomas are restricted exclusively to registered medical doctors. Non-medical applicants cannot be admitted.
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* 2. Country & Phone Row (Dual Inputs) */}
+        {/* 3. Country & Phone Row (Dual Inputs) */}
         <div>
           <div className="grid grid-cols-12 gap-1.5">
             <div className="col-span-5">
@@ -381,7 +485,7 @@ export function UniversalAdmissionForm({
           )}
         </div>
 
-        {/* 3. Email Address */}
+        {/* 4. Email Address */}
         <div>
           <label className="block text-[10px] font-bold text-slate-700 mb-0.5">
             Email <span className="text-red-500">*</span>
@@ -409,7 +513,7 @@ export function UniversalAdmissionForm({
           )}
         </div>
 
-        {/* 4. Course (Dynamically Connected) */}
+        {/* 5. Course (Dynamically Connected) */}
         <div>
           <label className="block text-[10px] font-bold text-slate-700 mb-0.5">
             Course Program <span className="text-red-500">*</span>
@@ -436,7 +540,7 @@ export function UniversalAdmissionForm({
           </select>
         </div>
 
-        {/* 5. Address: City & Country (2 Cols) */}
+        {/* 6. Address: City & Country (2 Cols) */}
         <div>
           <label className="block text-[10px] font-bold text-slate-700 mb-0.5">
             Address
@@ -470,15 +574,75 @@ export function UniversalAdmissionForm({
           </div>
         </div>
 
-        {/* 6. Submit Button */}
+        {/* 7. Doctor Human Verification / CAPTCHA Challenge */}
+        <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-bold text-slate-700 flex items-center gap-1">
+              <Lock className="w-3 h-3 text-[#0B4F9C]" />
+              <span>Doctor Verification Challenge <span className="text-red-500">*</span></span>
+            </span>
+            <button
+              type="button"
+              onClick={refreshCaptcha}
+              className="text-[9px] font-bold text-[#0B4F9C] hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-0 p-0"
+              title="Get a new math problem"
+            >
+              <RefreshCw className="w-2.5 h-2.5" />
+              <span>New Code</span>
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="bg-white px-3 py-1 border border-slate-300 rounded-lg text-xs font-mono font-black tracking-wider text-slate-800 select-none shadow-xs">
+              Solve: {captchaNum1} + {captchaNum2} = ?
+            </div>
+            <input
+              type="text"
+              inputMode="numeric"
+              required
+              placeholder="Answer"
+              value={captchaAnswer}
+              onChange={(e) => {
+                setCaptchaAnswer(e.target.value);
+                if (errors.captcha) setErrors((prev) => ({ ...prev, captcha: "" }));
+              }}
+              className={`w-24 px-2.5 py-1 border rounded-lg text-xs font-mono font-bold text-slate-900 text-center focus:bg-white focus:outline-hidden transition-all ${
+                errors.captcha
+                  ? "border-red-400 bg-red-50/50 focus:border-red-500"
+                  : "bg-white border-slate-300 focus:border-[#0B4F9C]"
+              }`}
+            />
+          </div>
+          {errors.captcha && (
+            <p className="text-[9px] text-red-600 font-semibold mt-1 flex items-center gap-1">
+              <AlertCircle className="w-2.5 h-2.5" />
+              <span>{errors.captcha}</span>
+            </p>
+          )}
+        </div>
+
+        {/* Global Error Banner */}
+        {errors.form && (
+          <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold flex items-start gap-1.5 animate-in fade-in">
+            <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+            <span>{errors.form}</span>
+          </div>
+        )}
+
+        {/* 8. Submit Button */}
         <div className="pt-1">
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-[#1A73E8] hover:bg-[#1557B0] active:scale-[0.98] text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md shadow-blue-600/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-70"
+            disabled={isSubmitting || specialtyStatus === "Not a Doctor (Student / General Public)"}
+            className={`w-full text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              specialtyStatus === "Not a Doctor (Student / General Public)"
+                ? "bg-slate-300 text-slate-500 cursor-not-allowed shadow-none"
+                : "bg-[#1A73E8] hover:bg-[#1557B0] active:scale-[0.98] text-white shadow-blue-600/20 disabled:opacity-70"
+            }`}
           >
             {isSubmitting ? (
-              <span>Submitting Application...</span>
+              <span>Verifying & Submitting...</span>
+            ) : specialtyStatus === "Not a Doctor (Student / General Public)" ? (
+              <span>Registration Restricted to Doctors</span>
             ) : (
               <>
                 <span>{buttonText}</span>

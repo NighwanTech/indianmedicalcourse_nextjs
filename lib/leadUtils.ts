@@ -238,3 +238,121 @@ export function deduplicateLeadsList(rawLeads: any[]): LeadItem[] {
 
   return deduplicated;
 }
+
+export interface LeadQualityValidationInput {
+  name: string;
+  mobile: string;
+  email?: string;
+  country?: string;
+  qualification?: string;
+  honeypot?: string;
+  formStartTime?: number;
+  captchaAnswer?: string;
+  expectedCaptcha?: string;
+}
+
+/**
+ * Universal Fake Lead & Bot Gatekeeper Filter
+ * Validates doctor qualification, filters bots, rejects fake phone numbers/names, and verifies security challenge.
+ */
+export function validateLeadQuality(input: LeadQualityValidationInput): {
+  isValid: boolean;
+  error?: string;
+} {
+  // 1. Honeypot check (bots automatically fill hidden inputs)
+  if (input.honeypot && input.honeypot.trim().length > 0) {
+    return { isValid: false, error: "Automated submission rejected by security filter." };
+  }
+
+  // 2. Minimum form interaction time (scripts submit within < 1.5 seconds)
+  if (input.formStartTime && Date.now() - input.formStartTime < 1500) {
+    return { isValid: false, error: "Form submitted too quickly. Please review your details." };
+  }
+
+  // 3. Doctor Qualification Gatekeeper
+  const qual = (input.qualification || "").trim().toLowerCase();
+  if (
+    qual.includes("not a doctor") || 
+    qual.includes("not_doctor") || 
+    qual.includes("student / general") || 
+    qual.includes("non-medical")
+  ) {
+    return {
+      isValid: false,
+      error: "Admission is strictly restricted to licensed medical practitioners (MBBS/MD/MS/AYUSH/Dental). Non-medical applicants are not eligible.",
+    };
+  }
+
+  // 4. Name Quality & Fake Check
+  const name = (input.name || "").trim();
+  if (name.length < 2) {
+    return { isValid: false, error: "Please enter your doctor full name." };
+  }
+  const cleanName = name.toLowerCase().replace(/[^a-z]/g, "");
+  const FAKE_NAME_PATTERNS = ["test", "testing", "asdf", "qwerty", "fake", "dummy", "spam", "xxxx", "abcd", "sample"];
+  if (FAKE_NAME_PATTERNS.some((p) => cleanName === p || cleanName.startsWith(p + "test"))) {
+    return { isValid: false, error: "Please enter a valid doctor name." };
+  }
+
+  // 5. Phone Number Quality & Fake Number Check
+  const rawDigits = (input.mobile || "").replace(/\D/g, "");
+  if (!rawDigits || rawDigits.length < 8) {
+    return { isValid: false, error: "Please enter a valid mobile number with at least 8 digits." };
+  }
+
+  // Check repeating digits e.g. 9999999999, 0000000000, 1111111111
+  const allSameDigits = /^(\d)\1+$/.test(rawDigits);
+  if (allSameDigits) {
+    return { isValid: false, error: "Please enter a valid phone number. Repeating digits are not accepted." };
+  }
+
+  // Check obvious sequence patterns
+  const SEQUENTIAL_PATTERNS = ["1234567890", "0123456789", "9876543210", "12345678", "87654321"];
+  if (SEQUENTIAL_PATTERNS.some((seq) => rawDigits.includes(seq))) {
+    return { isValid: false, error: "Please enter a genuine personal mobile number." };
+  }
+
+  // India Specific Validation
+  const isIndia = !input.country || input.country.toLowerCase() === "india" || (rawDigits.startsWith("91") && rawDigits.length === 12);
+  let indianTenDigits = rawDigits;
+  if (indianTenDigits.startsWith("91") && indianTenDigits.length === 12) {
+    indianTenDigits = indianTenDigits.substring(2);
+  } else if (indianTenDigits.startsWith("0") && indianTenDigits.length === 11) {
+    indianTenDigits = indianTenDigits.substring(1);
+  }
+
+  if (isIndia && (input.country?.toLowerCase() === "india" || indianTenDigits.length === 10)) {
+    if (indianTenDigits.length !== 10) {
+      return { isValid: false, error: "Indian mobile numbers must be exactly 10 digits." };
+    }
+    const firstDigit = indianTenDigits[0];
+    if (!["6", "7", "8", "9"].includes(firstDigit)) {
+      return { isValid: false, error: "Indian mobile numbers must begin with 6, 7, 8, or 9." };
+    }
+  }
+
+  // 6. Email validation
+  if (input.email && input.email.trim()) {
+    const email = input.email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return { isValid: false, error: "Please enter a valid email address." };
+    }
+    const DISPOSABLE_DOMAINS = [
+      "test.com", "example.com", "fake.com", "mailinator.com", "tempmail.com", "guerrillamail.com", "10minutemail.com", "throwaway.com"
+    ];
+    const domain = email.split("@")[1];
+    if (DISPOSABLE_DOMAINS.includes(domain)) {
+      return { isValid: false, error: "Temporary and disposable email addresses are not accepted." };
+    }
+  }
+
+  // 7. Security CAPTCHA / Math Challenge Check (if present)
+  if (input.expectedCaptcha !== undefined && input.captchaAnswer !== undefined) {
+    if (input.captchaAnswer.trim() !== input.expectedCaptcha.trim()) {
+      return { isValid: false, error: "Security verification code does not match. Please try again." };
+    }
+  }
+
+  return { isValid: true };
+}
+
