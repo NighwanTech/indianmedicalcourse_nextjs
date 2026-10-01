@@ -28,7 +28,7 @@ import {
   Percent
 } from "lucide-react";
 
-import { deduplicateLeadsList } from "./leads/page";
+import { deduplicateLeadsList } from "@/lib/leadUtils";
 
 export default function AdminDashboardPage() {
   const [leads, setLeads] = useState<any[]>([]);

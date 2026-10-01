@@ -25,7 +25,7 @@ import {
   Code
 } from "lucide-react";
 
-export const ADMIN_BLOGS_STORAGE_KEY = "imc_admin_blog_posts";
+const ADMIN_BLOGS_STORAGE_KEY = "imc_admin_blog_posts";
 
 export default function AdminBlogsPage() {
   const [postsList, setPostsList] = useState<BlogPost[]>(initialBlogPosts);
