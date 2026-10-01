@@ -145,7 +145,12 @@ export function GoogleAnalyticsAndTagManager() {
 
     if (savedGa) setGaId(savedGa);
     if (savedGtm) setGtmId(savedGtm);
-    if (savedGAds) setGAdsId(savedGAds);
+    if (savedGAds && savedGAds !== "AW-16589177872") {
+      setGAdsId(savedGAds);
+    } else {
+      setGAdsId(DEFAULT_GADS_CONVERSION_ID);
+      try { localStorage.setItem("imc_google_ads_id", DEFAULT_GADS_CONVERSION_ID); } catch(e) {}
+    }
 
     if (toggleAnalytics !== null) setIsAnalyticsEnabled(toggleAnalytics === "true");
     if (toggleGtm !== null) setIsGtmEnabled(toggleGtm === "true");

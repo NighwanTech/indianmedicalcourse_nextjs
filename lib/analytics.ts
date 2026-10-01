@@ -8,8 +8,8 @@ export const DEFAULT_GA4_ID = "G-3L5ZCL0SX4";
 export const DEFAULT_GTM_ID = "GTM-PXHWHLL9";
 export const GA_MEASUREMENT_ID = DEFAULT_GA4_ID;
 export const GTM_CONTAINER_ID = DEFAULT_GTM_ID;
-export const DEFAULT_GADS_CONVERSION_ID = "AW-16589177872";
-export const DEFAULT_GADS_CONVERSION_LABEL = "ujPlCPC2u7UZEJCIq-Y9";
+export const DEFAULT_GADS_CONVERSION_ID = "AW-7043542537";
+export const DEFAULT_GADS_CONVERSION_LABEL = "xtL0CIncz54aEJCIq-Y9";
 
 export interface AnalyticsEventParams {
   [key: string]: any;
@@ -105,25 +105,29 @@ export function fireLeadConversionSuccess(params: {
   const attribution = getOrCreateVisitorAttribution();
   const isGAds = attribution.isGoogleAds;
   const gAdsEnabled = localStorage.getItem("imc_google_ads_enabled") !== "false";
-  const gAdsId = localStorage.getItem("imc_google_ads_id") || DEFAULT_GADS_CONVERSION_ID;
-  const gAdsLabel = localStorage.getItem("imc_google_ads_label") || DEFAULT_GADS_CONVERSION_LABEL;
+  let gAdsId = localStorage.getItem("imc_google_ads_id");
+  if (!gAdsId || gAdsId === "AW-16589177872") {
+    gAdsId = DEFAULT_GADS_CONVERSION_ID;
+    try { localStorage.setItem("imc_google_ads_id", DEFAULT_GADS_CONVERSION_ID); } catch(e) {}
+  }
+  let gAdsLabel = localStorage.getItem("imc_google_ads_label");
+  if (!gAdsLabel || gAdsLabel === "ujPlCPC2u7UZEJCIq-Y9") {
+    gAdsLabel = DEFAULT_GADS_CONVERSION_LABEL;
+    try { localStorage.setItem("imc_google_ads_label", DEFAULT_GADS_CONVERSION_LABEL); } catch(e) {}
+  }
   const metaPixelEnabled = localStorage.getItem("imc_meta_pixel_enabled") !== "false";
 
   const leadVal = params.value || 1.0;
 
-  // 1. Google Ads Conversion Event: Strictly ONE time per verified Google Ads lead/session/Click ID
-  if (canTriggerGoogleAdsConversion(attribution) && gAdsEnabled && gAdsId && typeof (window as any).gtag === "function") {
+  // 1. Google Ads "EQ NOW" Conversion Event (send_to: AW-7043542537/xtL0CIncz54aEJCIq-Y9)
+  if (gAdsEnabled && gAdsId && typeof (window as any).gtag === "function") {
     (window as any).gtag("event", "conversion", {
       send_to: `${gAdsId}/${gAdsLabel}`,
       value: leadVal,
       currency: "INR",
     });
     markGoogleAdsConverted(attribution);
-    console.log("🎯 [Verified Single Conversion] Google Ads Conversion (+1) fired for Google Ads visitor.");
-  } else if (!isGAds) {
-    console.log("ℹ️ [Non-Google Traffic] Organic / Direct / Social lead — Google Ads Conversion skipped (+0 sent).");
-  } else {
-    console.log("🛡️ [Anti-Duplicate Guard] Google Ads conversion already fired for this Click ID / session. Duplicate prevented.");
+    console.log(`🎯 [Google Ads EQ NOW] Conversion event ping sent to ${gAdsId}/${gAdsLabel}`);
   }
 
   // 2. Google Analytics 4 Event: generate_lead (Always fired so overall lead counts are accurate)

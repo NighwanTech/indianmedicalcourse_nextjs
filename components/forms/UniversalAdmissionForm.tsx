@@ -194,6 +194,11 @@ export function UniversalAdmissionForm({
       });
       if (onSuccess) onSuccess();
 
+      // Smoothly redirect doctor to confirmation Thank You page
+      setTimeout(() => {
+        router.push(`/thank-you?ref=${encodeURIComponent(leadRefId)}`);
+      }, 1500);
+
     } catch (err) {
       console.error("Lead submission fallback:", err);
       // Clear fields and show success state gracefully
@@ -208,7 +213,7 @@ export function UniversalAdmissionForm({
     }
   };
 
-  // Auto-redirect back to clean fresh form after 20 seconds
+  // Auto-redirect back to clean fresh form after 20 seconds if user cancels or stays
   useEffect(() => {
     if (isSubmitted) {
       const timer = setTimeout(() => {
@@ -236,7 +241,7 @@ export function UniversalAdmissionForm({
 
         {/* User feedback redirect notice */}
         <p className="text-[11px] text-slate-500 mt-2.5 font-medium flex items-center justify-center gap-1.5 animate-pulse">
-          <span>You will be redirected to the form shortly...</span>
+          <span>Redirecting to your application confirmation page...</span>
         </p>
 
         <div className="mt-3.5 pt-2.5 border-t border-slate-100 flex items-center justify-center gap-2 text-[11px] text-slate-500 font-medium">

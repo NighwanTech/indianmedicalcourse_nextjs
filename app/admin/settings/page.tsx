@@ -190,8 +190,18 @@ Sitemap: https://indianmedicalcourse.com/sitemap.xml`);
 
       if (savedGa) setGaId(savedGa);
       if (savedGtm) setGtmId(savedGtm);
-      if (savedGAds) setGAdsId(savedGAds);
-      if (savedGAdsLabel) setGAdsLabel(savedGAdsLabel);
+      if (savedGAds && savedGAds !== "AW-16589177872") {
+        setGAdsId(savedGAds);
+      } else {
+        setGAdsId(DEFAULT_GADS_CONVERSION_ID);
+        try { localStorage.setItem("imc_google_ads_id", DEFAULT_GADS_CONVERSION_ID); } catch(e) {}
+      }
+      if (savedGAdsLabel && savedGAdsLabel !== "ujPlCPC2u7UZEJCIq-Y9") {
+        setGAdsLabel(savedGAdsLabel);
+      } else {
+        setGAdsLabel(DEFAULT_GADS_CONVERSION_LABEL);
+        try { localStorage.setItem("imc_google_ads_label", DEFAULT_GADS_CONVERSION_LABEL); } catch(e) {}
+      }
 
       if (savedGtmToggle !== null) setIsGtmEnabled(savedGtmToggle === "true");
       if (savedGaToggle !== null) setIsGaEnabled(savedGaToggle === "true");
@@ -1588,7 +1598,7 @@ Sitemap: https://indianmedicalcourse.com/sitemap.xml`);
                           type="text"
                           value={gAdsId}
                           onChange={(e) => setGAdsId(e.target.value)}
-                          placeholder="AW-16589177872"
+                          placeholder="AW-7043542537"
                           className="w-full text-xs font-mono p-2.5 bg-white border border-amber-300 rounded-xl font-bold"
                         />
                       </div>
@@ -1598,7 +1608,7 @@ Sitemap: https://indianmedicalcourse.com/sitemap.xml`);
                           type="text"
                           value={gAdsLabel}
                           onChange={(e) => setGAdsLabel(e.target.value)}
-                          placeholder="ujPlCPC2u7UZEJCIq-Y9"
+                          placeholder="xtL0CIncz54aEJCIq-Y9"
                           className="w-full text-xs font-mono p-2.5 bg-white border border-amber-300 rounded-xl font-bold"
                         />
                       </div>

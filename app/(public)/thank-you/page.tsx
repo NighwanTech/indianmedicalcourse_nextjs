@@ -3,6 +3,7 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Script from "next/script";
 import confetti from "canvas-confetti";
 import { siteSettings, courses, facultyMembers } from "@/lib/data";
 import { 
@@ -55,18 +56,17 @@ function ThankYouContent() {
       } catch (e) {}
     }
 
-    // 2. Strict Anti-Duplicate Google Ads Conversion Trigger
+    // 2. Google Ads "EQ NOW" Conversion Trigger (send_to: AW-7043542537/xtL0CIncz54aEJCIq-Y9)
     const attribution = getOrCreateVisitorAttribution();
     if (canTriggerGoogleAdsConversion(attribution)) {
-      trackGoogleAdsConversion();
-      markGoogleAdsConverted(attribution);
-      console.log("🎯 Google Ads Conversion (+1) successfully executed with anti-duplicate validation.");
-    } else {
-      if (!attribution.isGoogleAds) {
-        console.log("ℹ️ Organic / Direct / Social visitor: Google Ads conversion skipped (+0).");
-      } else {
-        console.log("ℹ️ Google Ads Conversion already recorded for this Click ID / session (duplicate prevented).");
+      if (typeof (window as any).gtag === "function") {
+        (window as any).gtag("event", "conversion", {
+          send_to: "AW-7043542537/xtL0CIncz54aEJCIq-Y9",
+        });
       }
+      trackGoogleAdsConversion("xtL0CIncz54aEJCIq-Y9");
+      markGoogleAdsConverted(attribution);
+      console.log("🎯 [Google Ads EQ NOW] Conversion event ping sent to AW-7043542537/xtL0CIncz54aEJCIq-Y9");
     }
 
     // 3. Fire celebratory confetti
@@ -115,6 +115,18 @@ function ThankYouContent() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-10 sm:py-16">
+      {/* Google Ads EQ NOW Event Snippet */}
+      <Script
+        id="google-ads-eq-now-snippet"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('event', 'conversion', {'send_to': 'AW-7043542537/xtL0CIncz54aEJCIq-Y9'});
+          `,
+        }}
+      />
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         
         {/* ========================================================================= */}

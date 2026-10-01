@@ -20,21 +20,27 @@ export function trackGoogleAdsConversion(conversionLabel?: string, value: number
   if (typeof window === "undefined") return;
 
   const isGAds = isGoogleAdsVisitor();
-  const adsId = localStorage.getItem("imc_google_ads_id") || DEFAULT_GADS_CONVERSION_ID;
-  const label = conversionLabel || localStorage.getItem("imc_google_ads_label") || DEFAULT_GADS_CONVERSION_LABEL;
+  let adsId = localStorage.getItem("imc_google_ads_id");
+  if (!adsId || adsId === "AW-16589177872") {
+    adsId = DEFAULT_GADS_CONVERSION_ID;
+    try { localStorage.setItem("imc_google_ads_id", DEFAULT_GADS_CONVERSION_ID); } catch(e) {}
+  }
+  let label = conversionLabel || localStorage.getItem("imc_google_ads_label");
+  if (!label || label === "ujPlCPC2u7UZEJCIq-Y9") {
+    label = DEFAULT_GADS_CONVERSION_LABEL;
+    try { localStorage.setItem("imc_google_ads_label", DEFAULT_GADS_CONVERSION_LABEL); } catch(e) {}
+  }
   const isGAdsEnabled = localStorage.getItem("imc_google_ads_enabled") !== "false";
   const metaPixelId = localStorage.getItem("imc_meta_pixel_id") || process.env.NEXT_PUBLIC_META_PIXEL_ID;
 
-  // 1. Trigger Google Ads Conversion Event ONLY if the visitor arrived via Google Ads
-  if (isGAds && isGAdsEnabled && (window as any).gtag && adsId) {
+  // 1. Trigger Google Ads Conversion Event
+  if (isGAdsEnabled && (window as any).gtag && adsId) {
     (window as any).gtag("event", "conversion", {
       send_to: `${adsId}/${label}`,
       value: value,
       currency: "INR",
     });
-    console.log("🎯 Google Ads Conversion +1 Counted (From Google Ads)");
-  } else {
-    console.log("ℹ️ Skipped Google Ads Conversion (Visitor did not originate from Google Ads)");
+    console.log(`🎯 Google Ads Conversion event sent to ${adsId}/${label}`);
   }
 
   // 2. Trigger GA4 generate_lead event
@@ -63,8 +69,11 @@ export function GoogleAdsTracker() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Load dynamic IDs from localStorage
-    const savedGAds = localStorage.getItem("imc_google_ads_id") || DEFAULT_GADS_CONVERSION_ID;
+    let savedGAds = localStorage.getItem("imc_google_ads_id");
+    if (!savedGAds || savedGAds === "AW-16589177872") {
+      savedGAds = DEFAULT_GADS_CONVERSION_ID;
+      try { localStorage.setItem("imc_google_ads_id", DEFAULT_GADS_CONVERSION_ID); } catch(e) {}
+    }
     const savedMeta = localStorage.getItem("imc_meta_pixel_id") || process.env.NEXT_PUBLIC_META_PIXEL_ID;
     if (savedGAds) setGoogleAdsId(savedGAds);
     if (savedMeta) setMetaPixelId(savedMeta);

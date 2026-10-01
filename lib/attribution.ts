@@ -189,7 +189,6 @@ export function getOrCreateVisitorAttribution(): VisitorAttribution {
 // Anti-duplicate protection checks
 export function canTriggerGoogleAdsConversion(attribution: VisitorAttribution): boolean {
   if (typeof window === "undefined") return false;
-  if (!attribution.isGoogleAds) return false;
   if (attribution.convertedToGoogleAds) return false;
 
   // Check converted click IDs to prevent duplicate conversion across separate tabs/reloads
