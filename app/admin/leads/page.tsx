@@ -64,88 +64,10 @@ function MetaLogo({ className = "w-3.5 h-3.5" }: { className?: string }) {
 
 import { LeadItem, formatLeadDateTime, deduplicateLeadsList } from "@/lib/leadUtils";
 
-const SEED_LEADS: LeadItem[] = [
-  {
-    id: "1",
-    uuid: "lead_1786971874086_4osw12x",
-    name: "Dr. Anirudh Kulkarni",
-    mobile: "+91 98765 00001",
-    email: "anirudh.k@gmail.com",
-    qualification: "MBBS",
-    interestedCourse: "Fellowship in Clinical Cardiology",
-    city: "Bengaluru",
-    state: "Karnataka",
-    country: "India",
-    formSource: "Homepage Hero Form",
-    leadSource: "Google Ads",
-    channel: "GOOGLE_ADS",
-    channelLabel: "Google Ads",
-    landingPageUrl: "https://indianmedicalcourse.com",
-    leadStatus: "NEW",
-    priority: "HIGH",
-    score: 90,
-    createdAt: "2026-08-18T12:15:00.000Z",
-    notes: "Doctor is interested in weekend ICU & Echo hands-on training.",
-    attribution: {
-      gclid: "Cj0KCQjwi46oBhC1ARIsA",
-      utmCampaign: "cardiology_fellowship_search_in",
-      utmTerm: "fellowship in cardiology for mbbs",
-    }
-  },
-  {
-    id: "2",
-    uuid: "lead_1786971874086_99a8x1",
-    name: "Dr. Meenakshi Sundaram",
-    mobile: "+91 98450 44332",
-    email: "dr.meenakshi@apollo.org",
-    qualification: "MD_MS",
-    interestedCourse: "Fellowship in Critical Care Medicine",
-    city: "Chennai",
-    state: "Tamil Nadu",
-    country: "India",
-    formSource: "Course Page Form",
-    leadSource: "Meta / Instagram Ads",
-    channel: "META_ADS",
-    channelLabel: "Meta / Instagram Ads",
-    landingPageUrl: "https://indianmedicalcourse.com/courses/fellowship-in-critical-care-medicine",
-    leadStatus: "IN_COUNSELLING",
-    priority: "URGENT",
-    score: 95,
-    createdAt: "2026-08-18T11:00:00.000Z",
-    notes: "Senior Resident aiming for ECMO and ventilator training.",
-    attribution: {
-      fbclid: "fb.1.17869718.XYZ99",
-      utmCampaign: "icu_fellowship_instagram_feed",
-    }
-  },
-  {
-    id: "3",
-    uuid: "lead_1786971874086_bb23x9",
-    name: "Dr. Rohit Singhal",
-    mobile: "+91 98112 33445",
-    email: "singhal.rohit@gmail.com",
-    qualification: "MBBS",
-    interestedCourse: "Fellowship in Laparoscopic Surgery",
-    city: "Agra",
-    state: "Uttar Pradesh",
-    country: "India",
-    formSource: "Quick Apply Floating Dock",
-    leadSource: "Organic / Direct",
-    channel: "ORGANIC",
-    channelLabel: "Organic / Direct",
-    landingPageUrl: "https://indianmedicalcourse.com/courses/fellowship-in-laparoscopic-surgery",
-    leadStatus: "NEW",
-    priority: "HIGH",
-    score: 85,
-    createdAt: "2026-08-18T09:30:00.000Z",
-    notes: "Looking for minimal access wet lab surgery observer-ship.",
-  },
-];
-
 const LEADS_STORAGE_KEY = "imc_captured_leads";
 
 export default function AdminLeadsPage() {
-  const [leads, setLeads] = useState<LeadItem[]>(SEED_LEADS);
+  const [leads, setLeads] = useState<LeadItem[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
   

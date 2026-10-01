@@ -200,8 +200,14 @@ export function deduplicateLeadsList(rawLeads: any[]): LeadItem[] {
   const seenIds = new Set<string>();
   const deduplicated: LeadItem[] = [];
 
+  const DUMMY_UUIDS = new Set(["lead_1786971874086_4osw12x", "lead_1786971874086_99a8x1", "lead_1786971874086_bb23x9"]);
+  const DUMMY_NAMES = new Set(["Dr. Anirudh Kulkarni", "Dr. Meenakshi Sundaram", "Dr. Rohit Singhal"]);
+
   for (const lead of normalized) {
     if (seenIds.has(lead.id) || seenIds.has(lead.uuid)) {
+      continue;
+    }
+    if (DUMMY_UUIDS.has(lead.uuid) || DUMMY_NAMES.has(lead.name)) {
       continue;
     }
 
