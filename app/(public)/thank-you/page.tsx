@@ -78,19 +78,30 @@ function ThankYouContent() {
 
         if (isLegitimateConversion && !alreadyFired) {
           (window as any).dataLayer = (window as any).dataLayer || [];
-          const conversionPayload = {
-            send_to: "AW-7043542537/xtL0CIncz54aEJCIq-Y9",
+          const payloadPrimary = {
+            send_to: "AW-4740079903/xtL0CIncz54aEJCIq-Y9",
             transaction_id: refId, // Google Ads deduplicates automatically by transaction_id
+            value: 1.0,
+            currency: "INR",
+          };
+          const payloadLinked = {
+            send_to: "AW-16589177872/xtL0CIncz54aEJCIq-Y9",
+            transaction_id: refId,
             value: 1.0,
             currency: "INR",
           };
 
           if (typeof (window as any).gtag === "function") {
-            (window as any).gtag("event", "conversion", conversionPayload);
+            (window as any).gtag("event", "conversion", payloadPrimary);
+            (window as any).gtag("event", "conversion", payloadLinked);
           } else {
             (window as any).dataLayer.push({
               event: "conversion",
-              ...conversionPayload,
+              ...payloadPrimary,
+            });
+            (window as any).dataLayer.push({
+              event: "conversion",
+              ...payloadLinked,
             });
           }
           trackGoogleAdsConversion("xtL0CIncz54aEJCIq-Y9");

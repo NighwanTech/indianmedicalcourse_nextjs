@@ -1598,7 +1598,7 @@ Sitemap: https://indianmedicalcourse.com/sitemap.xml`);
                           type="text"
                           value={gAdsId}
                           onChange={(e) => setGAdsId(e.target.value)}
-                          placeholder="AW-7043542537"
+                          placeholder="AW-4740079903"
                           className="w-full text-xs font-mono p-2.5 bg-white border border-amber-300 rounded-xl font-bold"
                         />
                       </div>

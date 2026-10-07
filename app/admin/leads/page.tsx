@@ -604,7 +604,7 @@ export default function AdminLeadsPage() {
           <div className="text-2xl font-black text-amber-600 font-display mt-0.5">
             {leads.filter((l) => (l.channelLabel || l.leadSource || "").includes("Google") || Boolean(l.gclid || l.attribution?.gclid)).length}
           </div>
-          <div className="text-[10px] text-amber-600 font-semibold mt-1">AW-7043542537 Tracked</div>
+          <div className="text-[10px] text-amber-600 font-semibold mt-1">AW-4740079903 Tracked</div>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">

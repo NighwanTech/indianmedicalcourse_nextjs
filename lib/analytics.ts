@@ -8,7 +8,7 @@ export const DEFAULT_GA4_ID = "G-3L5ZCL0SX4";
 export const DEFAULT_GTM_ID = "GTM-PXHWHLL9";
 export const GA_MEASUREMENT_ID = DEFAULT_GA4_ID;
 export const GTM_CONTAINER_ID = DEFAULT_GTM_ID;
-export const DEFAULT_GADS_CONVERSION_ID = "AW-7043542537";
+export const DEFAULT_GADS_CONVERSION_ID = "AW-4740079903";
 export const DEFAULT_GADS_CONVERSION_LABEL = "xtL0CIncz54aEJCIq-Y9";
 
 export interface AnalyticsEventParams {
@@ -106,7 +106,7 @@ export function fireLeadConversionSuccess(params: {
   const isGAds = attribution.isGoogleAds;
   const gAdsEnabled = localStorage.getItem("imc_google_ads_enabled") !== "false";
   let gAdsId = localStorage.getItem("imc_google_ads_id");
-  if (!gAdsId || gAdsId === "AW-16589177872") {
+  if (!gAdsId || gAdsId === "AW-7043542537") {
     gAdsId = DEFAULT_GADS_CONVERSION_ID;
     try { localStorage.setItem("imc_google_ads_id", DEFAULT_GADS_CONVERSION_ID); } catch(e) {}
   }
@@ -119,15 +119,22 @@ export function fireLeadConversionSuccess(params: {
 
   const leadVal = params.value || 1.0;
 
-  // 1. Google Ads "EQ NOW" Conversion Event (send_to: AW-7043542537/xtL0CIncz54aEJCIq-Y9)
-  if (gAdsEnabled && gAdsId && typeof (window as any).gtag === "function") {
+  // 1. Google Ads "EQ NOW" Conversion Event (Primary AW-4740079903 & Linked AW-16589177872)
+  if (gAdsEnabled && typeof (window as any).gtag === "function") {
+    // Primary Customer ID Tag
     (window as any).gtag("event", "conversion", {
-      send_to: `${gAdsId}/${gAdsLabel}`,
+      send_to: `AW-4740079903/${DEFAULT_GADS_CONVERSION_LABEL}`,
+      value: leadVal,
+      currency: "INR",
+    });
+    // Linked conversion tag
+    (window as any).gtag("event", "conversion", {
+      send_to: `AW-16589177872/${DEFAULT_GADS_CONVERSION_LABEL}`,
       value: leadVal,
       currency: "INR",
     });
     markGoogleAdsConverted(attribution);
-    console.log(`🎯 [Google Ads EQ NOW] Conversion event ping sent to ${gAdsId}/${gAdsLabel}`);
+    console.log(`🎯 [Google Ads EQ NOW] Conversion event ping sent to AW-4740079903 and AW-16589177872`);
   }
 
   // 2. Google Analytics 4 Event: generate_lead (Always fired so overall lead counts are accurate)

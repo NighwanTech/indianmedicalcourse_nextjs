@@ -21,7 +21,7 @@ export function trackGoogleAdsConversion(conversionLabel?: string, value: number
 
   const isGAds = isGoogleAdsVisitor();
   let adsId = localStorage.getItem("imc_google_ads_id");
-  if (!adsId || adsId === "AW-16589177872") {
+  if (!adsId || adsId === "AW-7043542537" || adsId === "AW-16589177872") {
     adsId = DEFAULT_GADS_CONVERSION_ID;
     try { localStorage.setItem("imc_google_ads_id", DEFAULT_GADS_CONVERSION_ID); } catch(e) {}
   }
@@ -70,7 +70,7 @@ export function GoogleAdsTracker() {
     if (typeof window === "undefined") return;
 
     let savedGAds = localStorage.getItem("imc_google_ads_id");
-    if (!savedGAds || savedGAds === "AW-16589177872") {
+    if (!savedGAds || savedGAds === "AW-7043542537") {
       savedGAds = DEFAULT_GADS_CONVERSION_ID;
       try { localStorage.setItem("imc_google_ads_id", DEFAULT_GADS_CONVERSION_ID); } catch(e) {}
     }

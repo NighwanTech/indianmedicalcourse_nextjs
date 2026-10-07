@@ -145,7 +145,7 @@ export function GoogleAnalyticsAndTagManager() {
 
     if (savedGa) setGaId(savedGa);
     if (savedGtm) setGtmId(savedGtm);
-    if (savedGAds && savedGAds !== "AW-16589177872") {
+    if (savedGAds && savedGAds !== "AW-7043542537") {
       setGAdsId(savedGAds);
     } else {
       setGAdsId(DEFAULT_GADS_CONVERSION_ID);

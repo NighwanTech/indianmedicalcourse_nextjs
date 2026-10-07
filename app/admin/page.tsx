@@ -207,7 +207,7 @@ export default function AdminDashboardPage() {
             {googleAdsLeads}
           </div>
           <p className="text-[11px] text-slate-500 mt-1 font-mono">
-            {totalLeads > 0 ? `${Math.round((googleAdsLeads / totalLeads) * 100)}% of Total` : "AW-7043542537"}
+            {totalLeads > 0 ? `${Math.round((googleAdsLeads / totalLeads) * 100)}% of Total` : "AW-4740079903"}
           </p>
         </div>
 

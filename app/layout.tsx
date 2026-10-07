@@ -85,14 +85,15 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={`${jakartaSans.variable} ${inter.variable} max-w-full`}>
       <head>
         {/* Google tag (gtag.js) */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-7043542537" />
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-4740079903" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('config', 'AW-7043542537');
+              gtag('config', 'AW-4740079903', {'allow_enhanced_conversions': true});
+              gtag('config', 'AW-16589177872', {'allow_enhanced_conversions': true});
             `,
           }}
         />
