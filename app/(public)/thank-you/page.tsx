@@ -57,26 +57,50 @@ function ThankYouContent() {
     }
 
     // 2. Google Ads "EQ NOW" Conversion Trigger (send_to: AW-7043542537/xtL0CIncz54aEJCIq-Y9)
-    // Fires unconditionally on every confirmation visit so Tag Assistant & Google Ads verify immediately
+    // SPAM & REFRESH PROTECTION:
+    // - Requires a valid lead submission ref or verified lead session (blocks direct URL hitting)
+    // - Enforces single-use token in sessionStorage (blocks multiple page reloads)
+    // - Passes Google Ads 'transaction_id' so Google deduplicates any duplicate hits
     try {
       if (typeof window !== "undefined") {
-        (window as any).dataLayer = (window as any).dataLayer || [];
-        if (typeof (window as any).gtag === "function") {
-          (window as any).gtag("event", "conversion", {
+        const isTagAssistant = (
+          window.location.search.includes("gtm_debug") || 
+          window.location.search.includes("tag_assistant") ||
+          Boolean((window as any).__TAG_ASSISTANT_ACTIVE__)
+        );
+        const hasValidLeadSession = Boolean(sessionStorage.getItem("imc_last_lead_ref"));
+        const hasSpecificRefId = refId && refId !== "IMC-2026" && refId.length > 5;
+        const alreadyFiredKey = `imc_conv_fired_${refId}`;
+        const alreadyFired = Boolean(sessionStorage.getItem(alreadyFiredKey));
+
+        // Only fire if it's an authentic lead submission or live Tag Assistant verification, and hasn't fired yet
+        const isLegitimateConversion = (hasValidLeadSession || hasSpecificRefId || isTagAssistant);
+
+        if (isLegitimateConversion && !alreadyFired) {
+          (window as any).dataLayer = (window as any).dataLayer || [];
+          const conversionPayload = {
             send_to: "AW-7043542537/xtL0CIncz54aEJCIq-Y9",
+            transaction_id: refId, // Google Ads deduplicates automatically by transaction_id
             value: 1.0,
             currency: "INR",
-          });
+          };
+
+          if (typeof (window as any).gtag === "function") {
+            (window as any).gtag("event", "conversion", conversionPayload);
+          } else {
+            (window as any).dataLayer.push({
+              event: "conversion",
+              ...conversionPayload,
+            });
+          }
+          trackGoogleAdsConversion("xtL0CIncz54aEJCIq-Y9");
+          sessionStorage.setItem(alreadyFiredKey, "true");
+          console.log(`🎯 [Google Ads EQ NOW] Verified conversion ping sent with transaction_id: ${refId}`);
+        } else if (alreadyFired) {
+          console.log(`ℹ️ [Google Ads EQ NOW] Conversion already registered for ${refId} (De-duplicated).`);
         } else {
-          (window as any).dataLayer.push({
-            event: "conversion",
-            send_to: "AW-7043542537/xtL0CIncz54aEJCIq-Y9",
-            value: 1.0,
-            currency: "INR",
-          });
+          console.log("ℹ️ [Google Ads EQ NOW] Direct thank-you page visit ignored (No lead submitted).");
         }
-        trackGoogleAdsConversion("xtL0CIncz54aEJCIq-Y9");
-        console.log("🎯 [Google Ads EQ NOW] Verified conversion event ping dispatched to AW-7043542537/xtL0CIncz54aEJCIq-Y9");
       }
     } catch (err) {
       console.error("Google Ads conversion trigger error:", err);
@@ -128,18 +152,6 @@ function ThankYouContent() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-10 sm:py-16">
-      {/* Google Ads EQ NOW Event Snippet */}
-      <Script
-        id="google-ads-eq-now-snippet"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('event', 'conversion', {'send_to': 'AW-7043542537/xtL0CIncz54aEJCIq-Y9'});
-          `,
-        }}
-      />
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         
         {/* ========================================================================= */}
