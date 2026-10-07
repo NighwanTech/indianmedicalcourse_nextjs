@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { siteSettings, courses } from "@/lib/data";
 import { countries } from "@/lib/countries";
 import confetti from "canvas-confetti";
@@ -30,6 +31,7 @@ import {
 import { validateLeadQuality } from "@/lib/leadUtils";
 
 export function FloatingConversionLayer() {
+  const router = useRouter();
   const [showExitModal, setShowExitModal] = useState(false);
   const [hasShownExitModal, setHasShownExitModal] = useState(false);
   const [showMobileDrawer, setShowMobileDrawer] = useState(false);
@@ -256,6 +258,19 @@ export function FloatingConversionLayer() {
       setFormError("");
 
       setIsSubmitted(true);
+
+      const leadRefId = res.data?.refId || `lead_${Date.now()}`;
+      try {
+        sessionStorage.setItem("imc_last_lead_ref", JSON.stringify({
+          refId: leadRefId,
+          doctorName: docName,
+          courseName: crsName,
+        }));
+      } catch (e) {}
+
+      setTimeout(() => {
+        router.push(`/thank-you?ref=${encodeURIComponent(leadRefId)}`);
+      }, 1500);
     } catch (err) {
       console.error(err);
       setFullName("");

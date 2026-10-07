@@ -82,14 +82,80 @@ const LANDING_PAGES_MAP: Record<string, {
     hospitalCenters: "Apex Surgical Hospitals & Fortis Network",
     duration: "12 Months (Hybrid + OT Wet Labs)",
   },
+  "dermatology": {
+    title: "Clinical & Aesthetic Dermatology Fellowship 2026",
+    subtitle: "Hands-on Laser Stations, Chemical Peels, PRP for Alopecia, Dermatosurgery Biopsies & Office Aesthetics across Partner Hospitals.",
+    badge: "✨ ADMISSIONS OPEN • DERMATOLOGY BATCH",
+    targetCourse: "Fellowship in Clinical Dermatology",
+    clinicalHighlights: [
+      "Hands-on lasers: Q-Switched Nd:YAG, Fractional CO2, and Diode hair reduction",
+      "Chemical peels (Glycolic, Salicylic, TCA) & Dermatosurgery punch biopsies",
+      "Platelet-Rich Plasma (PRP) preparation & micro-needling for hair and skin",
+      "CPD Standards Office (UK) Accredited with Verifiable Certificate",
+    ],
+    intakeMonth: "September 2026",
+    seatsRemaining: 5,
+    hospitalCenters: "Fortis Network & Apollo Hospitals",
+    duration: "12 Months (Hybrid + Hospital Rotations)",
+  },
+  "dermatology-fellowship": {
+    title: "Clinical Dermatology & Aesthetics Fellowship 2026",
+    subtitle: "Master procedural dermatosurgery, trichology, injectables, chemical peels & laser workstations with senior dermatologists.",
+    badge: "🌟 PRIORITY ADMISSIONS • DERMATOLOGY SPECIALTY",
+    targetCourse: "Fellowship in Clinical Dermatology",
+    clinicalHighlights: [
+      "Comprehensive Training in Dermatopathology, Dermatosurgery & Lasers",
+      "PRP for Alopecia, Vampire Facials, and Microneedling protocols",
+      "Hands-on bedside clinical OPD rotations with senior faculty",
+      "Recognized CPD accreditation with verified digital credential",
+    ],
+    intakeMonth: "September 2026",
+    seatsRemaining: 4,
+    hospitalCenters: "Apollo Hospitals & Fortis Network",
+    duration: "12 Months (Hybrid + Clinical Rotations)",
+  },
+  "clinical-dermatology": {
+    title: "Fellowship in Clinical Dermatology",
+    subtitle: "Hands-on Laser Stations, Chemical Peels, PRP for Alopecia, Dermatosurgery & Office Procedures across Partner Hospital Networks.",
+    badge: "🚀 ADMISSIONS OPEN • DERMATOLOGY BATCH",
+    targetCourse: "Fellowship in Clinical Dermatology",
+    clinicalHighlights: [
+      "Hands-on lasers: Q-Switched Nd:YAG, Fractional CO2, and Diode hair reduction",
+      "Chemical peels (Glycolic, Salicylic, TCA) & Dermatosurgery punch biopsies",
+      "Platelet-Rich Plasma (PRP) preparation & micro-needling for hair and skin",
+      "CPD Standards Office (UK) Accredited with Verifiable Certificate",
+    ],
+    intakeMonth: "September 2026",
+    seatsRemaining: 5,
+    hospitalCenters: "Fortis Network & Apollo Hospitals",
+    duration: "12 Months (Hybrid + Hospital Rotations)",
+  },
+  "fellowship-in-clinical-dermatology": {
+    title: "Fellowship in Clinical Dermatology 2026",
+    subtitle: "Hands-on Clinical Attachments, Procedural Dermatosurgery, Lasers & Aesthetic Medicine for MBBS/MD Doctors.",
+    badge: "🎓 OFFICIAL FELLOWSHIP ENROLLMENT",
+    targetCourse: "Fellowship in Clinical Dermatology",
+    clinicalHighlights: [
+      "Procedural dermatology, electrocautery, and radiofrequency surgery",
+      "Dermatosurgery excision, cyst enucleation, and skin grafting observerships",
+      "Acne scar revision, subcision, and TCA cross techniques",
+      "Accredited CPD UK certificate for hospital and clinical OPD practice",
+    ],
+    intakeMonth: "September 2026",
+    seatsRemaining: 6,
+    hospitalCenters: "Medanta The Medicity & Apollo Network",
+    duration: "12 Months (Hybrid + Hospital Rotations)",
+  },
 };
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const pageData = LANDING_PAGES_MAP[slug];
   if (!pageData) {
+    const formattedTitle = slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
     return {
-      title: "Medical Fellowship Admissions 2026 | Indian Medical Course",
+      title: `${formattedTitle} Fellowship Admissions 2026 | Indian Medical Course`,
+      description: `Enroll in ${formattedTitle} with accredited hospital training and bedside clinical rotations.`,
     };
   }
   return {
@@ -98,7 +164,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export function generateStaticParams() {
   return Object.keys(LANDING_PAGES_MAP).map((slug) => ({ slug }));

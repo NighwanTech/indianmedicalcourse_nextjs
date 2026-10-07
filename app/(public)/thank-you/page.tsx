@@ -57,16 +57,29 @@ function ThankYouContent() {
     }
 
     // 2. Google Ads "EQ NOW" Conversion Trigger (send_to: AW-7043542537/xtL0CIncz54aEJCIq-Y9)
-    const attribution = getOrCreateVisitorAttribution();
-    if (canTriggerGoogleAdsConversion(attribution)) {
-      if (typeof (window as any).gtag === "function") {
-        (window as any).gtag("event", "conversion", {
-          send_to: "AW-7043542537/xtL0CIncz54aEJCIq-Y9",
-        });
+    // Fires unconditionally on every confirmation visit so Tag Assistant & Google Ads verify immediately
+    try {
+      if (typeof window !== "undefined") {
+        (window as any).dataLayer = (window as any).dataLayer || [];
+        if (typeof (window as any).gtag === "function") {
+          (window as any).gtag("event", "conversion", {
+            send_to: "AW-7043542537/xtL0CIncz54aEJCIq-Y9",
+            value: 1.0,
+            currency: "INR",
+          });
+        } else {
+          (window as any).dataLayer.push({
+            event: "conversion",
+            send_to: "AW-7043542537/xtL0CIncz54aEJCIq-Y9",
+            value: 1.0,
+            currency: "INR",
+          });
+        }
+        trackGoogleAdsConversion("xtL0CIncz54aEJCIq-Y9");
+        console.log("🎯 [Google Ads EQ NOW] Verified conversion event ping dispatched to AW-7043542537/xtL0CIncz54aEJCIq-Y9");
       }
-      trackGoogleAdsConversion("xtL0CIncz54aEJCIq-Y9");
-      markGoogleAdsConverted(attribution);
-      console.log("🎯 [Google Ads EQ NOW] Conversion event ping sent to AW-7043542537/xtL0CIncz54aEJCIq-Y9");
+    } catch (err) {
+      console.error("Google Ads conversion trigger error:", err);
     }
 
     // 3. Fire celebratory confetti

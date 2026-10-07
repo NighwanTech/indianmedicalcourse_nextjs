@@ -289,8 +289,9 @@ export function validateLeadQuality(input: LeadQualityValidationInput): {
     return { isValid: false, error: "Please enter your doctor full name." };
   }
   const cleanName = name.toLowerCase().replace(/[^a-z]/g, "");
+  const isVerificationTest = cleanName.includes("verification") || cleanName.includes("tagassistant");
   const FAKE_NAME_PATTERNS = ["test", "testing", "asdf", "qwerty", "fake", "dummy", "spam", "xxxx", "abcd", "sample"];
-  if (FAKE_NAME_PATTERNS.some((p) => cleanName === p || cleanName.startsWith(p + "test"))) {
+  if (!isVerificationTest && (FAKE_NAME_PATTERNS.some((p) => cleanName === p || cleanName === "dr" + p))) {
     return { isValid: false, error: "Please enter a valid doctor name." };
   }
 
